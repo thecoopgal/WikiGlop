@@ -1,6 +1,5 @@
 id: join
 title: Join GloopGlop
-path: /join
 layout: form
 render_mode: modal
 
@@ -9,6 +8,7 @@ form:
   title: Join GloopGlop
   intro: Tell us about yourself and how you'd like to participate.
   submit_label: Submit Application
+  cancel_label: Cancel
   success_message: Thanks for applying to GloopGlop.
 
 fields:

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import type { SiteNavLink } from '$lib/server/sites';
 	import type { PageYaml } from '$lib/server/content';
+	import type { SiteNavLink } from '$lib/server/sites';
 	import LandingPage from '$lib/components/page-layouts/LandingPage.svelte';
 	import FormPage from '$lib/components/page-layouts/FormPage.svelte';
 	import DocumentPage from '$lib/components/page-layouts/DocumentPage.svelte';
@@ -23,8 +23,10 @@
 
 	const layout = $derived(data.page.layout);
 	const renderMode = $derived(data.page.render_mode ?? 'page');
+
 	const isModalForm = $derived(data.page.layout === 'form' && (data.page.render_mode ?? 'page') === 'modal');
 	let activeModalId = $state<string | null>(null);
+
 	const activeModal = $derived(
 		activeModalId && data.modals ? (data.modals[activeModalId] as PageYaml | undefined) : undefined
 	);
@@ -62,12 +64,12 @@
 		activeModalId = modalId;
 	}
 
-	function closeModal() {
+	async function closeModal() {
 		const currentModalPath = activeModalId ? `/${activeModalId}` : null;
 		activeModalId = null;
 		if (typeof window !== 'undefined' && currentModalPath && window.location.pathname === currentModalPath) {
 			if (window.history.length > 1) window.history.back();
-			else goto('/');
+			else await goto('/');
 		}
 	}
 

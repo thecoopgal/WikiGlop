@@ -1,10 +1,10 @@
-id: thepaperjelly
-name: The Paper Jelly
+id: alabamafella
+name: Alabamafella
 hosts:
-  - thepaperjelly.localhost
+  - alabamafella.localhost
   - 127.0.0.1
-  - thepaperjelly.gloopglop.com
-  - www.thepaperjelly.gloopglop.com
+  - alabamafella.gloopglop.com
+  - www.alabamafella.gloopglop.com
 
 kind: platform
 

@@ -1,10 +1,10 @@
-id: index
-title: GloopGlop
-path: /
+id: creators
+title: Gloop Glop Creators
+path: /creators
 layout: creator_links
 
 seo:
-  title: GloopGlop
+  title: GloopGlop Creators
   description: Creator bio and links.
   image: https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/907061a8-51ae-454c-c739-83935616f900/public
 
@@ -22,6 +22,10 @@ blocks:
     bio: |
       We are a collective creators who like to create cool tools for other creators.
     short_links:
+      - label: Home
+        icon: home
+        open_in: same_tab
+        href: /
       - label: ByLaws
         icon: document
         open_in: same_tab
@@ -33,24 +37,9 @@ blocks:
 
   - type: links
     id: social-links
-    title:
+    title: Our Amazing Creators
     style: cards
     items:
-      - label: Creators
-        href: /creators
-        open_in: same_tab
-      - label: Bylaws
-        href: /bylaws
-        open_in: same_tab
-      - label: Document
-        href: /document
-        open_in: same_tab
-      - label: Publication
-        href: /publication
-        open_in: same_tab
-      - label: Form
-        href: /form
-        open_in: same_tab
-      - label: Modal
-        href: /modal
-        open_in: same_tab
+      - source: "@thecoopgal"
+      - source: "@thepaperjelly"
+

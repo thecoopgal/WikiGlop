@@ -14,6 +14,27 @@ page_settings:
   show_edit_history: true
 
 blocks:
+  - type: creator_profile
+    id: profile
+    name: Gloop Glop
+    tagline: Gloop Glopping for all!
+    avatar: https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/907061a8-51ae-454c-c739-83935616f900/public
+    bio: |
+      We are a collective creators who like to create cool tools for other creators.
+    short_links:
+      - label: Home
+        icon: home
+        open_in: same_tab
+        href: /
+      - label: ByLaws
+        icon: document
+        open_in: same_tab
+        href: /bylaws
+      - label: Our Creators
+        icon: users
+        open_in: same_tab
+        href: /creators
+  
   - type: document_header
     id: top
     title: GloopGlop Bylaws

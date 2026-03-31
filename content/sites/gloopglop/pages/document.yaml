@@ -65,7 +65,8 @@ blocks:
     style: inline
     items:
       - label: Join
-        href: /join
+        href: "#"
         open_mode: modal
+        modal: join
       - label: Home
         href: /

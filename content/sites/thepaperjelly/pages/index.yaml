@@ -1,0 +1,52 @@
+id: index
+title: The Paper Jelly
+path: /
+layout: creator_links
+
+seo:
+  title: The Paper Jelly
+  description: Creator bio and links.
+  image: https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/1e168030-75a0-4012-217c-8545ffe42300/public
+
+page_settings:
+  show_header: true
+  show_footer: true
+  max_width: sm
+
+blocks:
+  - type: creator_profile
+    id: profile
+    name: The Paper Jelly
+    tagline: We’re nerds who love making nerdy things for nerdy people!
+    avatar: https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/1e168030-75a0-4012-217c-8545ffe42300/public
+    bio: |
+      We are a collective of minority artists who like to share our creativity with the world.
+    short_links:
+      - label: TikTok
+        icon: tiktok
+        href: https://www.tiktok.com/@thepaperjelly
+      - label: Shop
+        icon: shop
+        href: https://ko-fi.com/thepaperjelly
+
+  - type: links
+    id: social-links
+    title:
+    style: cards
+    items:
+      - label: CashApp
+        href: https://cash.app/$ThePaperJelly
+      - label: Venmo
+        href: https://venmo.com/u/thepaperjelly
+      - label: Shop
+        href: https://ko-fi.com/thepaperjelly
+      - label: TikTok
+        href: https://tiktok.com/@creator
+      - label: Instagram
+        href: https://www.instagram.com/thepaperjelly
+      - label: Facebook
+        href: https://www.facebook.com/thepaperjelly
+      - label: Threads
+        href: https://www.threads.com/@thepaperjelly?igshid=NTc4MTIwNjQ2YQ%3D%3D
+      - label: Tiktok
+        href: https://www.tiktok.com/@thepaperjelly
