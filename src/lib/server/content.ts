@@ -1,5 +1,3 @@
-import fs from 'fs/promises';
-import path from 'path';
 import { parse as parseYaml } from 'yaml';
 import type { ResolvedSite } from './sites';
 import { getAllSites } from './sites';
@@ -85,34 +83,22 @@ function isRecord(v: unknown): v is Record<string, unknown> {
 	return typeof v === 'object' && v !== null;
 }
 
-function getContentSitesDir() {
-	// File: src/lib/server/content.ts -> project root is ../../..
-	const projectRoot = path.resolve(import.meta.dirname, '../../..');
-	return path.join(projectRoot, 'content', 'sites');
-}
+const PAGE_YAML_FILES = import.meta.glob('/content/sites/*/pages/*.yaml', {
+	eager: true,
+	query: '?raw',
+	import: 'default'
+}) as Record<string, string>;
 
-function getSitePagesDir(siteId: string) {
-	return path.join(getContentSitesDir(), siteId, 'pages');
-}
-
-function getSiteModalsDir(siteId: string) {
-	return path.join(getContentSitesDir(), siteId, 'modals');
-}
+const MODAL_YAML_FILES = import.meta.glob('/content/sites/*/modals/*.yaml', {
+	eager: true,
+	query: '?raw',
+	import: 'default'
+}) as Record<string, string>;
 
 function getPageYamlPath(siteId: string, slugParts: string[]): string | null {
-	if (slugParts.length === 0) return path.join(getSitePagesDir(siteId), 'index.yaml');
-	if (slugParts.length === 1) return path.join(getSitePagesDir(siteId), `${slugParts[0]}.yaml`);
-
-	// Nested pages will be supported later.
+	if (slugParts.length === 0) return `/content/sites/${siteId}/pages/index.yaml`;
+	if (slugParts.length === 1) return `/content/sites/${siteId}/pages/${slugParts[0]}.yaml`;
 	return null;
-}
-
-async function readFileSafe(filePath: string): Promise<string | null> {
-	try {
-		return await fs.readFile(filePath, 'utf8');
-	} catch {
-		return null;
-	}
 }
 
 function toPathFromFileName(fileName: string): string {
@@ -230,8 +216,8 @@ export async function loadModalYaml(
 	const safeId = modalId.trim();
 	if (!safeId) return null;
 
-	const filePath = path.join(getSiteModalsDir(site.siteId), `${safeId}.yaml`);
-	const raw = await readFileSafe(filePath);
+	const filePath = `/content/sites/${site.siteId}/modals/${safeId}.yaml`;
+	const raw = MODAL_YAML_FILES[filePath];
 	if (!raw || !raw.trim()) return null;
 
 	try {
@@ -242,18 +228,11 @@ export async function loadModalYaml(
 }
 
 export async function loadAllModals(site: ResolvedSite): Promise<Record<string, PageYaml>> {
-	const modalsDir = getSiteModalsDir(site.siteId);
-	let entries: Array<{ name: string; isFile(): boolean }>;
-	try {
-		entries = await fs.readdir(modalsDir, { withFileTypes: true });
-	} catch {
-		return {};
-	}
-
 	const out: Record<string, PageYaml> = {};
-	for (const entry of entries) {
-		if (!entry.isFile() || !entry.name.endsWith('.yaml')) continue;
-		const modalId = entry.name.replace(/\.yaml$/i, '');
+	const prefix = `/content/sites/${site.siteId}/modals/`;
+	for (const [filePath] of Object.entries(MODAL_YAML_FILES)) {
+		if (!filePath.startsWith(prefix) || !filePath.endsWith('.yaml')) continue;
+		const modalId = filePath.slice(prefix.length).replace(/\.yaml$/i, '');
 		// eslint-disable-next-line no-await-in-loop
 		const modal = await loadModalYaml(site, modalId);
 		if (!modal) continue;
@@ -269,7 +248,7 @@ export async function loadPageYaml(
 	const filePath = getPageYamlPath(site.siteId, slugParts);
 	if (!filePath) return null;
 
-	const raw = await readFileSafe(filePath);
+	const raw = PAGE_YAML_FILES[filePath];
 	if (!raw || !raw.trim()) return null;
 
 	try {
@@ -287,20 +266,10 @@ export async function expandCreatorLinksShortcuts(
 ): Promise<PageYaml> {
 	if (!Array.isArray(page.blocks) || page.blocks.length === 0) return page;
 
-	const pagesDir = getSitePagesDir(site.siteId);
-	let entries: Array<{ name: string; isFile(): boolean }>;
-	try {
-		entries = await fs.readdir(pagesDir, { withFileTypes: true });
-	} catch {
-		return page;
-	}
-
 	const creatorItems: Array<{ label: string; href: string }> = [];
-	for (const entry of entries) {
-		if (!entry.isFile() || !entry.name.endsWith('.yaml')) continue;
-		const filePath = path.join(pagesDir, entry.name);
-		// eslint-disable-next-line no-await-in-loop
-		const raw = await readFileSafe(filePath);
+	const prefix = `/content/sites/${site.siteId}/pages/`;
+	for (const [filePath, raw] of Object.entries(PAGE_YAML_FILES)) {
+		if (!filePath.startsWith(prefix) || !filePath.endsWith('.yaml')) continue;
 		if (!raw || !raw.trim()) continue;
 
 		let parsed: unknown;
@@ -317,8 +286,8 @@ export async function expandCreatorLinksShortcuts(
 				? parsed.title.trim()
 				: typeof parsed.id === 'string' && parsed.id.trim()
 					? parsed.id.trim()
-					: entry.name.replace(/\.yaml$/i, '');
-		const href = toNormalizedPath(parsed.path, entry.name);
+					: filePath.slice(prefix.length).replace(/\.yaml$/i, '');
+		const href = toNormalizedPath(parsed.path, filePath.slice(prefix.length));
 		creatorItems.push({ label, href });
 	}
 

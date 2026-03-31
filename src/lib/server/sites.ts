@@ -1,5 +1,3 @@
-import fs from 'fs/promises';
-import path from 'path';
 import { parse as parseYaml } from 'yaml';
 
 export type SiteTheme = {
@@ -43,12 +41,11 @@ type CachedSites = {
 
 let cache: CachedSites | null = null;
 
-function getContentSitesDir() {
-	// /content/sites relative to the project root (resolve from this file location).
-	// File: src/lib/server/sites.ts -> project root is ../../..
-	const projectRoot = path.resolve(import.meta.dirname, '../../..');
-	return path.join(projectRoot, 'content', 'sites');
-}
+const SITE_YAML_FILES = import.meta.glob('/content/sites/*/site.yaml', {
+	eager: true,
+	query: '?raw',
+	import: 'default'
+}) as Record<string, string>;
 
 function isNonEmptyString(v: unknown): v is string {
 	return typeof v === 'string' && v.trim().length > 0;
@@ -75,15 +72,9 @@ function safeStringArray(v: unknown): string[] | undefined {
 }
 
 async function loadSiteConfig(siteId: string): Promise<ResolvedSite | null> {
-	const filePath = path.join(getContentSitesDir(), siteId, 'site.yaml');
-
-	let raw: string;
-	try {
-		raw = await fs.readFile(filePath, 'utf8');
-	} catch {
-		// Missing site.yaml should just make this site non-resolvable.
-		return null;
-	}
+	const filePath = `/content/sites/${siteId}/site.yaml`;
+	const raw = SITE_YAML_FILES[filePath];
+	if (typeof raw !== 'string') return null;
 
 	// Treat empty files as non-configured sites.
 	if (!raw.trim()) return null;
@@ -146,16 +137,12 @@ async function loadSiteConfig(siteId: string): Promise<ResolvedSite | null> {
 }
 
 async function loadAllSites(): Promise<ResolvedSite[]> {
-	const dirPath = getContentSitesDir();
-	let entries: Array<{ name: string; isDirectory(): boolean }>;
-
-	try {
-		entries = await fs.readdir(dirPath, { withFileTypes: true });
-	} catch {
-		return [];
-	}
-
-	const siteIds = entries.filter((e) => e.isDirectory()).map((e) => e.name);
+	const siteIds = Object.keys(SITE_YAML_FILES)
+		.map((filePath) => {
+			const match = /\/content\/sites\/([^/]+)\/site\.yaml$/i.exec(filePath);
+			return match?.[1] ?? null;
+		})
+		.filter((siteId): siteId is string => typeof siteId === 'string');
 
 	const sites: ResolvedSite[] = [];
 	for (const siteId of siteIds) {
@@ -168,12 +155,7 @@ async function loadAllSites(): Promise<ResolvedSite[]> {
 }
 
 export async function getAllSites(): Promise<ResolvedSite[]> {
-	const isDev =
-		(typeof process !== 'undefined' &&
-			typeof process.env?.NODE_ENV === 'string' &&
-			process.env.NODE_ENV === 'development') ||
-		false;
-	const CACHE_MS = isDev ? 5_000 : 60_000;
+	const CACHE_MS = 10_000;
 	const now = Date.now();
 	if (cache && now - cache.loadedAtMs < CACHE_MS) return cache.sites;
 
