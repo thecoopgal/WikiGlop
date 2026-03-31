@@ -168,7 +168,12 @@ async function loadAllSites(): Promise<ResolvedSite[]> {
 }
 
 export async function getAllSites(): Promise<ResolvedSite[]> {
-	const CACHE_MS = process.env.NODE_ENV === 'development' ? 5_000 : 60_000;
+	const isDev =
+		(typeof process !== 'undefined' &&
+			typeof process.env?.NODE_ENV === 'string' &&
+			process.env.NODE_ENV === 'development') ||
+		false;
+	const CACHE_MS = isDev ? 5_000 : 60_000;
 	const now = Date.now();
 	if (cache && now - cache.loadedAtMs < CACHE_MS) return cache.sites;
 
