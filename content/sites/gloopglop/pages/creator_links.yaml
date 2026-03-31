@@ -1,0 +1,50 @@
+id: index
+title: Creator Name
+path: /
+layout: creator_links
+
+seo:
+  title: Creator Name
+  description: Creator bio and links.
+  image: /media/creator/og-image.jpg
+
+page_settings:
+  show_header: true
+  show_footer: true
+  max_width: sm
+
+blocks:
+  - type: creator_profile
+    id: profile
+    name: Creator Name
+    tagline: Short creator tagline
+    avatar: /media/creator/avatar.jpg
+    bio: |
+      Short creator bio goes here.
+
+  - type: links
+    id: social-links
+    title: Find Me Online
+    style: stacked
+    items:
+      - label: TikTok
+        href: https://tiktok.com/@creator
+      - label: Instagram
+        href: https://instagram.com/creator
+      - label: Facebook
+        href: https://facebook.com/creator
+      - label: Ko-fi
+        href: https://ko-fi.com/creator
+      - label: Shop
+        href: https://shop.example.com
+
+  - type: markdown
+    id: note
+    content: |
+      Optional extra note, announcement, or update.
+
+  - type: callout
+    id: support
+    variant: success
+    title: Support This Creator
+    content: You can support this creator through their linked platforms above.

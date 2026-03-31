@@ -1,0 +1,38 @@
+id: bylaws
+title: GloopGlop Bylaws
+path: /bylaws
+layout: document
+
+permissions:
+  view: public
+  propose: members
+  edit_mode: proposal_required
+
+page_settings:
+  table_of_contents: true
+  show_last_updated: true
+  show_edit_history: true
+
+blocks:
+  - type: document_header
+    id: top
+    title: GloopGlop Bylaws
+    summary: Foundational governance document for GloopGlop.
+
+  - type: heading
+    id: article-1
+    level: 2
+    text: Article 1 — Name
+
+  - type: markdown
+    content: |
+      The name of the organization is GloopGlop.
+
+  - type: heading
+    id: article-2
+    level: 2
+    text: Article 2 — Purpose
+
+  - type: markdown
+    content: |
+      Add your purpose language here.

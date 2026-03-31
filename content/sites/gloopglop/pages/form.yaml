@@ -1,0 +1,66 @@
+id: form
+title: Form Title
+path: /form
+layout: form
+render_mode: modal
+
+seo:
+  title: Form Title
+  description: Form description
+
+form:
+  id: site_join_form
+  title: Form Title
+  intro: Short explanation of the form.
+  submit_label: Submit
+  cancel_label: Cancel
+  success_message: Thanks, your form was submitted.
+  destination: application_queue # optional internal key
+  notify_roles:
+    - admins
+    - stewards
+
+page_settings:
+  modal_size: md # sm | md | lg | xl
+
+fields:
+  - type: text
+    name: name
+    label: Name
+    required: true
+    placeholder: Your full name
+
+  - type: email
+    name: email
+    label: Email
+    required: true
+    placeholder: you@example.com
+
+  - type: text
+    name: display_name
+    label: Display name
+    required: false
+
+  - type: textarea
+    name: message
+    label: Tell us about yourself
+    required: true
+    rows: 5
+    placeholder: Share a little about yourself
+
+  - type: select
+    name: interest
+    label: Area of interest
+    required: false
+    options:
+      - label: Art
+        value: art
+      - label: Writing
+        value: writing
+      - label: Organizing
+        value: organizing
+
+  - type: checkbox
+    name: agree_values
+    label: I support the values of this community.
+    required: true

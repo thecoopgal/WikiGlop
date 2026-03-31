@@ -1,7 +1,39 @@
+<script lang="ts">
+	import { onMount } from 'svelte';
+	import IconMoon from '~icons/mdi/weather-night';
+	import IconSun from '~icons/mdi/white-balance-sunny';
+
+	type Theme = 'light' | 'dark';
+	const THEME_KEY = 'wikiglop-theme';
+
+	let theme = $state<Theme>('light');
+
+	function applyTheme(nextTheme: Theme) {
+		theme = nextTheme;
+		document.documentElement.setAttribute('data-theme', nextTheme);
+		localStorage.setItem(THEME_KEY, nextTheme);
+	}
+
+	function toggleTheme() {
+		applyTheme(theme === 'light' ? 'dark' : 'light');
+	}
+
+	onMount(() => {
+		const saved = localStorage.getItem(THEME_KEY);
+		if (saved === 'light' || saved === 'dark') {
+			applyTheme(saved);
+			return;
+		}
+
+		const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+		applyTheme(prefersDark ? 'dark' : 'light');
+	});
+</script>
+
 <div class="min-h-screen bg-base-200">
 	<div class="navbar bg-base-100 shadow-sm">
 		<div class="navbar-start">
-			<a class="btn btn-ghost text-xl" href="/">WikiGlop</a>
+			<a class="btn btn-ghost text-xl" href="/">GloopGlop</a>
 		</div>
 		<div class="navbar-center hidden md:flex">
 			<ul class="menu menu-horizontal px-1">
@@ -11,6 +43,18 @@
 			</ul>
 		</div>
 		<div class="navbar-end">
+			<button
+				class="btn btn-ghost btn-circle mr-2"
+				type="button"
+				aria-label="Toggle theme"
+				onclick={toggleTheme}
+			>
+				{#if theme === 'dark'}
+					<IconSun class="h-5 w-5" />
+				{:else}
+					<IconMoon class="h-5 w-5" />
+				{/if}
+			</button>
 			<a class="btn btn-primary" href="#get-started">Get Started</a>
 		</div>
 	</div>

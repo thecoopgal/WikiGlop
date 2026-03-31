@@ -1,0 +1,43 @@
+id: gloopglop
+name: GloopGlop
+hosts:
+  - gloopglop.com
+  - www.gloopglop.com
+
+kind: platform
+
+theme:
+  preset: gloopglop
+  mode: dark
+  overrides:
+    primary: "#7c3aed"
+    secondary: "#22d3ee"
+    accent: "#ec4899"
+    neutral: "#1f2937"
+    base-100: "#0f172a"
+    base-200: "#111827"
+    base-300: "#1f2937"
+    base-content: "#f8fafc"
+    info: "#38bdf8"
+    success: "#22c55e"
+    warning: "#f59e0b"
+    error: "#ef4444"
+
+navigation:
+  header:
+    - label: Home
+      href: /
+    - label: Bylaws
+      href: /bylaws
+    - label: Join
+      href: /join
+      open_mode: modal
+
+routing:
+  default_page: index
+
+permissions:
+  view: public
+  propose: members
+  edit: restricted
+  edit_mode: proposal_required

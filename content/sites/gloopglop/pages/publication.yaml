@@ -1,0 +1,67 @@
+id: publication_slug
+title: Publication Title
+path: /publication_slug
+layout: publication
+
+seo:
+  title: Publication Title
+  description: Description of the publication.
+  image: /media/publications/cover.jpg
+
+page_settings:
+  show_header: true
+  show_footer: true
+  table_of_contents: true
+  max_width: xl
+
+blocks:
+  - type: publication_header
+    id: top
+    title: Publication Title
+    subtitle: Optional subtitle
+    cover_image: /media/publications/cover.jpg
+
+  - type: markdown
+    id: intro
+    content: |
+      Intro text for the publication.
+
+  - type: gallery
+    id: pages
+    title: Pages
+    items:
+      - image: /media/publications/page-1.jpg
+        alt: Publication page 1
+      - image: /media/publications/page-2.jpg
+        alt: Publication page 2
+
+  - type: section
+    id: creators
+    title: Creators
+    blocks:
+      - type: people
+        items:
+          - name: Person One
+            role: Writer
+            bio: Short bio
+            image: /media/people/person-one.jpg
+          - name: Person Two
+            role: Designer
+            bio: Short bio
+            image: /media/people/person-two.jpg
+
+  - type: markdown
+    id: credits
+    content: |
+      Additional credits, acknowledgements, or notes.
+
+  - type: links
+    id: related
+    title: Related Links
+    style: inline
+    items:
+      - label: Join
+        href: /join
+        open_mode: modal
+      - label: Back Home
+        href: /

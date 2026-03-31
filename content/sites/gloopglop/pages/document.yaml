@@ -1,0 +1,71 @@
+id: document
+title: Document Title
+path: /document
+layout: document
+
+seo:
+  title: Document Title
+  description: Public document description.
+
+permissions:
+  view: public
+  propose: members
+  edit_mode: proposal_required
+
+page_settings:
+  show_header: true
+  show_footer: true
+  table_of_contents: true
+  show_last_updated: true
+  show_edit_history: true
+  max_width: prose
+
+blocks:
+  - type: document_header
+    id: top
+    title: Document Title
+    summary: Short overview of the document.
+
+  - type: heading
+    id: section-1
+    level: 2
+    text: Section 1
+
+  - type: markdown
+    id: section-1-body
+    content: |
+      Put the section text here.
+
+      This can be markdown content.
+
+  - type: heading
+    id: section-2
+    level: 2
+    text: Section 2
+
+  - type: markdown
+    id: section-2-body
+    content: |
+      More document content.
+
+  - type: quote
+    id: quote-1
+    text: A highlighted quote or principle.
+    citation: Optional source or note
+
+  - type: callout
+    id: note-1
+    variant: info
+    title: Editing Note
+    content: This page accepts proposed edits from members.
+
+  - type: links
+    id: related-docs
+    title: Related Pages
+    style: inline
+    items:
+      - label: Join
+        href: /join
+        open_mode: modal
+      - label: Home
+        href: /

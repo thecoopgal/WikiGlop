@@ -1,0 +1,35 @@
+id: index
+title: GloopGlop
+path: /
+layout: landing
+
+seo:
+  title: GloopGlop
+  description: Creator-owned links, shared spaces, and cooperative tooling.
+
+blocks:
+  - type: hero
+    id: hero
+    headline: GloopGlop
+    subheadline: Creator-owned links, communities, and cooperative infrastructure.
+    cta:
+      - label: Join GloopGlop
+        href: /join
+        open_mode: modal
+      - label: Read the Bylaws
+        href: /bylaws
+
+  - type: links
+    id: main-links
+    title: Explore
+    style: stacked
+    items:
+      - label: Join
+        href: /join
+        open_mode: modal
+      - label: Bylaws
+        href: /bylaws
+      - label: TKC
+        href: https://tkc.gloopglop.com
+      - label: The Paper Jelly
+        href: https://thepaperjelly.gloopglop.com
