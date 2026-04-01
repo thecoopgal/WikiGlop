@@ -1,0 +1,24 @@
+id: tkc
+name: Tuscaloosa Kaleidoscope Collective
+hosts:
+  - tkc.localhost
+  - 127.0.0.1
+  - tkc.gloopglop.com
+  - www.tkc.gloopglop.com
+
+kind: platform
+
+theme:
+  preset: gloopglop
+  mode: light
+  overrides:
+
+
+routing:
+  default_page: index
+
+permissions:
+  view: public
+  propose: members
+  edit: restricted
+  edit_mode: proposal_required

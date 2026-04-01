@@ -1,0 +1,43 @@
+id: index
+title: The Kaleidoscope Collective
+path: /
+layout: creator_links
+
+seo:
+  title: The Kaleidoscope Collective
+  image: https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/d1e965ad-d6c8-43c0-dfd5-0e28f0c2c300/public
+
+page_settings:
+  show_header: true
+  show_footer: true
+  max_width: sm
+
+blocks:
+  - type: creator_profile
+    id: profile
+    name: The Kaleidoscope Collective
+    tagline: We are a collective of creators who like to create cool things for other creators.
+    avatar: https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/d1e965ad-d6c8-43c0-dfd5-0e28f0c2c300/public
+    bio: |
+     
+
+    short_links:
+      - label: Creators
+        icon: users
+        href: https://www.tkc.gloopglop.com/creators
+
+  - type: links
+    id: social-links
+    title:
+    style: cards
+    items:
+      - label: Join Our Collective
+        href: "#"
+        open_mode: modal
+        modal: join
+        logo_override: https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/d1e965ad-d6c8-43c0-dfd5-0e28f0c2c300/public
+      - label: Our Creators
+        href: https://www.tkc.gloopglop.com/creators
+      - label: Our Projects
+        href: https://www.tkc.gloopglop.com/projects
+

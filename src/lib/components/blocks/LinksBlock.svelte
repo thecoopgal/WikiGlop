@@ -8,6 +8,7 @@
 			open_mode?: string;
 			modal?: string;
 			open_in?: 'same_tab' | 'new_tab' | string;
+			logo_override?: string;
 			status?: string;
 			message?: string;
 		}>;
@@ -54,6 +55,13 @@
 			return GLOOPGLOP_LOGO_URL;
 		}
 		return getFavicon(href);
+	}
+
+	function resolveCardIcon(item: NonNullable<Props['items']>[number]): string | null {
+		const override = (item.logo_override ?? '').trim();
+		if (override) return override;
+		if (item.open_mode === 'modal') return GLOOPGLOP_LOGO_URL;
+		return getCardIcon(item.href);
 	}
 
 	function isExternal(href: string | undefined): boolean {
@@ -106,6 +114,7 @@
 		{:else if mode === 'cards'}
 			<div class="grid gap-3">
 				{#each items as item}
+					{@const cardIcon = resolveCardIcon(item)}
 					{#if item.status === 'not_found' || !item.href}
 						<div class="card border border-warning/40 bg-base-100">
 							<div class="card-body p-4">
@@ -124,9 +133,9 @@
 						>
 							<div class="card-body p-4">
 								<div class="flex items-center gap-3">
-									{#if getCardIcon(item.href)}
+									{#if cardIcon}
 										<img
-											src={getCardIcon(item.href) ?? undefined}
+											src={cardIcon}
 											alt=""
 											class="h-6 w-6 rounded"
 											loading="lazy"
