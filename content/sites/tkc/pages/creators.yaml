@@ -1,10 +1,11 @@
-id: index
-title: The Kaleidoscope Collective
-path: /
+id: creators
+title: The Kaleidoscope Collective Creators
+path: /creators
 layout: creator_links
 
 seo:
-  title: The Kaleidoscope Collective
+  title: The Kaleidoscope Collective Creators
+  description: We are the Kaleidoscope
   image: https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/d1e965ad-d6c8-43c0-dfd5-0e28f0c2c300/public
 
 page_settings:
@@ -19,25 +20,22 @@ blocks:
     tagline: We are a collective of creators who like to create cool things for other creators.
     avatar: https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/d1e965ad-d6c8-43c0-dfd5-0e28f0c2c300/public
     bio: |
-     
-
+      We are a collective creators who like to create cool tools for other creators.
     short_links:
-      - label: Creators
+      - label: Home
+        icon: home
+        open_in: same_tab
+        href: /
+      - label: Our Creators
         icon: users
-        href: https://www.tkc.gloopglop.com/creators
+        open_in: same_tab
+        href: /creators
 
   - type: links
     id: social-links
-    title:
+    title: Our Amazing Creators
     style: cards
     items:
-      - label: Join Our Collective
-        href: "#"
-        open_mode: modal
-        modal: join
-        logo_override: https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/d1e965ad-d6c8-43c0-dfd5-0e28f0c2c300/public
-      - label: Our Creators
-        href: /creators
-      - label: Our Projects
-        href: /projects
+      - source: "@thecoopgal"
+      - source: "@thepaperjelly"
 

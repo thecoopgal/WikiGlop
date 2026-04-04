@@ -2,6 +2,7 @@ id: join
 title: Join GloopGlop
 layout: form
 render_mode: modal
+send_email: thecoopgal@gmail.com
 
 form:
   id: gloopglop_join

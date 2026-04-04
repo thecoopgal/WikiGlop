@@ -1,0 +1,31 @@
+id: demo-fcu
+title: Demo Federal Credit Union
+layout: ratesdotcoop
+
+seo:
+  title: Demo FCU — Rates.coop
+
+page_settings:
+  max_width: sm
+
+blocks:
+  - type: creator_profile
+    id: profile
+    name: Demo Federal Credit Union
+    tagline: Your money. Your community.
+    avatar: https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/907061a8-51ae-454c-c739-83935616f900/public
+    bio: |
+      Demo profile for Rates.coop — replace with real copy, rates tables, and compliance text.
+    short_links:
+      - label: Savings rates
+        icon: document
+        open_in: new_tab
+        href: https://example.org/savings
+
+  - type: links
+    id: social
+    title: Links
+    style: stacked
+    items:
+      - label: Federally insured by NCUA
+        href: https://www.ncua.gov

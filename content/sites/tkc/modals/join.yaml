@@ -2,6 +2,7 @@ id: join
 title: Join The Kaleidoscope Collective
 layout: form
 render_mode: modal
+send_email: thecoopgal@gmail.com
 
 form:
   id: tkc_join

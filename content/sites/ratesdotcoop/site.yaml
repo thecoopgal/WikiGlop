@@ -1,0 +1,27 @@
+id: ratesdotcoop
+name: Rates.coop
+kind: ratesdotcoop
+
+# Production URL is rates.coop — point DNS here. Dev: ratesdotcoop.localhost.
+# (A subdomain like ratesdotcoop.gloopglop.com is NOT required; hosts below are authoritative.)
+hosts:
+  - ratesdotcoop.localhost
+  - rates.coop
+  - www.rates.coop
+
+theme:
+  preset: light
+  mode: light
+
+navigation:
+  header:
+    - label: Home
+      href: /
+    - label: Example profile
+      href: /example-community
+
+routing:
+  default_page: index
+
+permissions:
+  view: public

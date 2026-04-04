@@ -7,6 +7,9 @@
 	import DocumentPage from '$lib/components/page-layouts/DocumentPage.svelte';
 	import PublicationPage from '$lib/components/page-layouts/PublicationPage.svelte';
 	import CreatorLinksPage from '$lib/components/page-layouts/CreatorLinksPage.svelte';
+	import RatesdotcoopPage from '$lib/components/page-layouts/RatesdotcoopPage.svelte';
+	import { collectFormFieldValues, postFormEmail } from '$lib/form-submit-client';
+	import Icons8BoogerAttribution from '$lib/components/Icons8BoogerAttribution.svelte';
 
 	let { data } = $props();
 
@@ -88,6 +91,35 @@
 	function fieldId(name: string) {
 		return `modal-field-${name}`;
 	}
+
+	let modalSubmitState = $state<'idle' | 'loading' | 'success' | 'error'>('idle');
+	let modalSubmitError = $state('');
+
+	$effect(() => {
+		activeModalId;
+		modalSubmitState = 'idle';
+		modalSubmitError = '';
+	});
+
+	async function handleModalFormSubmit(e: SubmitEvent) {
+		e.preventDefault();
+		const m = activeModal;
+		if (!m?.send_email?.trim() || !m.form?.fields?.length) return;
+		const id = activeModalId;
+		if (!id) return;
+		const formEl = e.currentTarget as HTMLFormElement;
+		modalSubmitState = 'loading';
+		modalSubmitError = '';
+		const values = collectFormFieldValues(formEl, m.form.fields);
+		const result = await postFormEmail({ kind: 'modal', modalId: id }, values);
+		if (!result.ok) {
+			modalSubmitState = 'error';
+			modalSubmitError = result.error;
+			return;
+		}
+		modalSubmitState = 'success';
+		formEl.reset();
+	}
 </script>
 
 <svelte:head>
@@ -98,7 +130,7 @@
 </svelte:head>
 
 <div
-	class="min-h-screen bg-base-200"
+	class="flex min-h-screen flex-col bg-base-200"
 	data-theme={themeName}
 	style={pageBg ? `background-color: ${pageBg};` : undefined}
 >
@@ -120,21 +152,25 @@
 		</div>
 	{/if}
 
-	<main>
+	<main class="flex-1">
 		{#if layout === 'landing'}
 			<LandingPage site={data.site} page={data.page} />
 		{:else if layout === 'form'}
-			<FormPage site={data.site} page={data.page} />
+			<FormPage site={data.site} page={data.page} formSlugParts={data.formSlugParts ?? []} />
 		{:else if layout === 'document'}
 			<DocumentPage site={data.site} page={data.page} />
 		{:else if layout === 'publication'}
 			<PublicationPage site={data.site} page={data.page} />
 		{:else if layout === 'creator_links'}
 			<CreatorLinksPage site={data.site} page={data.page} />
+		{:else if layout === 'ratesdotcoop'}
+			<RatesdotcoopPage site={data.site} page={data.page} />
 		{:else}
 			<LandingPage site={data.site} page={data.page} />
 		{/if}
 	</main>
+
+	<Icons8BoogerAttribution />
 
 	{#if activeModal}
 		{#if activeModal.layout === 'form'}
@@ -144,54 +180,87 @@
 					{#if activeModal.form?.intro}
 						<p class="mt-2 opacity-80">{activeModal.form.intro}</p>
 					{/if}
-					<form method="post" onsubmit={(e) => e.preventDefault()} class="mt-4 space-y-4">
-						{#each activeModal.form?.fields ?? [] as field}
-							<div>
-								<label class="mb-1 block text-sm font-medium" for={fieldId(field.name)}
-									>{field.label ?? field.name}</label
-								>
-								{#if field.type === 'textarea'}
-									<textarea
-										id={fieldId(field.name)}
-										class="textarea textarea-bordered w-full"
-										name={field.name}
-										rows={typeof field.rows === 'number' ? field.rows : 4}
-										placeholder={field.placeholder}
-									></textarea>
-								{:else if field.type === 'select'}
-									<select id={fieldId(field.name)} class="select select-bordered w-full" name={field.name}>
-										<option disabled selected value="">Select...</option>
-										{#each field.options ?? [] as opt}
-											<option value={opt.value}>{opt.label}</option>
-										{/each}
-									</select>
-								{:else if field.type === 'checkbox'}
-									<label class="label cursor-pointer justify-start gap-3">
-										<input type="checkbox" class="checkbox checkbox-primary" name={field.name} />
-										<span class="label-text">{field.label ?? field.name}</span>
-									</label>
-								{:else}
-									<input
-										id={fieldId(field.name)}
-										class="input input-bordered w-full"
-										type={field.type === 'email' ? 'email' : 'text'}
-										name={field.name}
-										placeholder={field.placeholder}
-										autocomplete="off"
-									/>
-								{/if}
-							</div>
-						{/each}
 
+					{#if modalSubmitState === 'success'}
+						<p class="mt-4 text-success font-medium">
+							{activeModal.form?.success_message ?? 'Thanks — your submission was sent.'}
+						</p>
 						<div class="mt-6 flex gap-3">
-							<button type="submit" class="btn btn-primary">
-								{activeModal.form?.submit_label ?? 'Submit'}
-							</button>
-							<button type="button" class="btn btn-ghost" onclick={closeModal}>
-								{activeModal.form?.cancel_label ?? 'Cancel'}
-							</button>
+							<button type="button" class="btn btn-primary" onclick={closeModal}>Done</button>
 						</div>
-					</form>
+					{:else}
+						<form method="post" class="mt-4 space-y-4" onsubmit={handleModalFormSubmit}>
+							{#each activeModal.form?.fields ?? [] as field}
+								<div>
+									<label class="mb-1 block text-sm font-medium" for={fieldId(field.name)}
+										>{field.label ?? field.name}</label
+									>
+									{#if field.type === 'textarea'}
+										<textarea
+											id={fieldId(field.name)}
+											class="textarea textarea-bordered w-full"
+											name={field.name}
+											rows={typeof field.rows === 'number' ? field.rows : 4}
+											placeholder={field.placeholder}
+											disabled={modalSubmitState === 'loading'}
+										></textarea>
+									{:else if field.type === 'select'}
+										<select
+											id={fieldId(field.name)}
+											class="select select-bordered w-full"
+											name={field.name}
+											disabled={modalSubmitState === 'loading'}
+										>
+											<option disabled selected value="">Select...</option>
+											{#each field.options ?? [] as opt}
+												<option value={opt.value}>{opt.label}</option>
+											{/each}
+										</select>
+									{:else if field.type === 'checkbox'}
+										<label class="label cursor-pointer justify-start gap-3">
+											<input
+												type="checkbox"
+												class="checkbox checkbox-primary"
+												name={field.name}
+												disabled={modalSubmitState === 'loading'}
+											/>
+											<span class="label-text">{field.label ?? field.name}</span>
+										</label>
+									{:else}
+										<input
+											id={fieldId(field.name)}
+											class="input input-bordered w-full"
+											type={field.type === 'email' ? 'email' : 'text'}
+											name={field.name}
+											placeholder={field.placeholder}
+											autocomplete="off"
+											disabled={modalSubmitState === 'loading'}
+										/>
+									{/if}
+								</div>
+							{/each}
+
+							{#if modalSubmitState === 'error' && modalSubmitError}
+								<p class="text-sm text-error">{modalSubmitError}</p>
+							{/if}
+
+							<div class="mt-6 flex gap-3">
+								<button type="submit" class="btn btn-primary" disabled={modalSubmitState === 'loading'}>
+									{modalSubmitState === 'loading'
+										? 'Sending…'
+										: (activeModal.form?.submit_label ?? 'Submit')}
+								</button>
+								<button
+									type="button"
+									class="btn btn-ghost"
+									onclick={closeModal}
+									disabled={modalSubmitState === 'loading'}
+								>
+									{activeModal.form?.cancel_label ?? 'Cancel'}
+								</button>
+							</div>
+						</form>
+					{/if}
 				</div>
 				<div class="modal-backdrop">
 					<button type="button" onclick={closeModal}>close</button>

@@ -1,0 +1,40 @@
+id: example-community
+title: Example Community Credit Union
+layout: ratesdotcoop
+
+seo:
+  title: Example Community Credit Union — Rates.coop
+  description: Member rates, branches, and links.
+
+page_settings:
+  max_width: sm
+
+blocks:
+  - type: creator_profile
+    id: profile
+    name: Example Community Credit Union
+    tagline: Banking on community since 1952
+    avatar: https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/907061a8-51ae-454c-c739-83935616f900/public
+    bio: |
+      Serving members in the tri-county area with savings, loans, and digital banking.
+    short_links:
+      - label: Loan rates
+        icon: document
+        open_in: same_tab
+        href: https://example.com/rates
+      - label: Find a branch
+        icon: users
+        open_in: new_tab
+        href: https://example.com/branches
+
+  - type: links
+    id: connect
+    title: Connect
+    style: cards
+    items:
+      - label: Website
+        href: https://example.com
+      - label: Mobile app
+        href: https://example.com/app
+      - label: Contact
+        href: https://example.com/contact

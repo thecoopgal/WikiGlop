@@ -15,6 +15,6 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 	const hydratedPage = await expandCreatorLinksShortcuts(site, page, url);
 
 	const modals = await loadAllModals(site);
-	return { site, page: hydratedPage, modals, initialModalId: null };
+	return { site, page: hydratedPage, modals, initialModalId: null, formSlugParts: [] as string[] };
 };
 

@@ -57,6 +57,7 @@ export type PageYaml = {
 	path?: string;
 	layout: string;
 	render_mode?: 'modal' | string;
+	send_email?: string;
 	seo?: PageSeo;
 	blocks?: PageBlock[];
 	form?: PageForm;
@@ -158,7 +159,7 @@ function buildAbsoluteUrl(host: string, requestUrl: URL): string {
 	return `${requestUrl.protocol}//${host}${portPart}`;
 }
 
-function parsePageYaml(raw: string, filePathForError: string): PageYaml {
+export function parsePageYaml(raw: string, filePathForError: string): PageYaml {
 	const parsed = parseYaml(raw);
 	if (!isRecord(parsed)) throw new Error(`Invalid YAML structure in ${filePathForError}`);
 
@@ -177,6 +178,10 @@ function parsePageYaml(raw: string, filePathForError: string): PageYaml {
 		path: typeof parsed.path === 'string' ? parsed.path : undefined,
 		layout: layout.trim(),
 		render_mode: typeof parsed.render_mode === 'string' ? parsed.render_mode : undefined,
+		send_email:
+			typeof parsed.send_email === 'string' && parsed.send_email.trim()
+				? parsed.send_email.trim()
+				: undefined,
 		seo: isRecord(parsed.seo) ? (parsed.seo as PageSeo) : undefined,
 		page_settings: isRecord(parsed.page_settings) ? (parsed.page_settings as PageSettings) : undefined,
 		permissions: isRecord(parsed.permissions) ? (parsed.permissions as Record<string, unknown>) : undefined,
