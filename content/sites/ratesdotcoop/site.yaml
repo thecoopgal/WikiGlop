@@ -2,12 +2,15 @@ id: ratesdotcoop
 name: Rates.coop
 kind: ratesdotcoop
 
-# Production URL is rates.coop — point DNS here. Dev: ratesdotcoop.localhost.
-# (A subdomain like ratesdotcoop.gloopglop.com is NOT required; hosts below are authoritative.)
+# Live: point ratesdotcoop.com + www at this app (TLS in Cloudflare/hosting).
+# Planned: add rates.coop + www when DNS is ready — listed below so the app accepts them then.
+# Dev: ratesdotcoop.localhost
 hosts:
   - ratesdotcoop.localhost
   - rates.coop
   - www.rates.coop
+  - ratesdotcoop.com
+  - www.ratesdotcoop.com
 
 theme:
   preset: light
