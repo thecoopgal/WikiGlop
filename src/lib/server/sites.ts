@@ -73,6 +73,31 @@ function safeStringArray(v: unknown): string[] | undefined {
 	return out.length ? out : undefined;
 }
 
+function normalizeTheme(themeRaw: unknown): SiteTheme | undefined {
+	if (!themeRaw || typeof themeRaw !== 'object') return undefined;
+	const theme = themeRaw as SiteTheme;
+	const preset = typeof theme.preset === 'string' ? theme.preset.trim().toLowerCase() : '';
+	const mode = typeof theme.mode === 'string' ? theme.mode.trim().toLowerCase() : '';
+	const overrides = theme.overrides && typeof theme.overrides === 'object' ? { ...theme.overrides } : undefined;
+
+	// Preset defaults: keep explicit site overrides, but supply a consistent baseline.
+	const effectiveTheme = preset === 'light' || preset === 'dark' ? preset : mode;
+	if (preset === 'gloopglop' && effectiveTheme !== 'dark') {
+		return {
+			...theme,
+			overrides: {
+				'base-200': '#F4F7FA',
+				...(overrides ?? {})
+			}
+		};
+	}
+
+	return {
+		...theme,
+		overrides
+	};
+}
+
 async function loadSiteConfig(siteId: string): Promise<ResolvedSite | null> {
 	const filePath = `/content/sites/${siteId}/site.yaml`;
 	const raw = SITE_YAML_FILES[filePath];
@@ -102,7 +127,7 @@ async function loadSiteConfig(siteId: string): Promise<ResolvedSite | null> {
 		name: typeof obj.name === 'string' ? obj.name : undefined,
 		kind: typeof obj.kind === 'string' ? obj.kind : undefined,
 		hosts,
-		theme: obj.theme && typeof obj.theme === 'object' ? (obj.theme as SiteTheme) : undefined,
+		theme: normalizeTheme(obj.theme),
 		navigation: (() => {
 			if (!obj.navigation || typeof obj.navigation !== 'object') return undefined;
 			const navObj = obj.navigation as Record<string, unknown>;
