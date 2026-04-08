@@ -34,6 +34,10 @@ import IconDownload from '~icons/mdi/download';
 		siteId?: string;
 		name?: string;
 		hosts?: string[];
+		theme?: {
+			preset?: string;
+			mode?: string;
+		};
 		routing?: {
 			gloop_gg_short_slug?: string;
 		};
@@ -44,8 +48,10 @@ let { name, tagline, avatar, bio, short_links, site } = $props() as Props;
 
 	const cardShadow = 'shadow-[0px_1px_3px_rgba(0,0,0,0.15)]';
 const GLOOP_SHORT_HOST = 'gloop.gg';
-const SHARE_ICON_URL =
+const SHARE_ICON_LIGHT_URL =
 	'https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/20ec55d3-136b-4ad6-f33a-12de645f5800/public';
+const SHARE_ICON_DARK_URL =
+	'https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/7b2e7e40-67c2-4618-c73b-b97537901e00/public';
 const BRAND_ICON_URL =
 	'https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/907061a8-51ae-454c-c739-83935616f900/public';
 
@@ -134,6 +140,12 @@ const shortPathLabel = $derived.by(() => {
 	const u = new URL(window.location.href);
 	const pagePath = u.pathname === '/' ? '' : u.pathname;
 	return `${GLOOP_SHORT_HOST}/${encodeURIComponent(key)}${pagePath}${u.search}`;
+});
+const shareIconUrl = $derived.by(() => {
+	const preset = site?.theme?.preset?.toLowerCase();
+	const mode = site?.theme?.mode?.toLowerCase();
+	const effectiveTheme = preset === 'light' || preset === 'dark' ? preset : mode;
+	return effectiveTheme === 'dark' ? SHARE_ICON_DARK_URL : SHARE_ICON_LIGHT_URL;
 });
 const qrUrl = $derived(
 	shortUrl
@@ -398,7 +410,7 @@ function onShareTouchEnd(e: TouchEvent) {
 						aria-label="Share page"
 						title="Share page"
 					>
-						<img src={SHARE_ICON_URL} alt="" class="h-5 w-5 object-contain" />
+						<img src={shareIconUrl} alt="" class="h-5 w-5 object-contain" />
 					</button>
 				</div>
 				<div class="flex flex-col items-center gap-4">
