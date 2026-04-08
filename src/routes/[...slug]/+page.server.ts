@@ -1,7 +1,6 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { expandCreatorLinksShortcuts, loadAllModals, loadPageYaml } from '$lib/server/content';
-import { isRatesdotcoopSite, loadCreditUnionProfileYaml } from '$lib/server/ratesdotcoop';
 
 function normalizeSlugParts(slugParam: unknown): string[] {
 	// In `[...slug]`, params.slug is usually a single string like "bylaws" or "a/b".
@@ -55,15 +54,6 @@ export const load: PageServerLoad = async ({ params, locals, url }) => {
 				initialModalId: modalId,
 				formSlugParts: [] as string[]
 			};
-		}
-	}
-
-	// rates.coop: /{slug} credit union profile (filesystem YAML under profiles/, not pages/).
-	if (slugParts.length === 1 && isRatesdotcoopSite(site)) {
-		const cu = loadCreditUnionProfileYaml(site, slugParts[0]);
-		if (cu) {
-			const hydrated = await expandCreatorLinksShortcuts(site, cu, url);
-			return { site, page: hydrated, modals, initialModalId: null, formSlugParts: slugParts };
 		}
 	}
 

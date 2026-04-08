@@ -13,6 +13,12 @@ theme:
   mode: light
   overrides:
 
+navigation:
+  header:
+    - label: Home
+      href: /
+    - label: Tuscaloosa mutual aid
+      href: /tuscaloosamutualaid
 
 routing:
   default_page: index

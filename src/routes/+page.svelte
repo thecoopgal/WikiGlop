@@ -7,7 +7,6 @@
 	import DocumentPage from '$lib/components/page-layouts/DocumentPage.svelte';
 	import PublicationPage from '$lib/components/page-layouts/PublicationPage.svelte';
 	import CreatorLinksPage from '$lib/components/page-layouts/CreatorLinksPage.svelte';
-	import RatesdotcoopPage from '$lib/components/page-layouts/RatesdotcoopPage.svelte';
 	import { collectFormFieldValues, postFormEmail } from '$lib/form-submit-client';
 	import Icons8BoogerAttribution from '$lib/components/Icons8BoogerAttribution.svelte';
 
@@ -163,8 +162,6 @@
 			<PublicationPage site={data.site} page={data.page} />
 		{:else if layout === 'creator_links'}
 			<CreatorLinksPage site={data.site} page={data.page} />
-		{:else if layout === 'ratesdotcoop'}
-			<RatesdotcoopPage site={data.site} page={data.page} />
 		{:else}
 			<LandingPage site={data.site} page={data.page} />
 		{/if}

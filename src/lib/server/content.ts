@@ -159,7 +159,7 @@ function buildAbsoluteUrl(host: string, requestUrl: URL): string {
 	return `${requestUrl.protocol}//${host}${portPart}`;
 }
 
-export function parsePageYaml(raw: string, filePathForError: string): PageYaml {
+function parsePageYaml(raw: string, filePathForError: string): PageYaml {
 	const parsed = parseYaml(raw);
 	if (!isRecord(parsed)) throw new Error(`Invalid YAML structure in ${filePathForError}`);
 
