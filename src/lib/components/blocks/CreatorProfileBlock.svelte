@@ -16,6 +16,7 @@ import IconCopy from '~icons/mdi/content-copy';
 import IconQrCode from '~icons/mdi/qrcode';
 import IconProfile from '~icons/mdi/account-circle-outline';
 import IconMore from '~icons/mdi/dots-horizontal-circle-outline';
+import IconDownload from '~icons/mdi/download';
 
 	type Props = {
 		name?: string;
@@ -45,13 +46,17 @@ let { name, tagline, avatar, bio, short_links, site } = $props() as Props;
 const GLOOP_SHORT_HOST = 'gloop.gg';
 const SHARE_ICON_URL =
 	'https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/20ec55d3-136b-4ad6-f33a-12de645f5800/public';
+const BRAND_ICON_URL =
+	'https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/907061a8-51ae-454c-c739-83935616f900/public';
 let showShareModal = $state(false);
 let copyState = $state<'idle' | 'copied' | 'error'>('idle');
+let qrCopyState = $state<'idle' | 'copied' | 'error'>('idle');
 let showQrCode = $state(false);
 let shareTouchStartX = 0;
 let shareTouchActive = false;
 let linkCopied = $state(false);
 let linkCopiedTimer: ReturnType<typeof setTimeout> | null = null;
+let downloadState = $state<'idle' | 'loading' | 'error'>('idle');
 
 function isLocalLikeHost(hostname: string): boolean {
 	return hostname === 'localhost' || hostname.endsWith('.localhost') || hostname === '127.0.0.1';
@@ -195,6 +200,133 @@ async function shareMore() {
 	await copyShortUrl();
 }
 
+async function copyQrImageToClipboard() {
+	if (!qrUrl) return;
+	try {
+		if (typeof navigator === 'undefined' || !navigator.clipboard || typeof ClipboardItem === 'undefined') {
+			throw new Error('Clipboard image API unavailable');
+		}
+		const res = await fetch(qrUrl);
+		if (!res.ok) throw new Error(`QR fetch failed: ${res.status}`);
+		const blob = await res.blob();
+		await navigator.clipboard.write([new ClipboardItem({ [blob.type || 'image/png']: blob })]);
+		qrCopyState = 'copied';
+		setTimeout(() => {
+			qrCopyState = 'idle';
+		}, 5000);
+	} catch {
+		qrCopyState = 'error';
+	}
+}
+
+function slugifyForFileName(v: string): string {
+	return v
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/^-+|-+$/g, '') || 'glop';
+}
+
+async function imageUrlToDataUrl(url: string): Promise<string> {
+	const res = await fetch(url);
+	if (!res.ok) throw new Error(`Image fetch failed: ${res.status}`);
+	const blob = await res.blob();
+	return await new Promise<string>((resolve, reject) => {
+		const reader = new FileReader();
+		reader.onload = () => resolve(String(reader.result ?? ''));
+		reader.onerror = () => reject(new Error('Could not read image data'));
+		reader.readAsDataURL(blob);
+	});
+}
+
+async function circularImageDataUrl(sourceDataUrl: string, size = 512): Promise<string> {
+	return await new Promise<string>((resolve, reject) => {
+		const img = new Image();
+		img.onload = () => {
+			try {
+				const canvas = document.createElement('canvas');
+				canvas.width = size;
+				canvas.height = size;
+				const ctx = canvas.getContext('2d');
+				if (!ctx) throw new Error('Canvas context unavailable');
+
+				ctx.clearRect(0, 0, size, size);
+				ctx.save();
+				ctx.beginPath();
+				ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+				ctx.closePath();
+				ctx.clip();
+				ctx.drawImage(img, 0, 0, size, size);
+				ctx.restore();
+
+				resolve(canvas.toDataURL('image/png'));
+			} catch (e) {
+				reject(e instanceof Error ? e : new Error('Could not create circular image'));
+			}
+		};
+		img.onerror = () => reject(new Error('Could not load avatar image'));
+		img.src = sourceDataUrl;
+	});
+}
+
+async function downloadBusinessCardPdf() {
+	if (!shortUrl || !qrUrl || downloadState === 'loading') return;
+	downloadState = 'loading';
+	try {
+		const { jsPDF } = await import('jspdf');
+
+		const [avatarDataUrl, qrDataUrl, brandDataUrl] = await Promise.all([
+			avatar ? imageUrlToDataUrl(avatar) : Promise.resolve(''),
+			imageUrlToDataUrl(qrUrl),
+			imageUrlToDataUrl(BRAND_ICON_URL)
+		]);
+		const avatarCircleDataUrl = avatarDataUrl ? await circularImageDataUrl(avatarDataUrl, 600) : '';
+
+		// Standard US business card: 3.5in x 2in. Styled to match share-card mock.
+		const pdf = new jsPDF({ orientation: 'landscape', unit: 'in', format: [3.5, 2] });
+		pdf.setFillColor(244, 247, 250);
+		pdf.rect(0, 0, 3.5, 2, 'F');
+		pdf.setDrawColor(124, 58, 237);
+		pdf.setLineWidth(0.01);
+		pdf.rect(0.02, 0.02, 3.46, 1.96, 'S');
+
+		pdf.setFont('helvetica', 'bold');
+		pdf.setFontSize(0.22 * 72);
+		pdf.setTextColor(10, 10, 10);
+		pdf.text(name ?? site?.name ?? site?.id ?? 'Glop', 1.75, 0.42, { align: 'center' });
+
+		if (avatarCircleDataUrl) {
+			pdf.addImage(avatarCircleDataUrl, 'PNG', 0.22, 0.76, 0.62, 0.62);
+			pdf.setDrawColor(40, 40, 40);
+			pdf.setLineWidth(0.02);
+			pdf.circle(0.53, 1.07, 0.31, 'S');
+		}
+
+		pdf.addImage(qrDataUrl, 'PNG', 1.33, 0.56, 0.84, 0.84);
+		if (brandDataUrl) {
+			pdf.addImage(brandDataUrl, 'PNG', 2.52, 0.79, 0.56, 0.56);
+		}
+
+		pdf.setFont('helvetica', 'bold');
+		pdf.setFontSize(0.2 * 72);
+		pdf.setTextColor(10, 10, 10);
+		pdf.text(shortPathLabel || '', 1.75, 1.78, { align: 'center' });
+
+		const base = slugifyForFileName(name ?? site?.siteId ?? site?.id ?? 'glop');
+		const blob = pdf.output('blob');
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement('a');
+		a.href = url;
+		a.download = `${base}-business-cards.pdf`;
+		document.body.appendChild(a);
+		a.click();
+		a.remove();
+		URL.revokeObjectURL(url);
+		downloadState = 'idle';
+	} catch {
+		downloadState = 'error';
+	}
+}
+
 function onShareTouchStart(e: TouchEvent) {
 	const touch = e.touches?.[0];
 	if (!touch) return;
@@ -225,6 +357,7 @@ function onShareTouchEnd(e: TouchEvent) {
 						onclick={() => {
 							showShareModal = true;
 							copyState = 'idle';
+							qrCopyState = 'idle';
 							showQrCode = false;
 							linkCopied = false;
 						}}
@@ -320,12 +453,27 @@ function onShareTouchEnd(e: TouchEvent) {
 									>
 										<IconProfile class="h-4 w-4" />
 									</button>
+									<button
+										type="button"
+										class="absolute right-0 top-1/2 -translate-y-1/2 p-0 bg-transparent border-0 shadow-none text-base-content/70 hover:text-base-content disabled:opacity-40"
+										onclick={downloadBusinessCardPdf}
+										aria-label="Download business card PDFs"
+										title="Download cards PDF"
+										disabled={downloadState === 'loading'}
+									>
+										<IconDownload class="h-4 w-4" />
+									</button>
 									{#if qrUrl}
 									<div class="flex flex-1 flex-col items-center">
 										<div class="flex flex-1 items-center justify-center">
 											<img src={qrUrl} alt="QR code for this page" class="h-[108px] w-[108px] rounded border border-base-300" />
 										</div>
 										<p class="mt-auto max-w-full truncate text-xs opacity-70">{shortPathLabel || '/'}</p>
+										{#if qrCopyState === 'copied'}
+											<p class="text-[11px] text-success">QR image copied.</p>
+										{:else if qrCopyState === 'error'}
+											<p class="text-[11px] text-error">Could not copy QR image.</p>
+										{/if}
 									</div>
 									{/if}
 								</div>
@@ -341,6 +489,12 @@ function onShareTouchEnd(e: TouchEvent) {
 							<span class="text-xs opacity-70">{linkCopied ? 'Copied' : 'Link'}</span>
 						</div>
 						<div class="flex w-16 flex-col items-center gap-1">
+							<button type="button" class="btn btn-circle btn-sm {cardShadow}" onclick={copyQrImageToClipboard} title="Copy QR image">
+								<IconQrCode class="h-4 w-4" />
+							</button>
+							<span class="text-xs opacity-70">{qrCopyState === 'copied' ? 'Copied' : 'QR'}</span>
+						</div>
+						<div class="flex w-16 flex-col items-center gap-1">
 							<button type="button" class="btn btn-circle btn-sm {cardShadow}" onclick={shareMore} title="More sharing options">
 								<IconMore class="h-4 w-4" />
 							</button>
@@ -349,6 +503,9 @@ function onShareTouchEnd(e: TouchEvent) {
 					</div>
 					{#if copyState === 'error'}
 						<p class="mt-2 text-sm text-error">Could not copy. Please copy manually.</p>
+					{/if}
+					{#if downloadState === 'error'}
+						<p class="mt-2 text-sm text-error">Could not generate card download.</p>
 					{/if}
 
 				</div>
