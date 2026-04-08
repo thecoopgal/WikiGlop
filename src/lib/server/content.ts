@@ -176,6 +176,13 @@ function buildAbsoluteUrl(host: string, requestUrl: URL): string {
 	return `${requestUrl.protocol}//${host}${portPart}`;
 }
 
+/** Protocol + host (+ port for local dev), using the same host rules as generated links (e.g. gloop.gg → *.gloopglop.com). */
+export function canonicalOriginForSite(site: ResolvedSite, requestUrl: URL): string | null {
+	const host = pickHostForRequest(site, requestUrl.hostname.toLowerCase());
+	if (!host) return null;
+	return buildAbsoluteUrl(host, requestUrl);
+}
+
 function parsePageYaml(raw: string, filePathForError: string): PageYaml {
 	const parsed = parseYaml(raw);
 	if (!isRecord(parsed)) throw new Error(`Invalid YAML structure in ${filePathForError}`);

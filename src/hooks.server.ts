@@ -1,3 +1,4 @@
+import { canonicalOriginForSite } from '$lib/server/content';
 import { getAllSites, resolveSiteByHostname, resolveSiteForGloopGgPath, resolveSiteById } from '$lib/server/sites';
 import type { Handle } from '@sveltejs/kit';
 import { dev } from '$app/environment';
@@ -18,6 +19,16 @@ export const handle: Handle = async ({ event, resolve }) => {
 				site = await resolveSiteById('gloopglop');
 			} else {
 				site = await resolveSiteForGloopGgPath(segments[0]);
+				if (site) {
+					const origin = canonicalOriginForSite(site, event.url);
+					if (origin) {
+						const rest = segments.slice(1);
+						const path =
+							rest.length > 0 ? `/${rest.map((s) => encodeURIComponent(s)).join('/')}` : '/';
+						const destination = `${origin}${path}${event.url.search}`;
+						return Response.redirect(destination, 301);
+					}
+				}
 				event.locals.gloopGgPageSlugParts = segments.slice(1);
 			}
 		} else {
