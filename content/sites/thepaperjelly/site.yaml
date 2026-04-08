@@ -18,6 +18,7 @@ theme:
 
 routing:
   default_page: index
+  gloop_gg_short_slug: tpj
 
 permissions:
   view: public
