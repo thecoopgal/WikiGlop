@@ -1,0 +1,31 @@
+id: not-found
+title: Page not found
+path: /not-found
+layout: landing
+
+seo:
+  title: Page not found
+  description: This page does not exist or has moved.
+
+page_settings:
+  show_header: true
+  max_width: md
+
+blocks:
+  - type: heading
+    id: title
+    level: 1
+    text: Page not found
+
+  - type: markdown
+    id: body
+    content: |
+      We could not find that page. It may have been removed, or the link might be wrong.
+
+  - type: links
+    id: actions
+    style: stacked
+    items:
+      - label: Go to home
+        href: '@platform_home'
+        open_in: same_tab

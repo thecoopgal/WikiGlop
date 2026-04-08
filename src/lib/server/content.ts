@@ -1,6 +1,6 @@
 import { parse as parseYaml } from 'yaml';
 import type { ResolvedSite } from './sites';
-import { getAllSites } from './sites';
+import { getAllSites, resolveSiteById } from './sites';
 
 export type PageSeo = {
 	title?: string;
@@ -119,6 +119,11 @@ function isCreatorLinksShortcut(item: LinkLikeItem): boolean {
 	const type = typeof item.type === 'string' ? item.type.trim().toLowerCase() : '';
 	const source = typeof item.source === 'string' ? item.source.trim().toLowerCase() : '';
 	return href === '@creator_links' || type === 'creator_links' || source === 'creator_links';
+}
+
+function isPlatformHomeHref(item: LinkLikeItem): boolean {
+	const href = typeof item.href === 'string' ? item.href.trim().toLowerCase() : '';
+	return href === '@platform_home';
 }
 
 function isLocalLikeHost(hostname: string): boolean {
@@ -320,6 +325,26 @@ export async function expandCreatorLinksShortcuts(
 		const expandedItems: Array<Record<string, unknown>> = [];
 
 		for (const item of items) {
+			if (isPlatformHomeHref(item)) {
+				const platformSite = allSites.find(
+					(s) => s.siteId.toLowerCase() === 'gloopglop' || s.id.toLowerCase() === 'gloopglop'
+				);
+				if (platformSite) {
+					const host = pickHostForRequest(platformSite, requestUrl.hostname.toLowerCase());
+					if (host) {
+						hasExpansion = true;
+						expandedItems.push({
+							...item,
+							href: `${buildAbsoluteUrl(host, requestUrl)}/`
+						});
+						continue;
+					}
+				}
+				hasExpansion = true;
+				expandedItems.push({ ...item, href: '/' });
+				continue;
+			}
+
 			const sourceRaw = typeof item.source === 'string' ? item.source.trim() : '';
 			if (sourceRaw.startsWith('@') && sourceRaw.length > 1) {
 				const requestedSiteId = sourceRaw.slice(1).trim().toLowerCase();
@@ -365,5 +390,34 @@ export async function expandCreatorLinksShortcuts(
 	});
 
 	return { ...page, blocks: nextBlocks };
+}
+
+/** `pages/not-found.yaml` — prefers the active site, then platform `gloopglop`. */
+export async function loadNotFoundPageForError(
+	site: ResolvedSite | null | undefined,
+	url: URL
+): Promise<{ site: ResolvedSite; page: PageYaml } | null> {
+	const platform = await resolveSiteById('gloopglop');
+
+	if (!site) {
+		if (!platform) return null;
+		const page = await loadPageYaml(platform, ['not-found']);
+		if (!page) return null;
+		return { site: platform, page: await expandCreatorLinksShortcuts(platform, page, url) };
+	}
+
+	const own = await loadPageYaml(site, ['not-found']);
+	if (own) {
+		return { site, page: await expandCreatorLinksShortcuts(site, own, url) };
+	}
+
+	if (platform && platform.siteId !== site.siteId) {
+		const page = await loadPageYaml(platform, ['not-found']);
+		if (page) {
+			return { site: platform, page: await expandCreatorLinksShortcuts(platform, page, url) };
+		}
+	}
+
+	return null;
 }
 
