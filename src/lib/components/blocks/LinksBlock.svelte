@@ -16,6 +16,8 @@
 
 	let { title, style, items } = $props() as Props;
 
+	const cardShadow = 'shadow-[0px_1px_3px_rgba(0,0,0,0.15)]';
+
 	const mode = $derived(style === 'inline' ? 'inline' : style === 'cards' ? 'cards' : 'stacked');
 	const GLOOPGLOP_LOGO_URL =
 		'https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/907061a8-51ae-454c-c739-83935616f900/public';
@@ -124,7 +126,7 @@
 						</div>
 					{:else}
 						<a
-							class="card bg-base-100 border border-base-300 transition hover:border-primary hover:shadow-sm"
+							class="card bg-base-100 border border-base-300 {cardShadow} transition hover:border-primary"
 							href={item.href}
 							data-open-mode={item.open_mode ?? undefined}
 							data-modal={item.modal ?? undefined}

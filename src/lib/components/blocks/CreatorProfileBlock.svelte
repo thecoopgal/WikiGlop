@@ -28,6 +28,8 @@
 
 	let { name, tagline, avatar, bio, short_links } = $props() as Props;
 
+	const cardShadow = 'shadow-[0px_1px_3px_rgba(0,0,0,0.15)]';
+
 	function normalizeIconKey(value: string | undefined): string {
 		return (value ?? '').trim().toLowerCase().replace(/[\s_-]+/g, '');
 	}
@@ -79,7 +81,7 @@
 
 {#if name}
 	<section class="my-10">
-		<div class="card bg-base-100 shadow-md">
+		<div class="card bg-base-100 {cardShadow}">
 			<div class="card-body items-center text-center">
 				<div class="flex flex-col items-center gap-4">
 					{#if avatar}
@@ -105,7 +107,7 @@
 							{@const Icon = iconComponent(shortLink.icon)}
 							<a
 								href={shortLink.href}
-								class="btn btn-circle btn-sm btn-outline"
+								class="btn btn-circle btn-sm btn-outline {cardShadow}"
 								target={shouldOpenSameTab(shortLink.open_in) ? undefined : '_blank'}
 								rel={shouldOpenSameTab(shortLink.open_in) ? undefined : 'noreferrer'}
 								title={shortLink.label ?? shortLink.icon ?? 'Link'}
