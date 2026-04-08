@@ -26,6 +26,7 @@
 	const layout = $derived(data.page.layout);
 	const renderMode = $derived(data.page.render_mode ?? 'page');
 	const isModalForm = $derived(data.page.layout === 'form' && (data.page.render_mode ?? 'page') === 'modal');
+	const showHeader = $derived(data.page.page_settings?.show_header !== false);
 	let activeModalId = $state<string | null>(null);
 	const activeModal = $derived(
 		activeModalId && data.modals ? (data.modals[activeModalId] as PageYaml | undefined) : undefined
@@ -133,7 +134,7 @@
 	data-theme={themeName}
 	style={pageBg ? `background-color: ${pageBg};` : undefined}
 >
-	{#if !isModalForm && data.site.navigation?.header}
+	{#if !isModalForm && showHeader && data.site.navigation?.header}
 		<div class="navbar bg-base-100 shadow-sm">
 			<div class="navbar-start">
 				<a class="btn btn-ghost text-xl" href="/">{data.site.name ?? data.site.id}</a>

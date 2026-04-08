@@ -31,6 +31,7 @@
 	);
 
 	const form = $derived(page.form);
+	const showHeader = $derived(page.page_settings?.show_header !== false);
 	const sendEmailEnabled = $derived(Boolean(page.send_email?.trim()));
 
 	let submitState = $state<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -172,7 +173,7 @@
 		</div>
 	</div>
 {:else}
-	<div class="mx-auto w-full max-w-3xl px-6 py-12">
+	<div class={`mx-auto w-full max-w-3xl px-6 ${showHeader ? 'pt-4 pb-12' : 'pt-0 pb-12'}`}>
 		<div class="card bg-base-100 shadow-md">
 			<div class="card-body">
 				{@render formInner()}

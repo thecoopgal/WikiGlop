@@ -6,22 +6,23 @@
 	let { site, page }: any = $props();
 
 	const maxWidth = $derived(page.page_settings?.max_width ?? 'sm');
+	const showHeader = $derived(page.page_settings?.show_header !== false);
 
 	function containerClass(v: string) {
 		switch (v) {
 			case 'sm':
-				return 'mx-auto max-w-screen-sm px-6';
+				return 'mx-auto max-w-[500px] px-6';
 			case 'md':
 				return 'mx-auto max-w-screen-md px-6';
 			case 'xl':
 				return 'mx-auto max-w-screen-xl px-6';
 			default:
-				return 'mx-auto max-w-2xl px-6';
+				return 'mx-auto max-w-[500px] px-6';
 		}
 	}
 </script>
 
-<div class="py-12">
+<div class={showHeader ? 'pt-4 pb-12' : 'pt-0 pb-12'}>
 	<div class={containerClass(String(maxWidth))}>
 		{#if page.blocks && page.blocks.length}
 			<div class="space-y-10">
