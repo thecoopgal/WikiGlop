@@ -5,6 +5,8 @@ hosts:
   - 127.0.0.1
   - alabamafella.gloopglop.com
   - www.alabamafella.gloopglop.com
+  - alabamafella.gloop.gg
+  - www.alabamafella.gloop.gg
 
 kind: platform
 
@@ -17,6 +19,7 @@ theme:
 
 routing:
   default_page: index
+  gloop_gg_short_slug: taf
 
 permissions:
   view: public

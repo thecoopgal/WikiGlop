@@ -28,7 +28,10 @@ export const load: PageServerLoad = async ({ params, locals, url }) => {
 		throw error(404, 'Site not found for this hostname.');
 	}
 
-	const slugParts = normalizeSlugParts(params.slug);
+	const slugParts =
+		locals.gloopGgPageSlugParts !== undefined
+			? locals.gloopGgPageSlugParts
+			: normalizeSlugParts(params.slug);
 	if (slugParts.length > 1) {
 		throw error(404, 'Nested pages are not supported yet.');
 	}

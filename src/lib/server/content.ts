@@ -144,6 +144,18 @@ function pickHostForRequest(targetSite: ResolvedSite, requestHostname: string): 
 		);
 	}
 
+	// Short gloop.gg hosts resolve to full *.gloopglop.com in generated links.
+	if (
+		requestHostname === 'gloop.gg' ||
+		requestHostname === 'www.gloop.gg' ||
+		/\.gloop\.gg$/i.test(requestHostname)
+	) {
+		const canonical = hosts.find(
+			(h) => h === 'gloopglop.com' || (h.endsWith('.gloopglop.com') && !h.startsWith('www.'))
+		);
+		if (canonical) return canonical;
+	}
+
 	const suffix = domainSuffix(requestHostname);
 	if (suffix) {
 		const bySuffix = hosts.find((h) => h === suffix || h.endsWith(`.${suffix}`));

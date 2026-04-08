@@ -5,6 +5,8 @@ hosts:
   - 127.0.0.1
   - thepaperjelly.gloopglop.com
   - www.thepaperjelly.gloopglop.com
+  - thepaperjelly.gloop.gg
+  - www.thepaperjelly.gloop.gg
 
 kind: platform
 

@@ -5,6 +5,8 @@ hosts:
   - 127.0.0.1
   - gloopglop.com
   - www.gloopglop.com
+  - gloop.gg
+  - www.gloop.gg
 
 kind: platform
 

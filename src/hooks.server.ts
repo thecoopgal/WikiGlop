@@ -1,11 +1,29 @@
-import { getAllSites, resolveSiteByHostname } from '$lib/server/sites';
+import { getAllSites, resolveSiteByHostname, resolveSiteForGloopGgPath, resolveSiteById } from '$lib/server/sites';
 import type { Handle } from '@sveltejs/kit';
 import { dev } from '$app/environment';
+
+const GLOOP_GG_APEX = new Set(['gloop.gg', 'www.gloop.gg']);
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const hostname = event.url.hostname;
 	if (hostname) {
-		let site = await resolveSiteByHostname(hostname);
+		const hn = hostname.trim().toLowerCase();
+		const pathname = event.url.pathname;
+		const segments = pathname.split('/').filter(Boolean);
+
+		let site: Awaited<ReturnType<typeof resolveSiteByHostname>> = null;
+
+		if (GLOOP_GG_APEX.has(hn)) {
+			if (segments.length === 0) {
+				site = await resolveSiteById('gloopglop');
+			} else {
+				site = await resolveSiteForGloopGgPath(segments[0]);
+				event.locals.gloopGgPageSlugParts = segments.slice(1);
+			}
+		} else {
+			site = await resolveSiteByHostname(hostname);
+		}
+
 		const isNodeDev =
 			typeof process !== 'undefined' &&
 			typeof process.env?.NODE_ENV === 'string' &&

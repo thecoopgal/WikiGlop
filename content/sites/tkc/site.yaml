@@ -5,6 +5,8 @@ hosts:
   - 127.0.0.1
   - tkc.gloopglop.com
   - www.tkc.gloopglop.com
+  - tkc.gloop.gg
+  - www.tkc.gloop.gg
 
 kind: platform
 

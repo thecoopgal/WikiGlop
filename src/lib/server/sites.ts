@@ -26,6 +26,8 @@ export type SiteConfig = {
 	navigation?: SiteNavigation;
 	routing?: {
 		default_page?: string;
+		/** First path segment on gloop.gg / www.gloop.gg (e.g. `taf` → this site). */
+		gloop_gg_short_slug?: string;
 	};
 	permissions?: Record<string, unknown>;
 };
@@ -162,6 +164,36 @@ export async function getAllSites(): Promise<ResolvedSite[]> {
 	const sites = await loadAllSites();
 	cache = { loadedAtMs: now, sites };
 	return sites;
+}
+
+export async function resolveSiteById(siteId: string): Promise<ResolvedSite | null> {
+	const key = normalizeHostname(siteId);
+	if (!key) return null;
+	const sites = await getAllSites();
+	return (
+		sites.find(
+			(s) => normalizeHostname(s.siteId) === key || normalizeHostname(s.id) === key
+		) ?? null
+	);
+}
+
+/** Resolves `gloop.gg/{firstSegment}/...` to a site by id or by `routing.gloop_gg_short_slug`. */
+export async function resolveSiteForGloopGgPath(firstSegment: string): Promise<ResolvedSite | null> {
+	const key = normalizeHostname(firstSegment);
+	if (!key) return null;
+
+	const byId = await resolveSiteById(key);
+	if (byId) return byId;
+
+	const sites = await getAllSites();
+	for (const site of sites) {
+		const short = site.routing?.gloop_gg_short_slug;
+		if (typeof short === 'string' && normalizeHostname(short) === key) {
+			return site;
+		}
+	}
+
+	return null;
 }
 
 export async function resolveSiteByHostname(hostname: string): Promise<ResolvedSite | null> {
