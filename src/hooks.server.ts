@@ -4,6 +4,7 @@ import type { Handle } from '@sveltejs/kit';
 import { dev } from '$app/environment';
 
 const GLOOP_GG_APEX = new Set(['gloop.gg', 'www.gloop.gg']);
+const GLOOPGLOP_HOST_RE = /(^|\.)gloopglop\.com$/i;
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const hostname = event.url.hostname;
@@ -33,6 +34,20 @@ export const handle: Handle = async ({ event, resolve }) => {
 			}
 		} else {
 			site = await resolveSiteByHostname(hostname);
+			// Canonicalize legacy *.gloopglop.com hosts to *.gloop.gg for brand consistency.
+			if (site && GLOOPGLOP_HOST_RE.test(hn)) {
+				const origin = canonicalOriginForSite(site, event.url);
+				if (origin) {
+					try {
+						const target = new URL(origin);
+						if (target.host.toLowerCase() !== event.url.host.toLowerCase()) {
+							return Response.redirect(`${origin}${event.url.pathname}${event.url.search}`, 301);
+						}
+					} catch {
+						// Ignore malformed origin and continue normal resolution.
+					}
+				}
+			}
 		}
 
 		const isNodeDev =
