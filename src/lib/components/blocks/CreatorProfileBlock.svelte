@@ -48,6 +48,32 @@ const SHARE_ICON_URL =
 	'https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/20ec55d3-136b-4ad6-f33a-12de645f5800/public';
 const BRAND_ICON_URL =
 	'https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/907061a8-51ae-454c-c739-83935616f900/public';
+
+// Business-card PDF design tokens (single source for easy tweaking).
+const CARD_W_IN = 3.5;
+const CARD_H_IN = 2;
+const CARD_BORDER = {
+	x: 0.02,
+	y: 0.02,
+	w: 3.46,
+	h: 1.96,
+	lineWidth: 0.01,
+	radius: 0
+};
+const CARD_BG_RGB: [number, number, number] = [244, 247, 250];
+const CARD_BORDER_RGB: [number, number, number] = [124, 58, 237];
+const TITLE_RGB: [number, number, number] = [10, 10, 10];
+const URL_RGB: [number, number, number] = [10, 10, 10];
+const PROFILE_FRAME_RGB: [number, number, number] = [40, 40, 40];
+const TITLE_FONT_IN = 0.22;
+const URL_FONT_IN = 0.2;
+const TITLE_POS = { x: 1.75, y: 0.42 };
+const PROFILE_IMAGE = { x: 0.22, y: 0.76, w: 0.62, h: 0.62 };
+const PROFILE_FRAME = { cx: 0.53, cy: 1.07, r: 0.31, lineWidth: 0.02 };
+const QR_IMAGE = { x: 1.33, y: 0.56, w: 0.84, h: 0.84 };
+const BRAND_IMAGE = { x: 2.52, y: 0.79, w: 0.56, h: 0.56 };
+const URL_POS = { x: 1.75, y: 1.78 };
+
 let showShareModal = $state(false);
 let copyState = $state<'idle' | 'copied' | 'error'>('idle');
 let qrCopyState = $state<'idle' | 'copied' | 'error'>('idle');
@@ -281,35 +307,43 @@ async function downloadBusinessCardPdf() {
 		]);
 		const avatarCircleDataUrl = avatarDataUrl ? await circularImageDataUrl(avatarDataUrl, 600) : '';
 
-		// Standard US business card: 3.5in x 2in. Styled to match share-card mock.
-		const pdf = new jsPDF({ orientation: 'landscape', unit: 'in', format: [3.5, 2] });
-		pdf.setFillColor(244, 247, 250);
-		pdf.rect(0, 0, 3.5, 2, 'F');
-		pdf.setDrawColor(124, 58, 237);
-		pdf.setLineWidth(0.01);
-		pdf.rect(0.02, 0.02, 3.46, 1.96, 'S');
+		// Standard US business card. Styled by tokens above.
+		const pdf = new jsPDF({ orientation: 'landscape', unit: 'in', format: [CARD_W_IN, CARD_H_IN] });
+		pdf.setFillColor(...CARD_BG_RGB);
+		pdf.rect(0, 0, CARD_W_IN, CARD_H_IN, 'F');
+		pdf.setDrawColor(...CARD_BORDER_RGB);
+		pdf.setLineWidth(CARD_BORDER.lineWidth);
+		pdf.roundedRect(
+			CARD_BORDER.x,
+			CARD_BORDER.y,
+			CARD_BORDER.w,
+			CARD_BORDER.h,
+			CARD_BORDER.radius,
+			CARD_BORDER.radius,
+			'S'
+		);
 
 		pdf.setFont('helvetica', 'bold');
-		pdf.setFontSize(0.22 * 72);
-		pdf.setTextColor(10, 10, 10);
-		pdf.text(name ?? site?.name ?? site?.id ?? 'Glop', 1.75, 0.42, { align: 'center' });
+		pdf.setFontSize(TITLE_FONT_IN * 72);
+		pdf.setTextColor(...TITLE_RGB);
+		pdf.text(name ?? site?.name ?? site?.id ?? 'Glop', TITLE_POS.x, TITLE_POS.y, { align: 'center' });
 
 		if (avatarCircleDataUrl) {
-			pdf.addImage(avatarCircleDataUrl, 'PNG', 0.22, 0.76, 0.62, 0.62);
-			pdf.setDrawColor(40, 40, 40);
-			pdf.setLineWidth(0.02);
-			pdf.circle(0.53, 1.07, 0.31, 'S');
+			pdf.addImage(avatarCircleDataUrl, 'PNG', PROFILE_IMAGE.x, PROFILE_IMAGE.y, PROFILE_IMAGE.w, PROFILE_IMAGE.h);
+			pdf.setDrawColor(...PROFILE_FRAME_RGB);
+			pdf.setLineWidth(PROFILE_FRAME.lineWidth);
+			pdf.circle(PROFILE_FRAME.cx, PROFILE_FRAME.cy, PROFILE_FRAME.r, 'S');
 		}
 
-		pdf.addImage(qrDataUrl, 'PNG', 1.33, 0.56, 0.84, 0.84);
+		pdf.addImage(qrDataUrl, 'PNG', QR_IMAGE.x, QR_IMAGE.y, QR_IMAGE.w, QR_IMAGE.h);
 		if (brandDataUrl) {
-			pdf.addImage(brandDataUrl, 'PNG', 2.52, 0.79, 0.56, 0.56);
+			pdf.addImage(brandDataUrl, 'PNG', BRAND_IMAGE.x, BRAND_IMAGE.y, BRAND_IMAGE.w, BRAND_IMAGE.h);
 		}
 
 		pdf.setFont('helvetica', 'bold');
-		pdf.setFontSize(0.2 * 72);
-		pdf.setTextColor(10, 10, 10);
-		pdf.text(shortPathLabel || '', 1.75, 1.78, { align: 'center' });
+		pdf.setFontSize(URL_FONT_IN * 72);
+		pdf.setTextColor(...URL_RGB);
+		pdf.text(shortPathLabel || '', URL_POS.x, URL_POS.y, { align: 'center' });
 
 		const base = slugifyForFileName(name ?? site?.siteId ?? site?.id ?? 'glop');
 		const blob = pdf.output('blob');

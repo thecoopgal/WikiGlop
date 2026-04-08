@@ -149,17 +149,14 @@ function pickHostForRequest(targetSite: ResolvedSite, requestHostname: string): 
 		);
 	}
 
-	// gloop.gg and gloopglop.com requests should prefer short *.gloop.gg canonical links.
+	// Short gloop.gg hosts resolve to full *.gloopglop.com in generated links.
 	if (
 		requestHostname === 'gloop.gg' ||
 		requestHostname === 'www.gloop.gg' ||
-		/\.gloop\.gg$/i.test(requestHostname) ||
-		requestHostname === 'gloopglop.com' ||
-		requestHostname === 'www.gloopglop.com' ||
-		/\.gloopglop\.com$/i.test(requestHostname)
+		/\.gloop\.gg$/i.test(requestHostname)
 	) {
 		const canonical = hosts.find(
-			(h) => h === 'gloop.gg' || (h.endsWith('.gloop.gg') && !h.startsWith('www.'))
+			(h) => h === 'gloopglop.com' || (h.endsWith('.gloopglop.com') && !h.startsWith('www.'))
 		);
 		if (canonical) return canonical;
 	}
@@ -179,7 +176,7 @@ function buildAbsoluteUrl(host: string, requestUrl: URL): string {
 	return `${requestUrl.protocol}//${host}${portPart}`;
 }
 
-/** Protocol + host (+ port for local dev), using the same host rules as generated links. */
+/** Protocol + host (+ port for local dev), using the same host rules as generated links (e.g. gloop.gg → *.gloopglop.com). */
 export function canonicalOriginForSite(site: ResolvedSite, requestUrl: URL): string | null {
 	const host = pickHostForRequest(site, requestUrl.hostname.toLowerCase());
 	if (!host) return null;
