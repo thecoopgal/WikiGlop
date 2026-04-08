@@ -26,7 +26,7 @@
 	<div class={`mx-auto ${maxWidthClass(maxWidth)}`}>
 		{#if page.blocks && page.blocks.length}
 			<div class="space-y-10">
-				<BlockRenderer blocks={page.blocks} />
+				<BlockRenderer blocks={page.blocks} site={site} />
 			</div>
 		{:else}
 			<p class="text-sm text-warning">No blocks defined for this page.</p>

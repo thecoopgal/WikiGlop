@@ -14,14 +14,14 @@
 	import QuoteBlock from './blocks/QuoteBlock.svelte';
 	import BlockRenderer from './BlockRenderer.svelte';
 
-	let { blocks, block }: any = $props();
+let { blocks, block, site }: any = $props();
 
 	const blockType = $derived((block as any)?.type as string | undefined);
 </script>
 
 {#if blocks}
 	{#each blocks as b, i (b.id ?? `${b.type}-${i}`)}
-		<BlockRenderer block={b} />
+		<BlockRenderer block={b} site={site} />
 	{/each}
 {:else if blockType === 'hero'}
 	{#if (block as any)?.id}
@@ -58,10 +58,10 @@
 {:else if blockType === 'section'}
 	{#if (block as any)?.id}
 		<div id={(block as any).id}>
-			<SectionBlock {...(block as any)} />
+			<SectionBlock {...(block as any)} site={site} />
 		</div>
 	{:else}
-		<SectionBlock {...(block as any)} />
+		<SectionBlock {...(block as any)} site={site} />
 	{/if}
 {:else if blockType === 'callout'}
 	{#if (block as any)?.id}
@@ -106,10 +106,10 @@
 {:else if blockType === 'creator_profile'}
 	{#if (block as any)?.id}
 		<div id={(block as any).id}>
-			<CreatorProfileBlock {...(block as any)} />
+			<CreatorProfileBlock {...(block as any)} site={site} />
 		</div>
 	{:else}
-		<CreatorProfileBlock {...(block as any)} />
+		<CreatorProfileBlock {...(block as any)} site={site} />
 	{/if}
 {:else if blockType === 'quote'}
 	{#if (block as any)?.id}

@@ -5,9 +5,10 @@
 	type Props = {
 		title?: string;
 		blocks?: PageBlock[];
+	site?: unknown;
 	};
 
-	let { title, blocks } = $props() as Props;
+let { title, blocks, site } = $props() as Props;
 </script>
 
 <section class="my-10">
@@ -17,7 +18,7 @@
 
 	{#if blocks && blocks.length}
 		<div class="space-y-8">
-			<BlockRenderer blocks={blocks} />
+			<BlockRenderer blocks={blocks} site={site} />
 		</div>
 	{:else}
 		<p class="text-sm text-warning">No section blocks.</p>

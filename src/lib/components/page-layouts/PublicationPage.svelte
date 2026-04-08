@@ -21,7 +21,7 @@
 	<div class={containerClass(String(maxWidth))}>
 		{#if page.blocks && page.blocks.length}
 			<div class="space-y-10">
-				<BlockRenderer blocks={page.blocks} />
+				<BlockRenderer blocks={page.blocks} site={site} />
 			</div>
 		{:else}
 			<p class="text-sm text-warning">No publication blocks found.</p>
