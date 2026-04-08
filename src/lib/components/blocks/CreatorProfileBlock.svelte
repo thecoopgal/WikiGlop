@@ -469,9 +469,7 @@ function onShareTouchEnd(e: TouchEvent) {
 											<img src={qrUrl} alt="QR code for this page" class="h-[108px] w-[108px] rounded border border-base-300" />
 										</div>
 										<p class="mt-auto max-w-full truncate text-xs opacity-70">{shortPathLabel || '/'}</p>
-										{#if qrCopyState === 'copied'}
-											<p class="text-[11px] text-success">QR image copied.</p>
-										{:else if qrCopyState === 'error'}
+										{#if qrCopyState === 'error'}
 											<p class="text-[11px] text-error">Could not copy QR image.</p>
 										{/if}
 									</div>
