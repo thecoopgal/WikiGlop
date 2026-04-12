@@ -58,7 +58,7 @@ export function isBlockedByRegionLock(
 	geo: { country: string | null; regionCode: string | null },
 	opts: { hostname: string; allowUnknownGeoFallback: boolean }
 ): boolean {
-	const raw = page.region_lock as RegionLockConfig | undefined;
+	const raw = page.region_lock;
 	if (!raw || typeof raw !== 'object') return false;
 
 	const { countries, subdivisions } = normalizeRegionLock(raw);

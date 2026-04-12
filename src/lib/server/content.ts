@@ -51,6 +51,12 @@ export type PageBlock = {
 	[key: string]: unknown;
 };
 
+export type RegionLockConfig = {
+	countries?: string[];
+	subdivisions?: string[];
+	allow_unknown_geo?: boolean;
+};
+
 export type PageYaml = {
 	id: string;
 	title?: string;
@@ -61,6 +67,7 @@ export type PageYaml = {
 	seo?: PageSeo;
 	blocks?: PageBlock[];
 	form?: PageForm;
+	region_lock?: RegionLockConfig;
 	// page_settings and other metadata come directly from YAML.
 	page_settings?: PageSettings;
 	permissions?: Record<string, unknown>;
