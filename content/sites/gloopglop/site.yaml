@@ -7,6 +7,7 @@ hosts:
   - www.gloopglop.com
   - gloop.gg
   - www.gloop.gg
+  - notifications-wikiglop.thecoopgal.workers.dev
 
 kind: platform
 
