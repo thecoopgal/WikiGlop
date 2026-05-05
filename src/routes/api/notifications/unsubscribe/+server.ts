@@ -17,8 +17,15 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	const payload = body as Record<string, unknown>;
 	const endpointRaw = payload.endpoint;
 	const endpoint = typeof endpointRaw === 'string' ? endpointRaw.trim() : '';
+	const pagePathRaw = payload.pagePath;
+	const pagePath = typeof pagePathRaw === 'string' ? pagePathRaw.trim() : '';
 	if (!endpoint) throw error(400, 'Missing endpoint');
 
-	await revokePushSubscription({ platform, endpoint });
+	await revokePushSubscription({
+		platform,
+		endpoint,
+		siteId: site.siteId,
+		pagePath: pagePath || undefined
+	});
 	return json({ ok: true });
 };

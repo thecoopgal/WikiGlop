@@ -37,6 +37,12 @@ type StoredPushSubscription = {
 	auth: string;
 };
 
+export type MyCreatorSubscription = {
+	pagePath: string;
+	creatorName: string | null;
+	revoked: boolean;
+};
+
 function randomId(prefix: string): string {
 	return `${prefix}_${crypto.randomUUID().replace(/-/g, '')}`;
 }
@@ -100,9 +106,7 @@ export async function upsertPushSubscription(params: {
 			`INSERT INTO push_subscriptions
         (id, site_id, page_path, creator_name, endpoint, p256dh, auth, user_agent, created_at, last_seen_at, revoked_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'), NULL)
-      ON CONFLICT(endpoint) DO UPDATE SET
-        site_id = excluded.site_id,
-        page_path = excluded.page_path,
+      ON CONFLICT(site_id, page_path, endpoint) DO UPDATE SET
         creator_name = excluded.creator_name,
         p256dh = excluded.p256dh,
         auth = excluded.auth,
@@ -126,14 +130,48 @@ export async function upsertPushSubscription(params: {
 export async function revokePushSubscription(params: {
 	platform: App.Platform | undefined;
 	endpoint: string;
+	siteId?: string;
+	pagePath?: string;
 }) {
 	const endpoint = params.endpoint?.trim();
 	if (!endpoint) return;
 	const db = getDb(params.platform);
-	await db
-		.prepare(`UPDATE push_subscriptions SET revoked_at = datetime('now') WHERE endpoint = ?`)
-		.bind(endpoint)
-		.all();
+	if (params.siteId && params.pagePath) {
+		await db
+			.prepare(
+				`UPDATE push_subscriptions
+         SET revoked_at = datetime('now')
+         WHERE endpoint = ? AND site_id = ? AND page_path = ?`
+			)
+			.bind(endpoint, params.siteId, params.pagePath)
+			.all();
+		return;
+	}
+	await db.prepare(`UPDATE push_subscriptions SET revoked_at = datetime('now') WHERE endpoint = ?`).bind(endpoint).all();
+}
+
+export async function getMyCreatorSubscriptions(params: {
+	platform: App.Platform | undefined;
+	siteId: string;
+	endpoint: string;
+}): Promise<MyCreatorSubscription[]> {
+	const endpoint = params.endpoint?.trim();
+	if (!endpoint) return [];
+	const db = getDb(params.platform);
+	const rows = await db
+		.prepare(
+			`SELECT page_path AS pagePath, creator_name AS creatorName, revoked_at
+       FROM push_subscriptions
+       WHERE site_id = ? AND endpoint = ?
+       ORDER BY creator_name ASC, page_path ASC`
+		)
+		.bind(params.siteId, endpoint)
+		.all<{ pagePath: string; creatorName: string | null; revoked_at: string | null }>();
+	return (rows.results ?? []).map((r) => ({
+		pagePath: r.pagePath,
+		creatorName: r.creatorName,
+		revoked: !!r.revoked_at
+	}));
 }
 
 async function activeSubscriptionsForPage(params: {

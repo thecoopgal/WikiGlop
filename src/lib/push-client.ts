@@ -2,6 +2,10 @@ type PushSetupResult =
 	| { ok: true }
 	| { ok: false; reason: 'unsupported' | 'no_public_key' | 'permission_denied' | 'subscribe_failed' | 'server_failed' };
 
+export type BrowserPushSubscriptionSummary = {
+	endpoint: string;
+};
+
 function base64UrlToUint8Array(base64Url: string): Uint8Array {
 	const padding = '='.repeat((4 - (base64Url.length % 4)) % 4);
 	const base64 = (base64Url + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -83,4 +87,31 @@ export async function registerForCreatorNotifications(input: {
 
 	if (!saveRes.ok) return { ok: false, reason: 'server_failed' };
 	return { ok: true };
+}
+
+export async function getCurrentBrowserSubscription(): Promise<BrowserPushSubscriptionSummary | null> {
+	if (!canUsePushNotifications()) return null;
+	try {
+		const registration = await navigator.serviceWorker.register('/sw.js');
+		await navigator.serviceWorker.ready;
+		const subscription = await registration.pushManager.getSubscription();
+		if (!subscription?.endpoint) return null;
+		return { endpoint: subscription.endpoint };
+	} catch {
+		return null;
+	}
+}
+
+export async function unsubscribeFromCreatorPage(pagePath: string): Promise<{ ok: boolean }> {
+	const current = await getCurrentBrowserSubscription();
+	if (!current?.endpoint) return { ok: false };
+	const res = await fetch('/api/notifications/unsubscribe', {
+		method: 'POST',
+		headers: { 'content-type': 'application/json' },
+		body: JSON.stringify({
+			endpoint: current.endpoint,
+			pagePath
+		})
+	});
+	return { ok: res.ok };
 }
