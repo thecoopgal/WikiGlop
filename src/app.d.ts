@@ -12,7 +12,9 @@ declare global {
 		}
 		// interface PageData {}
 		// interface PageState {}
-		// interface Platform {}
+		interface Platform {
+			env?: Record<string, unknown>;
+		}
 	}
 }
 

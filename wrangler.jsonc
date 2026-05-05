@@ -11,8 +11,17 @@
 	"observability": {
 		"enabled": true
 	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "gloopglop",
+			"database_id": "9ad087f7-5cdb-4e67-817c-5e47c080692a"
+		}
+	],
 	// Empty default for local / typegen; use `wrangler secret put RESEND_API_KEY` in production (overrides var).
 	"vars": {
-		"RESEND_API_KEY": ""
+		"RESEND_API_KEY": "",
+		"VAPID_PUBLIC_KEY": "BFxK_qez_beomsxbU92SJ90B2rNtQ7-kdwQuWvrD2_jQgMzNJNl15262JUyoJR-kpFY_ZeRoT7WnOg9xmsSW7hE",
+		"VAPID_SUBJECT": "mailto:notifications@gloop.gg"
 	}
 }

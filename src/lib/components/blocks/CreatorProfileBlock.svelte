@@ -17,6 +17,13 @@ import IconQrCode from '~icons/mdi/qrcode';
 import IconProfile from '~icons/mdi/account-circle-outline';
 import IconMore from '~icons/mdi/dots-horizontal-circle-outline';
 import IconDownload from '~icons/mdi/download';
+import IconBell from '~icons/mdi/bell-outline';
+import IconDownloadMobile from '~icons/mdi/cellphone-arrow-down';
+import {
+	isMobileDevice,
+	isStandaloneDisplayMode,
+	registerForCreatorNotifications
+} from '$lib/push-client';
 
 	type Props = {
 		name?: string;
@@ -89,6 +96,22 @@ let shareTouchActive = false;
 let linkCopied = $state(false);
 let linkCopiedTimer: ReturnType<typeof setTimeout> | null = null;
 let downloadState = $state<'idle' | 'loading' | 'error'>('idle');
+let showNotifyModal = $state(false);
+let notifyState = $state<'idle' | 'loading' | 'success' | 'error'>('idle');
+let notifyMessage = $state('');
+let deferredInstallPrompt: any = null;
+
+$effect(() => {
+	if (typeof window === 'undefined') return;
+	const onBeforeInstallPrompt = (event: Event) => {
+		event.preventDefault();
+		deferredInstallPrompt = event;
+	};
+	window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt);
+	return () => {
+		window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt);
+	};
+});
 
 function isLocalLikeHost(hostname: string): boolean {
 	return hostname === 'localhost' || hostname.endsWith('.localhost') || hostname === '127.0.0.1';
@@ -390,6 +413,41 @@ function onShareTouchEnd(e: TouchEvent) {
 	if (deltaX <= -SWIPE_THRESHOLD_PX) showQrCode = true;
 	if (deltaX >= SWIPE_THRESHOLD_PX) showQrCode = false;
 }
+
+async function enableNotifications() {
+	notifyState = 'loading';
+	notifyMessage = '';
+	const result = await registerForCreatorNotifications({
+		pagePath: typeof window !== 'undefined' ? window.location.pathname : '/',
+		creatorName: name ?? site?.name ?? site?.id ?? ''
+	});
+	if (!result.ok) {
+		notifyState = 'error';
+		notifyMessage =
+			result.reason === 'unsupported'
+				? 'This browser does not support push notifications.'
+				: result.reason === 'permission_denied'
+					? 'Notification permission was denied.'
+					: result.reason === 'no_public_key'
+						? 'Notifications are not configured on this site yet.'
+						: 'Could not enable notifications right now.';
+		return;
+	}
+	notifyState = 'success';
+	notifyMessage = 'Notifications are enabled for this creator page.';
+}
+
+async function promptInstallIfAvailable() {
+	if (!deferredInstallPrompt) return false;
+	try {
+		await deferredInstallPrompt.prompt();
+		await deferredInstallPrompt.userChoice;
+		deferredInstallPrompt = null;
+		return true;
+	} catch {
+		return false;
+	}
+}
 </script>
 
 {#if name}
@@ -397,21 +455,36 @@ function onShareTouchEnd(e: TouchEvent) {
 		<div class="card bg-base-100 {cardShadow}">
 			<div class="card-body items-center text-center">
 				<div class="w-full flex justify-end">
-					<button
-						type="button"
-						class="btn btn-ghost btn-sm btn-circle border border-base-300"
-						onclick={() => {
-							showShareModal = true;
-							copyState = 'idle';
-							qrCopyState = 'idle';
-							showQrCode = false;
-							linkCopied = false;
-						}}
-						aria-label="Share page"
-						title="Share page"
-					>
-						<img src={shareIconUrl} alt="" class="h-5 w-5 object-contain" />
-					</button>
+					<div class="flex items-center gap-2">
+						<button
+							type="button"
+							class="btn btn-ghost btn-sm btn-circle border border-base-300"
+							onclick={() => {
+								showNotifyModal = true;
+								notifyState = 'idle';
+								notifyMessage = '';
+							}}
+							aria-label="Get notifications"
+							title="Get notifications"
+						>
+							<IconBell class="h-5 w-5" />
+						</button>
+						<button
+							type="button"
+							class="btn btn-ghost btn-sm btn-circle border border-base-300"
+							onclick={() => {
+								showShareModal = true;
+								copyState = 'idle';
+								qrCopyState = 'idle';
+								showQrCode = false;
+								linkCopied = false;
+							}}
+							aria-label="Share page"
+							title="Share page"
+						>
+							<img src={shareIconUrl} alt="" class="h-5 w-5 object-contain" />
+						</button>
+					</div>
 				</div>
 				<div class="flex flex-col items-center gap-4">
 					{#if avatar}
@@ -555,6 +628,58 @@ function onShareTouchEnd(e: TouchEvent) {
 				</div>
 				<div class="modal-backdrop">
 					<button type="button" onclick={() => (showShareModal = false)}>close</button>
+				</div>
+			</div>
+		{/if}
+		{#if showNotifyModal}
+			<div class="modal modal-open">
+				<div class="modal-box max-w-md">
+					<h3 class="text-xl font-semibold">Follow {name ?? 'creator'} updates</h3>
+					<p class="mt-2 text-sm opacity-80">
+						Get notified when this creator posts new drops, links, and announcements.
+					</p>
+
+					<div class="mt-4 space-y-3">
+						{#if isMobileDevice() && !isStandaloneDisplayMode()}
+							<p class="text-sm">
+								On mobile, install this page as an app first for the best notification support.
+							</p>
+							<button
+								type="button"
+								class="btn btn-outline btn-sm"
+								onclick={promptInstallIfAvailable}
+							>
+								<IconDownloadMobile class="h-4 w-4" />
+								Install app
+							</button>
+							<p class="text-xs opacity-70">
+								If install does not open, use your browser menu and choose “Add to Home Screen”.
+							</p>
+						{/if}
+
+						<button
+							type="button"
+							class="btn btn-primary w-full"
+							onclick={enableNotifications}
+							disabled={notifyState === 'loading'}
+						>
+							{notifyState === 'loading' ? 'Enabling…' : 'Enable notifications'}
+						</button>
+						{#if notifyState === 'success'}
+							<p class="text-sm text-success">{notifyMessage}</p>
+						{:else if notifyState === 'error'}
+							<p class="text-sm text-error">{notifyMessage}</p>
+						{/if}
+					</div>
+
+					<div class="modal-action">
+						<button type="button" class="btn btn-ghost" onclick={() => (showNotifyModal = false)}>
+							Close
+						</button>
+					</div>
+				</div>
+				<div class="modal-backdrop">
+					<button type="button" onclick={() => (showNotifyModal = false)}>close</button>
 				</div>
 			</div>
 		{/if}

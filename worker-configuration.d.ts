@@ -6,7 +6,12 @@ declare namespace Cloudflare {
 	}
 	interface Env {
 		ASSETS: Fetcher;
+		CREATOR_NOTIFY_API_KEY: string;
+		DB: D1Database;
 		RESEND_API_KEY: string;
+		VAPID_PRIVATE_KEY: string;
+		VAPID_PUBLIC_KEY: string;
+		VAPID_SUBJECT: string;
 	}
 }
 interface Env extends Cloudflare.Env {}
@@ -14,5 +19,11 @@ type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
 declare namespace NodeJS {
-	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "RESEND_API_KEY">> {}
+	interface ProcessEnv
+		extends StringifyValues<
+			Pick<
+				Cloudflare.Env,
+				"CREATOR_NOTIFY_API_KEY" | "RESEND_API_KEY" | "VAPID_PRIVATE_KEY" | "VAPID_PUBLIC_KEY" | "VAPID_SUBJECT"
+			>
+		> {}
 }
