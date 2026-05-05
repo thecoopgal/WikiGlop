@@ -79,6 +79,12 @@ export type LoadedPage = {
 	page: PageYaml;
 };
 
+export type CreatorPageSummary = {
+	id: string;
+	title: string;
+	path: string;
+};
+
 type LinkLikeItem = {
 	label?: string;
 	href?: string;
@@ -404,6 +410,37 @@ export async function expandCreatorLinksShortcuts(
 	});
 
 	return { ...page, blocks: nextBlocks };
+}
+
+export async function listCreatorPages(site: ResolvedSite): Promise<CreatorPageSummary[]> {
+	const creators: CreatorPageSummary[] = [];
+	const prefix = `/content/sites/${site.siteId}/pages/`;
+	for (const [filePath, raw] of Object.entries(PAGE_YAML_FILES)) {
+		if (!filePath.startsWith(prefix) || !filePath.endsWith('.yaml')) continue;
+		if (!raw || !raw.trim()) continue;
+
+		let parsed: unknown;
+		try {
+			parsed = parseYaml(raw);
+		} catch {
+			continue;
+		}
+		if (!isRecord(parsed)) continue;
+		if (typeof parsed.layout !== 'string' || parsed.layout.trim() !== 'creator_links') continue;
+
+		const fileName = filePath.slice(prefix.length);
+		const title =
+			typeof parsed.title === 'string' && parsed.title.trim()
+				? parsed.title.trim()
+				: typeof parsed.id === 'string' && parsed.id.trim()
+					? parsed.id.trim()
+					: fileName.replace(/\.yaml$/i, '');
+		const id = typeof parsed.id === 'string' && parsed.id.trim() ? parsed.id.trim() : fileName.replace(/\.yaml$/i, '');
+		const path = toNormalizedPath(parsed.path, fileName);
+		creators.push({ id, title, path });
+	}
+
+	return creators.sort((a, b) => a.title.localeCompare(b.title));
 }
 
 /** `pages/not-found.yaml` — prefers the active site, then platform `gloopglop`. */
