@@ -9,6 +9,7 @@
 	import CreatorLinksPage from '$lib/components/page-layouts/CreatorLinksPage.svelte';
 	import { collectFormFieldValues, postFormEmail } from '$lib/form-submit-client';
 	import Icons8BoogerAttribution from '$lib/components/Icons8BoogerAttribution.svelte';
+	import MyCreatorNotificationsHub from '$lib/components/MyCreatorNotificationsHub.svelte';
 
 	let { data } = $props();
 
@@ -23,22 +24,34 @@
 		typeof data.site?.theme?.overrides?.['base-200'] === 'string' ? data.site.theme.overrides['base-200'] : undefined
 	);
 
-	const layout = $derived(data.page.layout);
-	const renderMode = $derived(data.page.render_mode ?? 'page');
-	const isModalForm = $derived(data.page.layout === 'form' && (data.page.render_mode ?? 'page') === 'modal');
-	const showHeader = $derived(data.page.page_settings?.show_header !== false);
+	const pageYaml = $derived.by(() =>
+		data.hub === 'creator_notifications' ? undefined : (data as { page: PageYaml }).page
+	);
+	const layout = $derived(pageYaml?.layout ?? 'landing');
+	const renderMode = $derived(pageYaml?.render_mode ?? 'page');
+	const isModalForm = $derived(
+		pageYaml?.layout === 'form' && (pageYaml?.render_mode ?? 'page') === 'modal'
+	);
+	const showHeader = $derived(pageYaml?.page_settings?.show_header !== false);
 	let activeModalId = $state<string | null>(null);
 	const activeModal = $derived(
-		activeModalId && data.modals ? (data.modals[activeModalId] as PageYaml | undefined) : undefined
+		activeModalId && data.hub !== 'creator_notifications' && data.modals
+			? (data.modals[activeModalId] as PageYaml | undefined)
+			: undefined
 	);
 
 	$effect(() => {
+		if (data.hub === 'creator_notifications') {
+			activeModalId = null;
+			return;
+		}
 		activeModalId = data.initialModalId ?? null;
 	});
 
 	function modalIdFromPath(pathname: string): string | null {
 		const slug = pathname.replace(/^\/+|\/+$/g, '');
 		if (!slug) return null;
+		if (data.hub === 'creator_notifications') return null;
 		return data.modals && data.modals[slug] ? slug : null;
 	}
 
@@ -76,6 +89,7 @@
 
 	$effect(() => {
 		if (typeof window === 'undefined') return;
+		if (data.hub === 'creator_notifications') return;
 		const onClick = (event: MouseEvent) => handleRootClick(event);
 		const onPopState = () => {
 			activeModalId = modalIdFromPath(window.location.pathname);
@@ -123,12 +137,19 @@
 </script>
 
 <svelte:head>
-	<title>{data.page.seo?.title ?? data.page.title ?? data.site.name ?? data.site.id}</title>
-	{#if data.page.seo?.description}
-		<meta name="description" content={data.page.seo.description} />
+	{#if data.hub === 'creator_notifications'}
+		<title>My Creator Notifications — {data.site.name ?? data.site.id}</title>
+	{:else}
+		<title>{pageYaml?.seo?.title ?? pageYaml?.title ?? data.site.name ?? data.site.id}</title>
+		{#if pageYaml?.seo?.description}
+			<meta name="description" content={pageYaml.seo.description} />
+		{/if}
 	{/if}
 </svelte:head>
 
+{#if data.hub === 'creator_notifications'}
+	<MyCreatorNotificationsHub site={data.site} creatorPages={data.creatorPages} />
+{:else}
 <div
 	class="flex min-h-screen flex-col bg-base-200"
 	data-theme={themeName}
@@ -154,17 +175,17 @@
 
 	<main class="flex-1">
 		{#if layout === 'landing'}
-			<LandingPage site={data.site} page={data.page} />
+			<LandingPage site={data.site} page={pageYaml as PageYaml} />
 		{:else if layout === 'form'}
-			<FormPage site={data.site} page={data.page} formSlugParts={data.formSlugParts ?? []} />
+			<FormPage site={data.site} page={pageYaml as PageYaml} formSlugParts={data.formSlugParts ?? []} />
 		{:else if layout === 'document'}
-			<DocumentPage site={data.site} page={data.page} />
+			<DocumentPage site={data.site} page={pageYaml as PageYaml} />
 		{:else if layout === 'publication'}
-			<PublicationPage site={data.site} page={data.page} />
+			<PublicationPage site={data.site} page={pageYaml as PageYaml} />
 		{:else if layout === 'creator_links'}
-			<CreatorLinksPage site={data.site} page={data.page} />
+			<CreatorLinksPage site={data.site} page={pageYaml as PageYaml} />
 		{:else}
-			<LandingPage site={data.site} page={data.page} />
+			<LandingPage site={data.site} page={pageYaml as PageYaml} />
 		{/if}
 	</main>
 
@@ -277,4 +298,5 @@
 		{/if}
 	{/if}
 </div>
+{/if}
 

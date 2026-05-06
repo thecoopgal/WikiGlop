@@ -1,11 +1,20 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { expandCreatorLinksShortcuts, loadAllModals, loadPageYaml } from '$lib/server/content';
+import { expandCreatorLinksShortcuts, listCreatorPagesAcrossSites, loadAllModals, loadPageYaml } from '$lib/server/content';
+import { isMeNotificationsHost } from '$lib/server/me-host';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const site = locals.site;
 	if (!site) {
 		throw error(404, 'Site not found for this hostname.');
+	}
+
+	if (isMeNotificationsHost(url.hostname)) {
+		return {
+			hub: 'creator_notifications' as const,
+			site,
+			creatorPages: await listCreatorPagesAcrossSites()
+		};
 	}
 
 	const page = await loadPageYaml(site, []);

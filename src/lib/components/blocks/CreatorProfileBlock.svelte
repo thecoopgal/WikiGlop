@@ -1,5 +1,6 @@
 <script lang="ts">
 	import IconInstagram from '~icons/mdi/instagram';
+	import IconLinkedin from '~icons/mdi/linkedin';
 	import IconFacebook from '~icons/mdi/facebook';
 	import IconYoutube from '~icons/mdi/youtube';
 	import IconTiktok from '~icons/simple-icons/tiktok';
@@ -24,6 +25,9 @@ import {
 	isStandaloneDisplayMode,
 	registerForCreatorNotifications
 } from '$lib/push-client';
+
+	/** Flip to `true` to show the creator notification bell + modal again. */
+	const CREATOR_NOTIFICATIONS_UI_ENABLED = false;
 
 	type Props = {
 		name?: string;
@@ -218,6 +222,8 @@ function toggleTopic(topicId: string) {
 		switch (key) {
 			case 'instagram':
 				return IconInstagram;
+			case 'linkedin':
+				return IconLinkedin;
 			case 'facebook':
 				return IconFacebook;
 			case 'youtube':
@@ -489,11 +495,11 @@ async function promptInstallIfAvailable() {
 	<section class="my-10">
 		<div class="card bg-base-100 {cardShadow}">
 			<div class="card-body items-center text-center">
-				<div class="w-full flex justify-end">
-					<div class="flex items-center gap-2">
+				<div class="flex w-full items-start gap-2">
+					{#if CREATOR_NOTIFICATIONS_UI_ENABLED}
 						<button
 							type="button"
-							class="btn btn-ghost btn-sm btn-circle border border-base-300"
+							class="btn btn-ghost btn-sm btn-circle shrink-0 border border-base-300 self-start"
 							onclick={() => {
 								showNotifyModal = true;
 								notifyState = 'idle';
@@ -505,37 +511,37 @@ async function promptInstallIfAvailable() {
 						>
 							<IconBell class="h-5 w-5" />
 						</button>
-						<button
-							type="button"
-							class="btn btn-ghost btn-sm btn-circle border border-base-300"
-							onclick={() => {
-								showShareModal = true;
-								copyState = 'idle';
-								qrCopyState = 'idle';
-								showQrCode = false;
-								linkCopied = false;
-							}}
-							aria-label="Share page"
-							title="Share page"
-						>
-							<img src={shareIconUrl} alt="" class="h-5 w-5 object-contain" />
-						</button>
-					</div>
-				</div>
-				<div class="flex flex-col items-center gap-4">
-					{#if avatar}
-						<img
-							src={avatar}
-							alt={name}
-							class="h-16 w-16 rounded-full object-cover"
-						/>
 					{/if}
-					<div class="text-center">
-						<h2 class="card-title w-full justify-center text-2xl text-center">{name}</h2>
-						{#if tagline}
-							<p class="mt-5 opacity-80">{tagline}</p>
+					<div class="flex min-w-0 flex-1 flex-col items-center gap-4">
+						{#if avatar}
+							<img
+								src={avatar}
+								alt={name}
+								class="h-16 w-16 rounded-full object-cover"
+							/>
 						{/if}
+						<div class="text-center">
+							<h2 class="card-title w-full justify-center text-2xl text-center">{name}</h2>
+							{#if tagline}
+								<p class="mt-5 opacity-80">{tagline}</p>
+							{/if}
+						</div>
 					</div>
+					<button
+						type="button"
+						class="btn btn-ghost btn-sm btn-circle shrink-0 border border-base-300 self-start"
+						onclick={() => {
+							showShareModal = true;
+							copyState = 'idle';
+							qrCopyState = 'idle';
+							showQrCode = false;
+							linkCopied = false;
+						}}
+						aria-label="Share page"
+						title="Share page"
+					>
+						<img src={shareIconUrl} alt="" class="h-5 w-5 object-contain" />
+					</button>
 				</div>
 				{#if bio}
 					<p class="whitespace-pre-line">{bio}</p>
@@ -667,7 +673,7 @@ async function promptInstallIfAvailable() {
 				</div>
 			</div>
 		{/if}
-		{#if showNotifyModal}
+		{#if CREATOR_NOTIFICATIONS_UI_ENABLED && showNotifyModal}
 			<div class="modal modal-open">
 				<div class="modal-box max-w-md">
 					<h3 class="text-xl font-semibold">{notifications?.title ?? `Follow ${name ?? 'creator'} updates`}</h3>

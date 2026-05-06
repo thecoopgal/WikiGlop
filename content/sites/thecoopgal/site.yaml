@@ -1,0 +1,26 @@
+id: thecoopgal
+name: The Coop Gal
+hosts:
+  - thecoopgal.localhost
+  - 127.0.0.1
+  - thecoopgal.gloopglop.com
+  - www.thecoopgal.gloopglop.com
+  - thecoopgal.gloop.gg
+  - www.thecoopgal.gloop.gg
+
+kind: platform
+
+theme:
+  preset: gloopglop
+  mode: light
+  overrides:
+
+routing:
+  default_page: index
+  gloop_gg_short_slug: tcg
+
+permissions:
+  view: public
+  propose: members
+  edit: restricted
+  edit_mode: proposal_required

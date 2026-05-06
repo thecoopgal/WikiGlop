@@ -14,6 +14,7 @@ theme:
   preset: gloopglop
   mode: light
   overrides:
+    base-200: "#5989db"
 
 
 routing:

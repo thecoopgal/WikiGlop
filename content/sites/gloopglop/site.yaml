@@ -3,6 +3,7 @@ name: GloopGlop
 hosts:
   - localhost
   - 127.0.0.1
+  - me.localhost
   - gloopglop.com
   - www.gloopglop.com
   - me.gloopglop.com

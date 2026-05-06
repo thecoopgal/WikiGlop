@@ -1,0 +1,62 @@
+id: index
+title: thecoopgal
+path: /
+layout: creator_links
+
+seo:
+  title: thecoopgal
+  description: Creator bio and links for The Coop Gal.
+  image: https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/7ce134db-e332-4ee9-9aa4-f09f93acfe00/public
+
+page_settings:
+  show_header: true
+  show_footer: true
+  max_width: sm
+
+notifications:
+  enabled: true
+  title: Follow thecoopgal
+  description: Choose what updates you want.
+  topics:
+    - id: go_live
+      label: Go Live
+      default: true
+    - id: updates
+      label: Updates
+      default: true
+    - id: shop
+      label: Shop & drops
+      default: false
+
+blocks:
+  - type: creator_profile
+    id: profile
+    name: "@thecoopgal"
+    tagline: Creator of GloopGlop
+    avatar: https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/7ce134db-e332-4ee9-9aa4-f09f93acfe00/public
+    bio: |
+      Welcome to my creator page.
+    short_links:
+      - label: TikTok
+        icon: tiktok
+        href: https://www.tiktok.com/@erinthecoopgal
+      - label: Instagram
+        icon: instagram
+        href: https://www.instagram.com/erinthecoopgal
+      - label: LinkedIn
+        icon: linkedin
+        href: https://www.linkedin.com/in/erin-mcmahan-879841101/
+
+
+  - type: links
+    id: social-links
+    title:
+    style: cards
+    items:
+      - label: TikTok
+        href: https://www.tiktok.com/@erinthecoopgal
+      - label: Instagram
+        href: https://www.instagram.com/erinthecoopgal
+      - label: LinkedIn
+        href: https://www.linkedin.com/in/erin-mcmahan-879841101/
+

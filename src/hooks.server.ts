@@ -1,4 +1,5 @@
 import { canonicalOriginForSite } from '$lib/server/content';
+import { isMeNotificationsHost } from '$lib/server/me-host';
 import { getAllSites, resolveSiteByHostname, resolveSiteForGloopGgPath, resolveSiteById } from '$lib/server/sites';
 import type { Handle } from '@sveltejs/kit';
 import { dev } from '$app/environment';
@@ -11,6 +12,9 @@ export const handle: Handle = async ({ event, resolve }) => {
 		const hn = hostname.trim().toLowerCase();
 		const pathname = event.url.pathname;
 		const segments = pathname.split('/').filter(Boolean);
+		if (isMeNotificationsHost(hn) && pathname === '/me') {
+			return Response.redirect(`${event.url.origin}/${event.url.search}`, 302);
+		}
 
 		let site: Awaited<ReturnType<typeof resolveSiteByHostname>> = null;
 
