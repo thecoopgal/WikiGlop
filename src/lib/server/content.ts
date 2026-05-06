@@ -83,7 +83,29 @@ export type CreatorPageSummary = {
 	id: string;
 	title: string;
 	path: string;
+	notificationTopics: Array<{ id: string; label: string; default?: boolean }>;
 };
+
+export type GlobalCreatorPageSummary = CreatorPageSummary & {
+	siteId: string;
+	siteName: string;
+};
+
+function parseNotificationTopicsFromParsedPage(parsed: Record<string, unknown>): Array<{ id: string; label: string; default?: boolean }> {
+	const notificationsRaw = parsed.notifications;
+	if (!notificationsRaw || typeof notificationsRaw !== 'object') return [];
+	const notificationsObj = notificationsRaw as Record<string, unknown>;
+	const topicsRaw = notificationsObj.topics;
+	if (!Array.isArray(topicsRaw)) return [];
+	return topicsRaw
+		.filter((t): t is Record<string, unknown> => typeof t === 'object' && t !== null)
+		.map((t) => ({
+			id: typeof t.id === 'string' ? t.id.trim().toLowerCase() : '',
+			label: typeof t.label === 'string' && t.label.trim() ? t.label.trim() : '',
+			default: t.default === true
+		}))
+		.filter((t) => !!t.id && !!t.label);
+}
 
 type LinkLikeItem = {
 	label?: string;
@@ -437,10 +459,28 @@ export async function listCreatorPages(site: ResolvedSite): Promise<CreatorPageS
 					: fileName.replace(/\.yaml$/i, '');
 		const id = typeof parsed.id === 'string' && parsed.id.trim() ? parsed.id.trim() : fileName.replace(/\.yaml$/i, '');
 		const path = toNormalizedPath(parsed.path, fileName);
-		creators.push({ id, title, path });
+		const notificationTopics = parseNotificationTopicsFromParsedPage(parsed);
+		creators.push({ id, title, path, notificationTopics });
 	}
 
 	return creators.sort((a, b) => a.title.localeCompare(b.title));
+}
+
+export async function listCreatorPagesAcrossSites(): Promise<GlobalCreatorPageSummary[]> {
+	const sites = await getAllSites();
+	const all: GlobalCreatorPageSummary[] = [];
+	for (const site of sites) {
+		// eslint-disable-next-line no-await-in-loop
+		const pages = await listCreatorPages(site);
+		for (const page of pages) {
+			all.push({
+				...page,
+				siteId: site.siteId,
+				siteName: site.name ?? site.id ?? site.siteId
+			});
+		}
+	}
+	return all.sort((a, b) => a.siteName.localeCompare(b.siteName) || a.title.localeCompare(b.title));
 }
 
 /** `pages/not-found.yaml` — prefers the active site, then platform `gloopglop`. */

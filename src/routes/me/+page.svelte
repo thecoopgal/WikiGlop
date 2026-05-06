@@ -25,6 +25,10 @@
 	let currentEndpoint = $state('');
 	let feedback = $state('');
 
+	function rowKey(page: { siteId: string; path: string }): string {
+		return `${page.siteId}:${page.path}`;
+	}
+
 	async function refreshSubscriptions() {
 		const current = await getCurrentBrowserSubscription();
 		if (!current?.endpoint) {
@@ -40,38 +44,44 @@
 		}
 		const payload = (await res.json()) as {
 			ok: boolean;
-			subscriptions: Array<{ pagePath: string; revoked: boolean }>;
+			subscriptions: Array<{ siteId: string; pagePath: string; revoked: boolean }>;
 		};
-		const activePaths = new Set(
-			(payload.subscriptions ?? []).filter((x) => !x.revoked).map((x) => x.pagePath)
+		const activeKeys = new Set(
+			(payload.subscriptions ?? [])
+				.filter((x) => !x.revoked)
+				.map((x) => `${x.siteId}:${x.pagePath}`)
 		);
 		const next: SubState = {};
 		for (const page of creatorPages) {
-			next[page.path] = activePaths.has(page.path) ? 'followed' : 'not_followed';
+			const key = rowKey(page);
+			next[key] = activeKeys.has(key) ? 'followed' : 'not_followed';
 		}
 		subState = next;
 	}
 
-	async function followCreator(path: string, title: string) {
-		subState = { ...subState, [path]: 'loading' };
+	async function followCreator(siteId: string, path: string, title: string) {
+		const key = `${siteId}:${path}`;
+		subState = { ...subState, [key]: 'loading' };
 		const result = await registerForCreatorNotifications({
+			siteId,
 			pagePath: path,
 			creatorName: title
 		});
 		if (!result.ok) {
-			subState = { ...subState, [path]: 'not_followed' };
+			subState = { ...subState, [key]: 'not_followed' };
 			feedback = 'Could not subscribe on this device right now.';
 			return;
 		}
-		subState = { ...subState, [path]: 'followed' };
+		subState = { ...subState, [key]: 'followed' };
 		feedback = '';
 		await refreshSubscriptions();
 	}
 
-	async function unfollowCreator(path: string) {
-		subState = { ...subState, [path]: 'loading' };
-		const result = await unsubscribeFromCreatorPage(path);
-		subState = { ...subState, [path]: result.ok ? 'not_followed' : 'followed' };
+	async function unfollowCreator(siteId: string, path: string) {
+		const key = `${siteId}:${path}`;
+		subState = { ...subState, [key]: 'loading' };
+		const result = await unsubscribeFromCreatorPage(path, siteId);
+		subState = { ...subState, [key]: result.ok ? 'not_followed' : 'followed' };
 		if (!result.ok) feedback = 'Could not update this subscription.';
 	}
 
@@ -112,25 +122,25 @@
 						<div class="flex items-center justify-between rounded-box border border-base-300 p-3">
 							<div>
 								<p class="font-medium">{page.title}</p>
-								<p class="text-xs opacity-70">{page.path}</p>
+								<p class="text-xs opacity-70">{page.siteName} · {page.path}</p>
 							</div>
-							{#if subState[page.path] === 'followed'}
+							{#if subState[rowKey(page)] === 'followed'}
 								<button
 									type="button"
 									class="btn btn-sm btn-outline"
-									onclick={() => unfollowCreator(page.path)}
-									disabled={subState[page.path] === 'loading'}
+									onclick={() => unfollowCreator(page.siteId, page.path)}
+									disabled={subState[rowKey(page)] === 'loading'}
 								>
-									{#if subState[page.path] === 'loading'}Updating...{:else}Unfollow{/if}
+									{#if subState[rowKey(page)] === 'loading'}Updating...{:else}Unfollow{/if}
 								</button>
 							{:else}
 								<button
 									type="button"
 									class="btn btn-sm btn-primary"
-									onclick={() => followCreator(page.path, page.title)}
-									disabled={subState[page.path] === 'loading'}
+									onclick={() => followCreator(page.siteId, page.path, page.title)}
+									disabled={subState[rowKey(page)] === 'loading'}
 								>
-									{#if subState[page.path] === 'loading'}Updating...{:else}Follow{/if}
+									{#if subState[rowKey(page)] === 'loading'}Updating...{:else}Follow{/if}
 								</button>
 							{/if}
 						</div>

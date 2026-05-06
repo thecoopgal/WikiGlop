@@ -36,6 +36,16 @@ import {
 			icon?: string;
 			open_in?: 'same_tab' | 'new_tab' | string;
 		}>;
+		notifications?: {
+			enabled?: boolean;
+			title?: string;
+			description?: string;
+			topics?: Array<{
+				id: string;
+				label: string;
+				default?: boolean;
+			}>;
+		};
 	site?: {
 		id?: string;
 		siteId?: string;
@@ -51,7 +61,7 @@ import {
 	};
 	};
 
-let { name, tagline, avatar, bio, short_links, site } = $props() as Props;
+let { name, tagline, avatar, bio, short_links, notifications, site } = $props() as Props;
 
 	const cardShadow = 'shadow-[0px_1px_3px_rgba(0,0,0,0.15)]';
 const GLOOP_SHORT_HOST = 'gloop.gg';
@@ -99,6 +109,7 @@ let downloadState = $state<'idle' | 'loading' | 'error'>('idle');
 let showNotifyModal = $state(false);
 let notifyState = $state<'idle' | 'loading' | 'success' | 'error'>('idle');
 let notifyMessage = $state('');
+let selectedTopicIds = $state<string[]>([]);
 let deferredInstallPrompt: any = null;
 
 $effect(() => {
@@ -175,6 +186,28 @@ const qrUrl = $derived(
 		? `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(shortUrl)}`
 		: ''
 );
+const notificationTopics = $derived.by(() =>
+	(notifications?.topics ?? [])
+		.map((t) => ({
+			id: typeof t.id === 'string' ? t.id.trim().toLowerCase() : '',
+			label: typeof t.label === 'string' ? t.label.trim() : '',
+			default: t.default === true
+		}))
+		.filter((t) => !!t.id && !!t.label)
+);
+
+function seedDefaultTopics() {
+	const defaults = notificationTopics.filter((t) => t.default).map((t) => t.id);
+	selectedTopicIds = defaults.length ? Array.from(new Set(defaults)) : notificationTopics.map((t) => t.id);
+}
+
+function toggleTopic(topicId: string) {
+	if (selectedTopicIds.includes(topicId)) {
+		selectedTopicIds = selectedTopicIds.filter((x) => x !== topicId);
+		return;
+	}
+	selectedTopicIds = [...selectedTopicIds, topicId];
+}
 
 	function normalizeIconKey(value: string | undefined): string {
 		return (value ?? '').trim().toLowerCase().replace(/[\s_-]+/g, '');
@@ -418,8 +451,10 @@ async function enableNotifications() {
 	notifyState = 'loading';
 	notifyMessage = '';
 	const result = await registerForCreatorNotifications({
+		siteId: site?.siteId ?? site?.id,
 		pagePath: typeof window !== 'undefined' ? window.location.pathname : '/',
-		creatorName: name ?? site?.name ?? site?.id ?? ''
+		creatorName: name ?? site?.name ?? site?.id ?? '',
+		topicIds: selectedTopicIds
 	});
 	if (!result.ok) {
 		notifyState = 'error';
@@ -463,6 +498,7 @@ async function promptInstallIfAvailable() {
 								showNotifyModal = true;
 								notifyState = 'idle';
 								notifyMessage = '';
+								seedDefaultTopics();
 							}}
 							aria-label="Get notifications"
 							title="Get notifications"
@@ -634,9 +670,9 @@ async function promptInstallIfAvailable() {
 		{#if showNotifyModal}
 			<div class="modal modal-open">
 				<div class="modal-box max-w-md">
-					<h3 class="text-xl font-semibold">Follow {name ?? 'creator'} updates</h3>
+					<h3 class="text-xl font-semibold">{notifications?.title ?? `Follow ${name ?? 'creator'} updates`}</h3>
 					<p class="mt-2 text-sm opacity-80">
-						Get notified when this creator posts new drops, links, and announcements.
+						{notifications?.description ?? 'Get notified when this creator posts new drops, links, and announcements.'}
 					</p>
 
 					<div class="mt-4 space-y-3">
@@ -656,15 +692,36 @@ async function promptInstallIfAvailable() {
 								If install does not open, use your browser menu and choose “Add to Home Screen”.
 							</p>
 						{/if}
+						{#if notificationTopics.length}
+							<div class="rounded-box border border-base-300 p-3">
+								<p class="mb-2 text-sm font-medium">Notification types</p>
+								<div class="space-y-2">
+									{#each notificationTopics as topic}
+										<label class="label cursor-pointer justify-start gap-3 p-0">
+											<input
+												type="checkbox"
+												class="checkbox checkbox-primary checkbox-sm"
+												checked={selectedTopicIds.includes(topic.id)}
+												onchange={() => toggleTopic(topic.id)}
+											/>
+											<span class="label-text">{topic.label}</span>
+										</label>
+									{/each}
+								</div>
+							</div>
+						{/if}
 
 						<button
 							type="button"
 							class="btn btn-primary w-full"
 							onclick={enableNotifications}
-							disabled={notifyState === 'loading'}
+							disabled={notifyState === 'loading' || (notificationTopics.length > 0 && selectedTopicIds.length === 0)}
 						>
 							{notifyState === 'loading' ? 'Enabling…' : 'Enable notifications'}
 						</button>
+						{#if notificationTopics.length > 0 && selectedTopicIds.length === 0}
+							<p class="text-xs opacity-70">Select at least one notification type.</p>
+						{/if}
 						{#if notifyState === 'success'}
 							<p class="text-sm text-success">{notifyMessage}</p>
 						{:else if notifyState === 'error'}

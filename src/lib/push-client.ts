@@ -42,8 +42,10 @@ export function isStandaloneDisplayMode(): boolean {
 }
 
 export async function registerForCreatorNotifications(input: {
+	siteId?: string;
 	pagePath: string;
 	creatorName?: string;
+	topicIds?: string[];
 }): Promise<PushSetupResult> {
 	if (!canUsePushNotifications()) return { ok: false, reason: 'unsupported' };
 
@@ -79,8 +81,10 @@ export async function registerForCreatorNotifications(input: {
 		method: 'POST',
 		headers: { 'content-type': 'application/json' },
 		body: JSON.stringify({
+			siteId: input.siteId ?? '',
 			pagePath: input.pagePath,
 			creatorName: input.creatorName ?? '',
+			topicIds: Array.isArray(input.topicIds) ? input.topicIds : [],
 			subscription: subscription.toJSON()
 		})
 	});
@@ -102,7 +106,7 @@ export async function getCurrentBrowserSubscription(): Promise<BrowserPushSubscr
 	}
 }
 
-export async function unsubscribeFromCreatorPage(pagePath: string): Promise<{ ok: boolean }> {
+export async function unsubscribeFromCreatorPage(pagePath: string, siteId?: string): Promise<{ ok: boolean }> {
 	const current = await getCurrentBrowserSubscription();
 	if (!current?.endpoint) return { ok: false };
 	const res = await fetch('/api/notifications/unsubscribe', {
@@ -110,6 +114,7 @@ export async function unsubscribeFromCreatorPage(pagePath: string): Promise<{ ok
 		headers: { 'content-type': 'application/json' },
 		body: JSON.stringify({
 			endpoint: current.endpoint,
+			siteId: siteId ?? '',
 			pagePath
 		})
 	});

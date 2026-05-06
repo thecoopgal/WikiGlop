@@ -18,12 +18,27 @@
 	let title = $state('');
 	let message = $state('');
 	let destinationUrl = $state('');
+	let selectedTopicId = $state('');
 	let sendState = $state<'idle' | 'loading' | 'success' | 'error'>('idle');
 	let feedback = $state('');
 
 	$effect(() => {
 		if (selectedPath) return;
 		selectedPath = creatorPages[0]?.path ?? '/';
+	});
+
+	const selectedCreator = $derived(creatorPages.find((p: any) => p.path === selectedPath));
+	const selectedCreatorTopics = $derived(
+		Array.isArray(selectedCreator?.notificationTopics) ? selectedCreator.notificationTopics : []
+	);
+
+	$effect(() => {
+		if (!selectedCreatorTopics.length) {
+			selectedTopicId = '';
+			return;
+		}
+		const hasSelected = selectedCreatorTopics.some((t: any) => t.id === selectedTopicId);
+		if (!hasSelected) selectedTopicId = '';
 	});
 
 	function selectedCreatorName(): string {
@@ -53,7 +68,8 @@
 					title: title.trim(),
 					message: message.trim(),
 					url: destinationUrl.trim() || selectedPath,
-					creatorName: selectedCreatorName()
+					creatorName: selectedCreatorName(),
+					topicId: selectedTopicId || undefined
 				})
 			});
 			const body = (await res.json().catch(() => null)) as
@@ -125,6 +141,19 @@
 						</div>
 						<textarea class="textarea textarea-bordered w-full" rows="4" maxlength="280" bind:value={message} placeholder="Tap to see the latest update"></textarea>
 					</label>
+					{#if selectedCreatorTopics.length}
+						<label class="form-control w-full">
+							<div class="label">
+								<span class="label-text">Notification type</span>
+							</div>
+							<select class="select select-bordered w-full" bind:value={selectedTopicId}>
+								<option value="">All subscribers</option>
+								{#each selectedCreatorTopics as topic}
+									<option value={topic.id}>{topic.label}</option>
+								{/each}
+							</select>
+						</label>
+					{/if}
 
 					<label class="form-control w-full">
 						<div class="label">

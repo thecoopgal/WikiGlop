@@ -13,6 +13,7 @@ export type PushDeliveryPayload = {
 	body: string;
 	url?: string;
 	creatorName?: string;
+	topicId?: string;
 };
 
 type EnvLike = {
@@ -38,6 +39,7 @@ type StoredPushSubscription = {
 };
 
 export type MyCreatorSubscription = {
+	siteId: string;
 	pagePath: string;
 	creatorName: string | null;
 	revoked: boolean;
@@ -89,10 +91,11 @@ export async function upsertPushSubscription(params: {
 	siteId: string;
 	pagePath: string;
 	creatorName?: string;
+	topicIds?: string[];
 	subscription: PushSubscriptionInput;
 	userAgent?: string;
 }) {
-	const { platform, siteId, pagePath, creatorName, subscription, userAgent } = params;
+	const { platform, siteId, pagePath, creatorName, topicIds, subscription, userAgent } = params;
 	const endpoint = subscription.endpoint?.trim();
 	const p256dh = subscription.keys?.p256dh?.trim();
 	const auth = subscription.keys?.auth?.trim();
@@ -125,6 +128,37 @@ export async function upsertPushSubscription(params: {
 			userAgent?.trim() || null
 		)
 		.all();
+
+	const row = await db
+		.prepare(
+			`SELECT id FROM push_subscriptions WHERE site_id = ? AND page_path = ? AND endpoint = ? LIMIT 1`
+		)
+		.bind(siteId, pagePath, endpoint)
+		.first<{ id: string }>();
+	const subscriptionId = row?.id?.trim();
+	if (!subscriptionId) return;
+
+	const normalizedTopics = Array.from(
+		new Set(
+			(topicIds ?? [])
+				.map((x) => String(x ?? '').trim().toLowerCase())
+				.filter((x) => /^[a-z0-9][a-z0-9_-]{0,63}$/i.test(x))
+		)
+	);
+	await db
+		.prepare(`DELETE FROM push_subscription_topics WHERE subscription_id = ?`)
+		.bind(subscriptionId)
+		.all();
+	for (const topicId of normalizedTopics) {
+		// eslint-disable-next-line no-await-in-loop
+		await db
+			.prepare(
+				`INSERT OR IGNORE INTO push_subscription_topics (id, subscription_id, topic_id, created_at)
+         VALUES (?, ?, ?, datetime('now'))`
+			)
+			.bind(randomId('pushtopic'), subscriptionId, topicId)
+			.all();
+	}
 }
 
 export async function revokePushSubscription(params: {
@@ -152,7 +186,6 @@ export async function revokePushSubscription(params: {
 
 export async function getMyCreatorSubscriptions(params: {
 	platform: App.Platform | undefined;
-	siteId: string;
 	endpoint: string;
 }): Promise<MyCreatorSubscription[]> {
 	const endpoint = params.endpoint?.trim();
@@ -160,14 +193,15 @@ export async function getMyCreatorSubscriptions(params: {
 	const db = getDb(params.platform);
 	const rows = await db
 		.prepare(
-			`SELECT page_path AS pagePath, creator_name AS creatorName, revoked_at
+			`SELECT site_id AS siteId, page_path AS pagePath, creator_name AS creatorName, revoked_at
        FROM push_subscriptions
-       WHERE site_id = ? AND endpoint = ?
-       ORDER BY creator_name ASC, page_path ASC`
+       WHERE endpoint = ?
+       ORDER BY site_id ASC, creator_name ASC, page_path ASC`
 		)
-		.bind(params.siteId, endpoint)
-		.all<{ pagePath: string; creatorName: string | null; revoked_at: string | null }>();
+		.bind(endpoint)
+		.all<{ siteId: string; pagePath: string; creatorName: string | null; revoked_at: string | null }>();
 	return (rows.results ?? []).map((r) => ({
+		siteId: r.siteId,
 		pagePath: r.pagePath,
 		creatorName: r.creatorName,
 		revoked: !!r.revoked_at
@@ -178,15 +212,41 @@ async function activeSubscriptionsForPage(params: {
 	platform: App.Platform | undefined;
 	siteId: string;
 	pagePath: string;
+	topicIds?: string[];
 }): Promise<StoredPushSubscription[]> {
 	const db = getDb(params.platform);
+	const normalizedTopics = Array.from(
+		new Set(
+			(params.topicIds ?? [])
+				.map((x) => String(x ?? '').trim().toLowerCase())
+				.filter((x) => /^[a-z0-9][a-z0-9_-]{0,63}$/i.test(x))
+		)
+	);
+	if (!normalizedTopics.length) {
+		const result = await db
+			.prepare(
+				`SELECT id, endpoint, p256dh, auth
+       FROM push_subscriptions
+       WHERE site_id = ? AND page_path = ? AND revoked_at IS NULL`
+			)
+			.bind(params.siteId, params.pagePath)
+			.all<StoredPushSubscription>();
+		return result.results ?? [];
+	}
+
+	const placeholders = normalizedTopics.map(() => '?').join(', ');
 	const result = await db
 		.prepare(
 			`SELECT id, endpoint, p256dh, auth
        FROM push_subscriptions
-       WHERE site_id = ? AND page_path = ? AND revoked_at IS NULL`
+       WHERE site_id = ? AND page_path = ? AND revoked_at IS NULL
+         AND id IN (
+           SELECT subscription_id
+           FROM push_subscription_topics
+           WHERE topic_id IN (${placeholders})
+         )`
 		)
-		.bind(params.siteId, params.pagePath)
+		.bind(params.siteId, params.pagePath, ...normalizedTopics)
 		.all<StoredPushSubscription>();
 	return result.results ?? [];
 }
@@ -196,9 +256,10 @@ export async function sendPushToPage(params: {
 	siteId: string;
 	pagePath: string;
 	payload: PushDeliveryPayload;
+	topicIds?: string[];
 }) {
-	const { platform, siteId, pagePath, payload } = params;
-	const subscriptions = await activeSubscriptionsForPage({ platform, siteId, pagePath });
+	const { platform, siteId, pagePath, payload, topicIds } = params;
+	const subscriptions = await activeSubscriptionsForPage({ platform, siteId, pagePath, topicIds });
 	if (!subscriptions.length) return { sent: 0, failed: 0, total: 0 };
 
 	const vapid = getVapidConfig(platform);

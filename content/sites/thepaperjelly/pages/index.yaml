@@ -13,6 +13,21 @@ page_settings:
   show_footer: true
   max_width: sm
 
+notifications:
+  enabled: true
+  title: Follow The Paper Jelly
+  description: Choose what updates you want from The Paper Jelly.
+  topics:
+    - id: go_live
+      label: Go Live
+      default: true
+    - id: festivals
+      label: Festivals
+      default: true
+    - id: new_art
+      label: New Art
+      default: true
+
 blocks:
   - type: creator_profile
     id: profile
