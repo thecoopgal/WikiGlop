@@ -32,10 +32,17 @@ blocks:
   - type: creator_profile
     id: profile
     name: "@thecoopgal"
+    profile_theme: gloopglop
+    names:
+      - "@thecoopgal"
+      - "Erin McMahan"
+      - "@thecoopgal"
+      - "GloopGlop Founder"
+    name_animation: all
     tagline: Creator of GloopGlop
     avatar: https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/7ce134db-e332-4ee9-9aa4-f09f93acfe00/public
     bio: |
-      Welcome to my creator page.
+      Welcome to my GloopGlop page, check out my socials below.
     short_links:
       - label: TikTok
         icon: tiktok
@@ -46,17 +53,3 @@ blocks:
       - label: LinkedIn
         icon: linkedin
         href: https://www.linkedin.com/in/erin-mcmahan-879841101/
-
-
-  - type: links
-    id: social-links
-    title:
-    style: cards
-    items:
-      - label: TikTok
-        href: https://www.tiktok.com/@erinthecoopgal
-      - label: Instagram
-        href: https://www.instagram.com/erinthecoopgal
-      - label: LinkedIn
-        href: https://www.linkedin.com/in/erin-mcmahan-879841101/
-

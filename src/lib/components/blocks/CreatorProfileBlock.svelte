@@ -31,6 +31,9 @@ import {
 
 	type Props = {
 		name?: string;
+		names?: string[];
+		name_animation?: 'fade' | 'swipe' | 'bounce' | 'all' | string;
+		profile_theme?: string;
 		tagline?: string;
 		avatar?: string;
 		bio?: string;
@@ -65,7 +68,57 @@ import {
 	};
 	};
 
-let { name, tagline, avatar, bio, short_links, notifications, site } = $props() as Props;
+let { name, names, name_animation, profile_theme, tagline, avatar, bio, short_links, notifications, site } = $props() as Props;
+
+const NAME_ANIMATIONS = ['fade', 'swipe', 'bounce'] as const;
+type NameAnimationMode = (typeof NAME_ANIMATIONS)[number] | 'all';
+
+function normalizeAnimationMode(value: string | undefined): NameAnimationMode {
+	const v = (value ?? '').trim().toLowerCase();
+	if (v === 'swipe' || v === 'bounce' || v === 'all') return v;
+	return 'fade';
+}
+
+const nameOptions = $derived.by(() => {
+	const out: string[] = [];
+	const push = (v: string | undefined) => {
+		const t = (v ?? '').trim();
+		if (!t || out.includes(t)) return;
+		out.push(t);
+	};
+	push(name);
+	for (const n of names ?? []) push(typeof n === 'string' ? n : '');
+	if (!out.length) push(site?.name ?? site?.id ?? 'Creator');
+	return out;
+});
+const primaryName = $derived(nameOptions[0] ?? 'Creator');
+const hasDisplayName = $derived(nameOptions.length > 0);
+const configuredNameAnimation = $derived(normalizeAnimationMode(name_animation));
+let activeNameIndex = $state(0);
+let animationStep = $state(0);
+
+$effect(() => {
+	nameOptions;
+	activeNameIndex = 0;
+	animationStep = 0;
+});
+
+$effect(() => {
+	if (nameOptions.length <= 1) return;
+	const t = setInterval(() => {
+		activeNameIndex = (activeNameIndex + 1) % nameOptions.length;
+		animationStep += 1;
+	}, 2600);
+	return () => clearInterval(t);
+});
+
+const displayedName = $derived(nameOptions[activeNameIndex] ?? primaryName);
+const effectiveNameAnimation = $derived.by(() => {
+	if (configuredNameAnimation !== 'all') return configuredNameAnimation;
+	return NAME_ANIMATIONS[animationStep % NAME_ANIMATIONS.length];
+});
+const isCoopgalCosmicTheme = $derived((profile_theme ?? '').trim().toLowerCase() === 'coopgal_cosmic');
+const isGloopglopTheme = $derived((profile_theme ?? '').trim().toLowerCase() === 'gloopglop');
 
 	const cardShadow = 'shadow-[0px_1px_3px_rgba(0,0,0,0.15)]';
 const GLOOP_SHORT_HOST = 'gloop.gg';
@@ -288,7 +341,7 @@ async function shareMore() {
 	if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
 		try {
 			await navigator.share({
-				title: name ?? site?.name ?? site?.id ?? 'Share This Glop',
+				title: primaryName,
 				url: shortUrl
 			});
 			return;
@@ -400,7 +453,7 @@ async function downloadBusinessCardPdf() {
 		pdf.setFont('helvetica', 'bold');
 		pdf.setFontSize(TITLE_FONT_IN * 72);
 		pdf.setTextColor(...TITLE_RGB);
-		pdf.text(name ?? site?.name ?? site?.id ?? 'Glop', TITLE_POS.x, TITLE_POS.y, { align: 'center' });
+		pdf.text(primaryName, TITLE_POS.x, TITLE_POS.y, { align: 'center' });
 
 		if (avatarCircleDataUrl) {
 			pdf.addImage(avatarCircleDataUrl, 'PNG', PROFILE_IMAGE.x, PROFILE_IMAGE.y, PROFILE_IMAGE.w, PROFILE_IMAGE.h);
@@ -419,7 +472,7 @@ async function downloadBusinessCardPdf() {
 		pdf.setTextColor(...URL_RGB);
 		pdf.text(shortPathLabel || '', URL_POS.x, URL_POS.y, { align: 'center' });
 
-		const base = slugifyForFileName(name ?? site?.siteId ?? site?.id ?? 'glop');
+		const base = slugifyForFileName(primaryName ?? site?.siteId ?? site?.id ?? 'glop');
 		const blob = pdf.output('blob');
 		const url = URL.createObjectURL(blob);
 		const a = document.createElement('a');
@@ -459,7 +512,7 @@ async function enableNotifications() {
 	const result = await registerForCreatorNotifications({
 		siteId: site?.siteId ?? site?.id,
 		pagePath: typeof window !== 'undefined' ? window.location.pathname : '/',
-		creatorName: name ?? site?.name ?? site?.id ?? '',
+		creatorName: primaryName,
 		topicIds: selectedTopicIds
 	});
 	if (!result.ok) {
@@ -491,15 +544,26 @@ async function promptInstallIfAvailable() {
 }
 </script>
 
-{#if name}
+{#if hasDisplayName}
 	<section class="my-10">
-		<div class="card bg-base-100 {cardShadow}">
-			<div class="card-body items-center text-center">
-				<div class="flex w-full items-start gap-2">
+		<div class={`card relative overflow-hidden ${
+			isCoopgalCosmicTheme
+				? 'border border-primary/30 bg-gradient-to-br from-[#0f1327] via-[#1e1b4b] to-[#0e2a52] text-white shadow-[0_12px_45px_rgba(37,99,235,0.35)]'
+				: isGloopglopTheme
+					? 'border border-primary/20 bg-gradient-to-b from-base-100 to-base-200'
+					: `bg-base-100 ${cardShadow}`
+		}`}>
+			{#if isCoopgalCosmicTheme}
+				<div class="pointer-events-none absolute -left-14 top-[-42px] h-44 w-44 rounded-full bg-fuchsia-500/25 blur-3xl"></div>
+				<div class="pointer-events-none absolute -right-12 bottom-[-48px] h-44 w-44 rounded-full bg-cyan-400/25 blur-3xl"></div>
+				<div class="pointer-events-none absolute left-1/2 top-[38%] h-px w-[84%] -translate-x-1/2 bg-white/20"></div>
+			{/if}
+			<div class={`card-body items-center text-center ${isCoopgalCosmicTheme ? 'relative z-10' : ''}`}>
+				<div class={`grid w-full items-start gap-2 ${isGloopglopTheme ? 'grid-cols-[2.5rem_minmax(0,1fr)]' : 'grid-cols-[2.5rem_minmax(0,1fr)_2.5rem]'}`}>
 					{#if CREATOR_NOTIFICATIONS_UI_ENABLED}
 						<button
 							type="button"
-							class="btn btn-ghost btn-sm btn-circle shrink-0 border border-base-300 self-start"
+							class="btn btn-ghost btn-sm btn-circle border border-base-300 self-start"
 							onclick={() => {
 								showNotifyModal = true;
 								notifyState = 'idle';
@@ -511,54 +575,91 @@ async function promptInstallIfAvailable() {
 						>
 							<IconBell class="h-5 w-5" />
 						</button>
+					{:else}
+						<div class="h-8 w-8" aria-hidden="true"></div>
 					{/if}
-					<div class="flex min-w-0 flex-1 flex-col items-center gap-4">
+					<div class="flex min-w-0 flex-1 items-center justify-center gap-4">
 						{#if avatar}
 							<img
 								src={avatar}
-								alt={name}
-								class="h-16 w-16 rounded-full object-cover"
+								alt={primaryName}
+								class={`h-16 w-16 shrink-0 rounded-full object-cover ${isCoopgalCosmicTheme ? 'ring-2 ring-cyan-300/70 ring-offset-2 ring-offset-[#111827] shadow-[0_0_22px_rgba(34,211,238,0.35)]' : ''}`}
 							/>
 						{/if}
-						<div class="text-center">
-							<h2 class="card-title w-full justify-center text-2xl text-center">{name}</h2>
+						<div class="mx-auto w-full max-w-md text-left">
+							<h2 class={`card-title w-full justify-start text-2xl text-left ${isCoopgalCosmicTheme ? 'font-extrabold tracking-wide' : ''}`}>
+								{#key `${activeNameIndex}-${effectiveNameAnimation}`}
+									<span class={`inline-block profile-name-anim profile-name-anim-${effectiveNameAnimation} ${isCoopgalCosmicTheme ? 'bg-gradient-to-r from-cyan-200 via-white to-fuchsia-200 bg-clip-text text-transparent drop-shadow-[0_2px_8px_rgba(255,255,255,0.2)]' : ''}`}>{displayedName}</span>
+								{/key}
+							</h2>
 							{#if tagline}
-								<p class="mt-5 opacity-80">{tagline}</p>
+								<p class={`mt-5 max-w-sm text-left ${isCoopgalCosmicTheme ? 'text-white/85' : 'opacity-80'}`}>{tagline}</p>
 							{/if}
 						</div>
 					</div>
-					<button
-						type="button"
-						class="btn btn-ghost btn-sm btn-circle shrink-0 border border-base-300 self-start"
-						onclick={() => {
-							showShareModal = true;
-							copyState = 'idle';
-							qrCopyState = 'idle';
-							showQrCode = false;
-							linkCopied = false;
-						}}
-						aria-label="Share page"
-						title="Share page"
-					>
-						<img src={shareIconUrl} alt="" class="h-5 w-5 object-contain" />
-					</button>
+					{#if !isGloopglopTheme}
+						<button
+							type="button"
+							class="btn btn-ghost btn-sm btn-circle border border-base-300 self-start"
+							onclick={() => {
+								showShareModal = true;
+								copyState = 'idle';
+								qrCopyState = 'idle';
+								showQrCode = false;
+								linkCopied = false;
+							}}
+							aria-label="Share page"
+							title="Share page"
+						>
+							<img src={shareIconUrl} alt="" class="h-5 w-5 object-contain" />
+						</button>
+					{/if}
 				</div>
 				{#if bio}
-					<p class="whitespace-pre-line">{bio}</p>
+					<p class={`mx-auto w-full max-w-md whitespace-pre-line text-center ${isCoopgalCosmicTheme ? 'text-white/90' : ''}`}>{bio}</p>
+				{/if}
+				{#if isGloopglopTheme}
+					<div class="mt-3 w-full flex justify-center">
+						<button
+							type="button"
+							class="btn btn-sm rounded-full border border-primary/30 bg-primary/10 hover:bg-primary/20"
+							onclick={() => {
+								showShareModal = true;
+								copyState = 'idle';
+								qrCopyState = 'idle';
+								showQrCode = false;
+								linkCopied = false;
+							}}
+							aria-label="Share page"
+							title="Share page"
+						>
+							<img src={shareIconUrl} alt="" class="h-4 w-4 object-contain" />
+							Share profile
+						</button>
+					</div>
 				{/if}
 				{#if short_links?.length}
-					<div class="mt-5 flex flex-wrap gap-2">
+					<div class={`mt-5 ${isGloopglopTheme ? 'grid w-full grid-cols-2 gap-2 sm:grid-cols-3' : 'flex flex-wrap gap-2'}`}>
 						{#each short_links as shortLink, i (`${shortLink.href}-${i}`)}
 							{@const Icon = iconComponent(shortLink.icon)}
 							<a
 								href={shortLink.href}
-								class="btn btn-circle btn-sm btn-outline {cardShadow}"
+								class={`btn btn-sm btn-outline ${
+									isCoopgalCosmicTheme
+										? 'btn-circle border-white/45 bg-white/10 text-white backdrop-blur hover:bg-white/20 hover:border-white/70'
+										: isGloopglopTheme
+											? 'h-auto min-h-10 items-center justify-center gap-2 rounded-xl border-primary/25 bg-base-100/80 px-3 py-2 text-center font-medium normal-case hover:bg-primary/10'
+											: `btn-circle ${cardShadow}`
+								}`}
 								target={shouldOpenSameTab(shortLink.open_in) ? undefined : '_blank'}
 								rel={shouldOpenSameTab(shortLink.open_in) ? undefined : 'noreferrer'}
 								title={shortLink.label ?? shortLink.icon ?? 'Link'}
 								aria-label={shortLink.label ?? shortLink.icon ?? 'Link'}
 							>
 								<Icon class="h-5 w-5" />
+								{#if isGloopglopTheme}
+									<span class="truncate text-center text-xs leading-tight">{shortLink.label ?? shortLink.icon ?? 'Link'}</span>
+								{/if}
 							</a>
 						{/each}
 					</div>
@@ -583,11 +684,11 @@ async function promptInstallIfAvailable() {
 							<div class="w-1/2 px-3 py-4">
 								<div class="relative flex min-h-[144px] flex-col items-center justify-center gap-2 text-center">
 									{#if avatar}
-										<img src={avatar} alt={name ?? 'Page image'} class="h-14 w-14 rounded-full object-cover" />
+										<img src={avatar} alt={primaryName ?? 'Page image'} class="h-14 w-14 rounded-full object-cover" />
 									{:else}
 										<div class="h-14 w-14 rounded-full bg-base-300"></div>
 									{/if}
-									<p class="max-w-full truncate font-medium">{name ?? site?.name ?? site?.id ?? 'Untitled page'}</p>
+									<p class="max-w-full truncate font-medium">{primaryName}</p>
 									<p class="max-w-full truncate text-xs opacity-80">{canonicalHostLabel || '/'}</p>
 									<p class="max-w-full truncate text-xs opacity-60">{shortPathLabel || '/'}</p>
 									{#if qrUrl}
@@ -676,7 +777,7 @@ async function promptInstallIfAvailable() {
 		{#if CREATOR_NOTIFICATIONS_UI_ENABLED && showNotifyModal}
 			<div class="modal modal-open">
 				<div class="modal-box max-w-md">
-					<h3 class="text-xl font-semibold">{notifications?.title ?? `Follow ${name ?? 'creator'} updates`}</h3>
+					<h3 class="text-xl font-semibold">{notifications?.title ?? `Follow ${primaryName} updates`}</h3>
 					<p class="mt-2 text-sm opacity-80">
 						{notifications?.description ?? 'Get notified when this creator posts new drops, links, and announcements.'}
 					</p>
@@ -748,6 +849,34 @@ async function promptInstallIfAvailable() {
 		{/if}
 	</section>
 {:else}
-	<p class="text-sm text-warning">Creator profile missing name.</p>
+	<p class="text-sm text-warning">Creator profile missing display name.</p>
 {/if}
+
+<style>
+	.profile-name-anim {
+		will-change: transform, opacity;
+	}
+	.profile-name-anim-fade {
+		animation: profile-name-fade 420ms ease both;
+	}
+	.profile-name-anim-swipe {
+		animation: profile-name-swipe 460ms cubic-bezier(0.22, 1, 0.36, 1) both;
+	}
+	.profile-name-anim-bounce {
+		animation: profile-name-bounce 560ms ease both;
+	}
+	@keyframes profile-name-fade {
+		from { opacity: 0; }
+		to { opacity: 1; }
+	}
+	@keyframes profile-name-swipe {
+		from { opacity: 0; transform: translateY(14px); }
+		to { opacity: 1; transform: translateY(0); }
+	}
+	@keyframes profile-name-bounce {
+		0% { opacity: 0; transform: translateY(-18px) scale(0.96); }
+		60% { opacity: 1; transform: translateY(6px) scale(1.01); }
+		100% { opacity: 1; transform: translateY(0) scale(1); }
+	}
+</style>
 
