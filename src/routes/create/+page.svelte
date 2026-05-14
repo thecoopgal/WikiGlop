@@ -46,6 +46,8 @@ let creatorHandle = $state('');
 	let showOkayText = $state(false);
 	let showTitleText = $state(false);
 	let okaySubline = $state('Gloops have been Glopped');
+	/** True while the header should show the small booger inside a spinning ring (intro, “Okay”, or explicit async work). */
+	let headerAsyncBusy = $state(false);
 
 	const INTRO_MS = 2200;
 	const INTRO_ICON_URL =
@@ -248,6 +250,10 @@ let creatorHandle = $state('');
 	function removeTopic(i: number) {
 		topics = topics.filter((_, idx) => idx !== i);
 	}
+
+	const isHeaderLoading = $derived.by(
+		() => headerAsyncBusy || showIntro || (step === 0 && !showTitleText)
+	);
 
 	const normalizedCreatorHandle = $derived.by(() => normalizeHandle(creatorHandle));
 	const isCreatorHandleValid = $derived.by(() => /^[a-z0-9-]+$/.test(normalizedCreatorHandle));
@@ -589,40 +595,42 @@ ${cleanLinks.map((l) => `      - label: ${q(l.label)}
 </svelte:head>
 
 <div class="flex min-h-screen flex-col bg-gradient-to-b from-base-200 via-base-200 to-base-300/40">
-	<main class="relative flex flex-1 items-center justify-center px-4 py-8 md:px-6 md:py-12">
-		<div class="absolute left-1/2 top-4 w-[min(500px,calc(100vw-2rem))] -translate-x-1/2 md:top-6">
-			<div>
+	<main class="flex flex-1 items-center justify-center px-4 py-8 md:px-6 md:py-12">
+		<div class="mx-auto flex w-full max-w-[800px] flex-col gap-3 md:items-center">
+			<div class="w-full shrink-0 md:w-[500px]">
 				<div class="flex items-center justify-between text-xs opacity-70">
 					<span>{step + 1} / {steps.length}</span>
 					<span>{progressPct}%</span>
 				</div>
 				<progress class="progress progress-primary mt-2 w-full" value={progressPct} max="100"></progress>
 			</div>
-		</div>
 
-		<div class="mx-auto w-full max-w-[800px]">
-			<div class="card w-full min-h-screen rounded-none border-0 bg-base-100 shadow-none md:mx-auto md:h-[500px] md:w-[500px] md:min-h-0 md:rounded-3xl md:border md:border-base-300 md:shadow-md">
-				<div class="card-body flex h-full flex-col justify-center p-5 md:p-6">
-					<div class={showIntro ? '' : 'hidden'}>
-						<div class="flex flex-col items-center text-center">
-							<div class="mx-auto mb-5 grid h-24 w-24 place-items-center rounded-full border-4 border-primary/20 border-t-primary animate-spin">
-								<img src={INTRO_ICON_URL} alt="GloopGlop booger icon" class="h-10 w-10 object-contain" />
-							</div>
-
-							{#if showOneMomentText}
-								<div in:fade={{ duration: 400 }} out:fade={{ duration: 400 }}>
-									<h2 class="text-2xl font-extrabold tracking-tight">One moment{'.'.repeat(oneMomentDots)}</h2>
-									<p class="mt-3 min-h-[1.5rem] text-sm opacity-75">{introMessages[introMessageIndex]}</p>
-								</div>
-							{/if}
+			<div class="card w-full min-h-screen shrink-0 rounded-none border-0 bg-base-100 shadow-none md:h-[500px] md:w-[500px] md:min-h-0 md:rounded-3xl md:border md:border-base-300 md:shadow-md">
+				<div class="card-body grid h-full min-h-0 grid-rows-[1fr_auto_1fr] p-5 md:p-6">
+					<div class="min-h-0" aria-hidden="true"></div>
+					<header class="flex w-full shrink-0 flex-col items-center text-center">
+						<div
+							class="relative mx-auto mb-5 grid h-24 w-24 shrink-0 place-items-center overflow-visible rounded-full border-4 border-primary/20 transition-[border-color] duration-300 {isHeaderLoading
+								? 'border-t-primary animate-spin'
+								: ''}"
+						>
+							<img
+								src={INTRO_ICON_URL}
+								alt="GloopGlop booger icon"
+								class="h-10 w-10 origin-center object-contain transition-transform duration-300 ease-out will-change-transform {isHeaderLoading
+									? 'scale-100'
+									: 'scale-[2]'}"
+							/>
 						</div>
-					</div>
-					<div class={showIntro ? 'hidden' : ''}>
-						<div class="flex flex-col items-center text-center">
-							<div class="mx-auto mb-5 grid h-24 w-24 place-items-center rounded-full border-4 border-primary/20 border-t-primary animate-spin">
-								<img src={INTRO_ICON_URL} alt="GloopGlop booger icon" class="h-10 w-10 object-contain" />
-							</div>
-							<div class="mb-6 w-full text-center">
+						<div class="mb-6 w-full min-h-[7.75rem] text-center">
+							{#if showIntro}
+								{#if showOneMomentText}
+									<div in:fade={{ duration: 400 }} out:fade={{ duration: 400 }}>
+										<h2 class="text-2xl font-extrabold tracking-tight">One moment{'.'.repeat(oneMomentDots)}</h2>
+										<p class="mt-3 min-h-[2.75rem] text-sm leading-snug opacity-75">{introMessages[introMessageIndex]}</p>
+									</div>
+								{/if}
+							{:else}
 								<div class="min-h-[2.25rem] flex items-center justify-center">
 									{#if step === 0}
 										{#if showOkayText}
@@ -647,9 +655,12 @@ ${cleanLinks.map((l) => `      - label: ${q(l.label)}
 										<p class="text-xs font-semibold tracking-wide text-primary/80">{active.kicker}</p>
 									{/if}
 								</div>
-							</div>
+							{/if}
 						</div>
+					</header>
 
+					<div class="min-h-0 w-full overflow-y-auto overscroll-contain">
+					{#if !showIntro}
 						{#if step !== 0 || showTitleText}
 							<div transition:fade={{ duration: 400 }}>
 								{#key active.id}
@@ -1050,10 +1061,10 @@ ${cleanLinks.map((l) => `      - label: ${q(l.label)}
 								<p class="mt-3 text-sm text-error">Please answer this before continuing.</p>
 							{/if}
 						{/if}
-
+					{/if}
+					</div>
+				</div>
 			</div>
-		</div>
-		</div>
 		</div>
 	</main>
 

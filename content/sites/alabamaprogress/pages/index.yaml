@@ -1,0 +1,58 @@
+id: index
+title: Alabama Progress
+path: /
+layout: creator_links
+
+seo:
+  title: Alabama Progress
+  description: Creator bio and links for Alabama Progress.
+
+page_settings:
+  show_header: true
+  show_footer: true
+  max_width: sm
+
+notifications:
+  enabled: true
+  title: Follow Alabama Progress
+  description: Choose what updates you want.
+  topics:
+    - id: go_live
+      label: Go Live
+      default: true
+    - id: updates
+      label: Updates
+      default: true
+    - id: shop
+      label: Donate & Volunteer
+      default: false
+
+blocks:
+  - type: creator_profile
+    id: profile
+    profile_theme: gloopglop
+    name: Alabama Progress
+    names:
+      - Alabama Progress
+      - '@AlabamaProgress'
+    name_animation: all
+    tagline: Working-class power in Alabama.
+    bio: |
+      Alabama Progress is building working-class power in Alabama through community-led organizing, advocacy, and mutual aid.
+    short_links:
+      - label: Instagram
+        icon: instagram
+        href: '#'
+        open_in: same_tab
+      - label: Facebook
+        icon: facebook
+        href: '#'
+        open_in: same_tab
+      - label: TikTok
+        icon: tiktok
+        href: '#'
+        open_in: same_tab
+      - label: YouTube
+        icon: youtube
+        href: '#'
+        open_in: same_tab
