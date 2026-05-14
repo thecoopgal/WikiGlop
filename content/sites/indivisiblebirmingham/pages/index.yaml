@@ -1,0 +1,35 @@
+id: "index"
+title: "Birmingham Indivisible"
+layout: "creator_links"
+seo:
+  title: "Birmingham Indivisible"
+  description: "Links and contact for Birmingham Indivisible (Indivisible Alabama)."
+page_settings:
+  show_header: true
+  show_footer: true
+  max_width: "sm"
+blocks:
+  - type: "creator_profile"
+    id: "profile"
+    profile_theme: "gloopglop"
+    name: "Birmingham Indivisible"
+    names:
+      - "Birmingham Indivisible"
+      - "@birminghamindivisible"
+    name_animation: "all"
+    tagline: "Indivisible Alabama — Birmingham"
+    bio: "Birmingham Indivisible is part of the Indivisible Alabama network of grassroots groups.\n"
+    short_links:
+      - label: "Facebook"
+        icon: "facebook"
+        href: "https://www.facebook.com/groups/birminghamindivisible"
+      - label: "Instagram"
+        icon: "instagram"
+        href: "https://www.instagram.com/birminghamindivisible"
+      - label: "YouTube"
+        icon: "youtube"
+        href: "https://www.youtube.com/@BHMIndivisible"
+      - label: "Bluesky"
+        icon: "link"
+        href: "https://bsky.app/profile/indivisiblebham.bsky.social"
+path: "/"

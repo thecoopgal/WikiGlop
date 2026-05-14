@@ -1,0 +1,22 @@
+id: indivisibletag
+name: Indivisible TAG (Tennessee, Alabama and Georgia)
+hosts:
+  - indivisibletag.localhost
+  - 127.0.0.1
+  - indivisibletag.gloopglop.com
+  - www.indivisibletag.gloopglop.com
+  - indivisibletag.gloop.gg
+  - www.indivisibletag.gloop.gg
+kind: platform
+theme:
+  preset: gloopglop
+  mode: light
+  overrides:
+routing:
+  default_page: index
+  gloop_gg_short_slug: indtag
+permissions:
+  view: public
+  propose: members
+  edit: restricted
+  edit_mode: proposal_required

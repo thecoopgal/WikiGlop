@@ -1,0 +1,66 @@
+id: index
+title: Indivisible Alabama
+path: /
+layout: creator_links
+
+seo:
+  title: Indivisible Alabama
+  description: Grassroots Indivisible chapters and affiliates across Alabama — open a region for that group’s link hub.
+
+page_settings:
+  show_header: true
+  show_footer: true
+  max_width: sm
+
+blocks:
+  - type: creator_profile
+    id: profile
+    profile_theme: gloopglop
+    name: Indivisible Alabama
+    names:
+      - Indivisible Alabama
+    name_animation: all
+    tagline: Statewide network of local Indivisible chapters.
+    bio: |
+      Indivisible Alabama connects independent local groups organizing for democracy and justice across the state.
+      Use the links below to open each chapter’s own page and social links.
+
+  - type: links
+    id: social-links
+    title: Local chapters & affiliates
+    style: cards
+    items:
+      - label: Indivisible Athens Alabama
+        source: '@indivisibleathens'
+      - label: Indivisible Auburn/Opelika
+        source: '@indivisibleauburnopelika'
+      - label: Indivisible Baldwin County
+        source: '@indivisiblebaldwincounty'
+      - label: Birmingham Indivisible
+        source: '@indivisiblebirmingham'
+      - label: Indivisible Dothan
+        source: '@indivisibledothan'
+      - label: Concerned Citizens for Change (Ft. Payne)
+        source: '@concernedcitizensftpayne'
+      - label: Northwest Alabama Indivisible (Haleyville)
+        source: '@indivisiblehaleyvillenorthwest'
+      - label: Indivisible 5th District North Alabama (Huntsville)
+        source: '@indivisiblehuntsvillenorthalabama'
+      - label: Indivisible Lake Martin Dadeville and Surrounding Area
+        source: '@indivisiblelakemartindadeville'
+      - label: Indivisible Mobile
+        source: '@indivisiblemobile'
+      - label: Alabama Resisters (Montgomery)
+        source: '@alabamaresistersmontgomery'
+      - label: Phenix City Indivisible
+        source: '@indivisiblephenixcity'
+      - label: Indivisible of the Shoals/Florence
+        source: '@indivisibleshoalsflorence'
+      - label: Indivisible TAG (Tennessee, Alabama and Georgia)
+        source: '@indivisibletag'
+      - label: Talladega County Indivisible
+        source: '@indivisibletalladegacounty'
+      - label: Indivisible West Alabama
+        source: '@indivisiblewestalabama'
+      - label: Indivisible West St. Clair County (Moody)
+        source: '@indivisibleweststclairmoody'

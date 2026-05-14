@@ -1,0 +1,29 @@
+id: "index"
+title: "Indivisible 5th District North Alabama (Huntsville)"
+layout: "creator_links"
+seo:
+  title: "Indivisible 5th District North Alabama (Huntsville)"
+  description: "Links and contact for Indivisible 5th District North Alabama (Huntsville) (Indivisible Alabama)."
+page_settings:
+  show_header: true
+  show_footer: true
+  max_width: "sm"
+blocks:
+  - type: "creator_profile"
+    id: "profile"
+    profile_theme: "gloopglop"
+    name: "Indivisible 5th District North Alabama (Huntsville)"
+    names:
+      - "Indivisible 5th District North Alabama (Huntsville)"
+    name_animation: "all"
+    tagline: "Indivisible Alabama — Huntsville"
+    bio: "Indivisible 5th District North Alabama (Huntsville) is part of the Indivisible Alabama network of grassroots
+      groups.\n"
+    short_links:
+      - label: "Facebook"
+        icon: "facebook"
+        href: "https://www.facebook.com/indivisible5thalabama/"
+      - label: "Bluesky"
+        icon: "link"
+        href: "https://bsky.app/profile/indivisible5al.bsky.social"
+path: "/"

@@ -1,0 +1,22 @@
+id: indivisiblemobile
+name: Indivisible Mobile
+hosts:
+  - indivisiblemobile.localhost
+  - 127.0.0.1
+  - indivisiblemobile.gloopglop.com
+  - www.indivisiblemobile.gloopglop.com
+  - indivisiblemobile.gloop.gg
+  - www.indivisiblemobile.gloop.gg
+kind: platform
+theme:
+  preset: gloopglop
+  mode: light
+  overrides:
+routing:
+  default_page: index
+  gloop_gg_short_slug: indmob
+permissions:
+  view: public
+  propose: members
+  edit: restricted
+  edit_mode: proposal_required

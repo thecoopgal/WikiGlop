@@ -1,0 +1,32 @@
+id: "index"
+title: "Indivisible Mobile"
+layout: "creator_links"
+seo:
+  title: "Indivisible Mobile"
+  description: "Links and contact for Indivisible Mobile (Indivisible Alabama)."
+page_settings:
+  show_header: true
+  show_footer: true
+  max_width: "sm"
+blocks:
+  - type: "creator_profile"
+    id: "profile"
+    profile_theme: "gloopglop"
+    name: "Indivisible Mobile"
+    names:
+      - "Indivisible Mobile"
+      - "@indivisiblemobile"
+    name_animation: "all"
+    tagline: "Indivisible Alabama — Mobile"
+    bio: "Indivisible Mobile is part of the Indivisible Alabama network of grassroots groups.\n"
+    short_links:
+      - label: "Facebook"
+        icon: "facebook"
+        href: "https://www.facebook.com/indivisiblemobile"
+      - label: "Instagram"
+        icon: "instagram"
+        href: "https://www.instagram.com/indivisiblemobile"
+      - label: "Bluesky"
+        icon: "link"
+        href: "https://bsky.app/profile/indivisiblemobile.bsky.social"
+path: "/"

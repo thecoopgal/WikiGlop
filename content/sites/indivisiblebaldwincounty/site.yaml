@@ -1,0 +1,22 @@
+id: indivisiblebaldwincounty
+name: Indivisible Baldwin County
+hosts:
+  - indivisiblebaldwincounty.localhost
+  - 127.0.0.1
+  - indivisiblebaldwincounty.gloopglop.com
+  - www.indivisiblebaldwincounty.gloopglop.com
+  - indivisiblebaldwincounty.gloop.gg
+  - www.indivisiblebaldwincounty.gloop.gg
+kind: platform
+theme:
+  preset: gloopglop
+  mode: light
+  overrides:
+routing:
+  default_page: index
+  gloop_gg_short_slug: indbal
+permissions:
+  view: public
+  propose: members
+  edit: restricted
+  edit_mode: proposal_required

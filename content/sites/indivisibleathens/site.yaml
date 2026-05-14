@@ -1,0 +1,22 @@
+id: indivisibleathens
+name: Indivisible Athens Alabama
+hosts:
+  - indivisibleathens.localhost
+  - 127.0.0.1
+  - indivisibleathens.gloopglop.com
+  - www.indivisibleathens.gloopglop.com
+  - indivisibleathens.gloop.gg
+  - www.indivisibleathens.gloop.gg
+kind: platform
+theme:
+  preset: gloopglop
+  mode: light
+  overrides:
+routing:
+  default_page: index
+  gloop_gg_short_slug: indath
+permissions:
+  view: public
+  propose: members
+  edit: restricted
+  edit_mode: proposal_required

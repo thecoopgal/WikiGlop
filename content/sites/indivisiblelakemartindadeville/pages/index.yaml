@@ -1,0 +1,26 @@
+id: "index"
+title: "Indivisible Lake Martin Dadeville and Surrounding Area"
+layout: "creator_links"
+seo:
+  title: "Indivisible Lake Martin Dadeville and Surrounding Area"
+  description: "Links and contact for Indivisible Lake Martin Dadeville and Surrounding Area (Indivisible Alabama)."
+page_settings:
+  show_header: true
+  show_footer: true
+  max_width: "sm"
+blocks:
+  - type: "creator_profile"
+    id: "profile"
+    profile_theme: "gloopglop"
+    name: "Indivisible Lake Martin Dadeville and Surrounding Area"
+    names:
+      - "Indivisible Lake Martin Dadeville and Surrounding Area"
+    name_animation: "all"
+    tagline: "Indivisible Alabama — Lake Martin, Dadeville and Surrounding Area"
+    bio: "Indivisible Lake Martin Dadeville and Surrounding Area is part of the Indivisible Alabama network of grassroots
+      groups.\n"
+    short_links:
+      - label: "Email"
+        icon: "link"
+        href: "mailto:indivisiblelakemartin@gmail.com"
+path: "/"

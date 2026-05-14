@@ -1,0 +1,25 @@
+id: "index"
+title: "Northwest Alabama Indivisible (Haleyville)"
+layout: "creator_links"
+seo:
+  title: "Northwest Alabama Indivisible (Haleyville)"
+  description: "Links and contact for Northwest Alabama Indivisible (Haleyville) (Indivisible Alabama)."
+page_settings:
+  show_header: true
+  show_footer: true
+  max_width: "sm"
+blocks:
+  - type: "creator_profile"
+    id: "profile"
+    profile_theme: "gloopglop"
+    name: "Northwest Alabama Indivisible (Haleyville)"
+    names:
+      - "Northwest Alabama Indivisible (Haleyville)"
+    name_animation: "all"
+    tagline: "Indivisible Alabama — Haleyville"
+    bio: "Northwest Alabama Indivisible (Haleyville) is part of the Indivisible Alabama network of grassroots groups.\n"
+    short_links:
+      - label: "Email"
+        icon: "link"
+        href: "mailto:Oddjenn77@gmail.com"
+path: "/"

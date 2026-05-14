@@ -1,0 +1,25 @@
+id: "index"
+title: "Talladega County Indivisible"
+layout: "creator_links"
+seo:
+  title: "Talladega County Indivisible"
+  description: "Links and contact for Talladega County Indivisible (Indivisible Alabama)."
+page_settings:
+  show_header: true
+  show_footer: true
+  max_width: "sm"
+blocks:
+  - type: "creator_profile"
+    id: "profile"
+    profile_theme: "gloopglop"
+    name: "Talladega County Indivisible"
+    names:
+      - "Talladega County Indivisible"
+    name_animation: "all"
+    tagline: "Indivisible Alabama — Talladega County"
+    bio: "Talladega County Indivisible is part of the Indivisible Alabama network of grassroots groups.\n"
+    short_links:
+      - label: "Facebook"
+        icon: "facebook"
+        href: "https://www.facebook.com/profile.php?id=61586165706211"
+path: "/"

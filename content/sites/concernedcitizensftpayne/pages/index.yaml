@@ -1,0 +1,25 @@
+id: "index"
+title: "Concerned Citizens for Change (Ft. Payne)"
+layout: "creator_links"
+seo:
+  title: "Concerned Citizens for Change (Ft. Payne)"
+  description: "Links and contact for Concerned Citizens for Change (Ft. Payne) (Indivisible Alabama)."
+page_settings:
+  show_header: true
+  show_footer: true
+  max_width: "sm"
+blocks:
+  - type: "creator_profile"
+    id: "profile"
+    profile_theme: "gloopglop"
+    name: "Concerned Citizens for Change (Ft. Payne)"
+    names:
+      - "Concerned Citizens for Change (Ft. Payne)"
+    name_animation: "all"
+    tagline: "Indivisible Alabama — Ft. Payne"
+    bio: "Concerned Citizens for Change (Ft. Payne) is part of the Indivisible Alabama network of grassroots groups.\n"
+    short_links:
+      - label: "Email"
+        icon: "link"
+        href: "mailto:concernedcitizensforchangeal@gmail.com"
+path: "/"

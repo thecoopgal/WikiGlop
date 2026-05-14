@@ -1,0 +1,25 @@
+id: "index"
+title: "Indivisible West St. Clair County (Moody)"
+layout: "creator_links"
+seo:
+  title: "Indivisible West St. Clair County (Moody)"
+  description: "Links and contact for Indivisible West St. Clair County (Moody) (Indivisible Alabama)."
+page_settings:
+  show_header: true
+  show_footer: true
+  max_width: "sm"
+blocks:
+  - type: "creator_profile"
+    id: "profile"
+    profile_theme: "gloopglop"
+    name: "Indivisible West St. Clair County (Moody)"
+    names:
+      - "Indivisible West St. Clair County (Moody)"
+    name_animation: "all"
+    tagline: "Indivisible Alabama — West St. Clair County/Moody"
+    bio: "Indivisible West St. Clair County (Moody) is part of the Indivisible Alabama network of grassroots groups.\n"
+    short_links:
+      - label: "Facebook"
+        icon: "facebook"
+        href: "https://www.facebook.com/profile.php?id=61581478587112"
+path: "/"

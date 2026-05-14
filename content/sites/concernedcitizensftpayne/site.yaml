@@ -1,0 +1,22 @@
+id: concernedcitizensftpayne
+name: Concerned Citizens for Change (Ft. Payne)
+hosts:
+  - concernedcitizensftpayne.localhost
+  - 127.0.0.1
+  - concernedcitizensftpayne.gloopglop.com
+  - www.concernedcitizensftpayne.gloopglop.com
+  - concernedcitizensftpayne.gloop.gg
+  - www.concernedcitizensftpayne.gloop.gg
+kind: platform
+theme:
+  preset: gloopglop
+  mode: light
+  overrides:
+routing:
+  default_page: index
+  gloop_gg_short_slug: indfpa
+permissions:
+  view: public
+  propose: members
+  edit: restricted
+  edit_mode: proposal_required

@@ -1,0 +1,28 @@
+id: "index"
+title: "Alabama Resisters (Montgomery)"
+layout: "creator_links"
+seo:
+  title: "Alabama Resisters (Montgomery)"
+  description: "Links and contact for Alabama Resisters (Montgomery) (Indivisible Alabama)."
+page_settings:
+  show_header: true
+  show_footer: true
+  max_width: "sm"
+blocks:
+  - type: "creator_profile"
+    id: "profile"
+    profile_theme: "gloopglop"
+    name: "Alabama Resisters (Montgomery)"
+    names:
+      - "Alabama Resisters (Montgomery)"
+    name_animation: "all"
+    tagline: "Indivisible Alabama — Montgomery"
+    bio: "Alabama Resisters (Montgomery) is part of the Indivisible Alabama network of grassroots groups.\n"
+    short_links:
+      - label: "Facebook"
+        icon: "facebook"
+        href: "https://www.facebook.com/alabamaresisters"
+      - label: "Bluesky"
+        icon: "link"
+        href: "https://bsky.app/profile/Alabamaresisters.bsky.social"
+path: "/"

@@ -1,0 +1,29 @@
+id: "index"
+title: "Indivisible Auburn/Opelika"
+layout: "creator_links"
+seo:
+  title: "Indivisible Auburn/Opelika"
+  description: "Links and contact for Indivisible Auburn/Opelika (Indivisible Alabama)."
+page_settings:
+  show_header: true
+  show_footer: true
+  max_width: "sm"
+blocks:
+  - type: "creator_profile"
+    id: "profile"
+    profile_theme: "gloopglop"
+    name: "Indivisible Auburn/Opelika"
+    names:
+      - "Indivisible Auburn/Opelika"
+      - "@indivisibleauburnopelika"
+    name_animation: "all"
+    tagline: "Indivisible Alabama — Auburn/Opelika"
+    bio: "Indivisible Auburn/Opelika is part of the Indivisible Alabama network of grassroots groups.\n"
+    short_links:
+      - label: "Facebook"
+        icon: "facebook"
+        href: "https://www.facebook.com/groups/IndivisibleAuburn"
+      - label: "Instagram"
+        icon: "instagram"
+        href: "https://www.instagram.com/indivisibleauburnopelika/"
+path: "/"

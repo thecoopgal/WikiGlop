@@ -1,0 +1,32 @@
+id: "index"
+title: "Phenix City Indivisible"
+layout: "creator_links"
+seo:
+  title: "Phenix City Indivisible"
+  description: "Links and contact for Phenix City Indivisible (Indivisible Alabama)."
+page_settings:
+  show_header: true
+  show_footer: true
+  max_width: "sm"
+blocks:
+  - type: "creator_profile"
+    id: "profile"
+    profile_theme: "gloopglop"
+    name: "Phenix City Indivisible"
+    names:
+      - "Phenix City Indivisible"
+      - "@phenixcityIndivisible"
+    name_animation: "all"
+    tagline: "Indivisible Alabama — Phenix City"
+    bio: "Phenix City Indivisible is part of the Indivisible Alabama network of grassroots groups.\n"
+    short_links:
+      - label: "Facebook"
+        icon: "facebook"
+        href: "https://www.facebook.com/groups/1083898120231435"
+      - label: "Instagram"
+        icon: "instagram"
+        href: "https://www.instagram.com/phenixcityIndivisible"
+      - label: "Website"
+        icon: "web"
+        href: "https://www.indivisiblephenixcity.org/"
+path: "/"

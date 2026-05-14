@@ -1,0 +1,25 @@
+id: "index"
+title: "Indivisible of the Shoals/Florence"
+layout: "creator_links"
+seo:
+  title: "Indivisible of the Shoals/Florence"
+  description: "Links and contact for Indivisible of the Shoals/Florence (Indivisible Alabama)."
+page_settings:
+  show_header: true
+  show_footer: true
+  max_width: "sm"
+blocks:
+  - type: "creator_profile"
+    id: "profile"
+    profile_theme: "gloopglop"
+    name: "Indivisible of the Shoals/Florence"
+    names:
+      - "Indivisible of the Shoals/Florence"
+    name_animation: "all"
+    tagline: "Indivisible Alabama — Shoals/Florence"
+    bio: "Indivisible of the Shoals/Florence is part of the Indivisible Alabama network of grassroots groups.\n"
+    short_links:
+      - label: "Facebook"
+        icon: "facebook"
+        href: "https://www.facebook.com/ShoalsIndivisible/"
+path: "/"

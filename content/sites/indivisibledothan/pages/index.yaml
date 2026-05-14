@@ -1,0 +1,25 @@
+id: "index"
+title: "Indivisible Dothan"
+layout: "creator_links"
+seo:
+  title: "Indivisible Dothan"
+  description: "Links and contact for Indivisible Dothan (Indivisible Alabama)."
+page_settings:
+  show_header: true
+  show_footer: true
+  max_width: "sm"
+blocks:
+  - type: "creator_profile"
+    id: "profile"
+    profile_theme: "gloopglop"
+    name: "Indivisible Dothan"
+    names:
+      - "Indivisible Dothan"
+    name_animation: "all"
+    tagline: "Indivisible Alabama — Dothan"
+    bio: "Indivisible Dothan is part of the Indivisible Alabama network of grassroots groups.\n"
+    short_links:
+      - label: "Facebook"
+        icon: "facebook"
+        href: "https://www.facebook.com/groups/indivisible.dothan.al"
+path: "/"

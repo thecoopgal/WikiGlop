@@ -1,0 +1,26 @@
+id: "index"
+title: "Indivisible TAG (Tennessee, Alabama and Georgia)"
+layout: "creator_links"
+seo:
+  title: "Indivisible TAG (Tennessee, Alabama and Georgia)"
+  description: "Links and contact for Indivisible TAG (Tennessee, Alabama and Georgia) (Indivisible Alabama)."
+page_settings:
+  show_header: true
+  show_footer: true
+  max_width: "sm"
+blocks:
+  - type: "creator_profile"
+    id: "profile"
+    profile_theme: "gloopglop"
+    name: "Indivisible TAG (Tennessee, Alabama and Georgia)"
+    names:
+      - "Indivisible TAG (Tennessee, Alabama and Georgia)"
+    name_animation: "all"
+    tagline: "Indivisible Alabama — TAG (Tennessee, Alabama and Georgia)"
+    bio: "Indivisible TAG (Tennessee, Alabama and Georgia) is part of the Indivisible Alabama network of grassroots
+      groups.\n"
+    short_links:
+      - label: "Facebook"
+        icon: "facebook"
+        href: "https://www.facebook.com/IndivisibleTAG/"
+path: "/"

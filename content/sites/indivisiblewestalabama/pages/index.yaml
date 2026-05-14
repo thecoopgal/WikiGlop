@@ -1,0 +1,39 @@
+id: index
+title: Indivisible West Alabama
+path: /
+layout: creator_links
+
+seo:
+  title: Indivisible West Alabama
+  description: Links and contact for Indivisible West Alabama (Indivisible Alabama).
+
+page_settings:
+  show_header: true
+  show_footer: true
+  max_width: sm
+
+blocks:
+  - type: creator_profile
+    id: profile
+    profile_theme: gloopglop
+    name: Indivisible West Alabama (Tuscaloosa)
+    names:
+      - Indivisible West Alabama
+      - '@Indivisiblewestalabama'
+    name_animation: all
+    tagline: Indivisible Alabama — West Alabama
+    bio: |
+      Indivisible West Alabama is part of the Indivisible Alabama network of grassroots groups.
+    short_links:
+      - label: Facebook
+        icon: facebook
+        href: https://www.facebook.com/profile.php?id=61575062221564
+      - label: Instagram
+        icon: instagram
+        href: https://www.instagram.com/Indivisiblewestalabama
+      - label: TikTok
+        icon: tiktok
+        href: https://www.tiktok.com/@indivisiblewestalabama
+      - label: Bluesky
+        icon: link
+        href: https://bsky.app/profile/indivisiblewestal.bsky.social
