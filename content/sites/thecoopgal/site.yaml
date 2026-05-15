@@ -14,6 +14,7 @@ theme:
   preset: gloopglop
   mode: light
   overrides:
+    base-200: "#fce7f3"
 
 routing:
   default_page: index
