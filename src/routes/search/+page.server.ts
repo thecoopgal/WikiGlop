@@ -9,10 +9,10 @@ import {
 import { collectHttpHrefLabelsFromPage } from '$lib/server/glop-page-ingest';
 import {
 	fetchGlopAnswerCountsForUrls,
-	normalizeGlopQuery,
 	searchGlopAnswers,
 	type GlopAnswerRow
 } from '$lib/server/glop-search';
+import { normalizeGlopQuery } from '$lib/glop-query-normalize';
 import {
 	expandCreatorLinksShortcuts,
 	loadPageYaml,

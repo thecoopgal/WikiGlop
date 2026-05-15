@@ -5,7 +5,8 @@ layout: creator_links
 
 seo:
   title: Alabama Progress
-  description: Creator bio and links for Alabama Progress.
+  description: Alabama Progress is building working-class power in Alabama through community leadership, organizing, advocacy, and mutual aid.
+  image: https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/41f26808-2aab-4865-6ec7-38741e8fce00/public
 
 page_settings:
   show_header: true
@@ -36,9 +37,10 @@ blocks:
       - Alabama Progress
       - '@AlabamaProgress'
     name_animation: all
-    tagline: Working-class power in Alabama.
+    tagline: Progress in Alabama.
+    avatar: https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/41f26808-2aab-4865-6ec7-38741e8fce00/public
     bio: |
-      Alabama Progress is building working-class power in Alabama through community-led organizing, advocacy, and mutual aid.
+      Alabama Progress is building working-class power in Alabama through community leadership, organizing, advocacy, and mutual aid.
     short_links:
       - label: Instagram
         icon: instagram

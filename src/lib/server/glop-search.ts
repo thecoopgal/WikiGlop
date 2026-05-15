@@ -1,3 +1,4 @@
+import { normalizeGlopQuery } from '$lib/glop-query-normalize';
 import { isOmittedFromGloopglopSearch } from '$lib/server/url-public';
 
 type Db = NonNullable<GlopSearchEnv['DB']>;
@@ -32,9 +33,7 @@ function getDb(platform: App.Platform | undefined): Db {
 	return env.DB;
 }
 
-export function normalizeGlopQuery(raw: string): string {
-	return raw.trim().toLowerCase().replace(/\s+/g, ' ');
-}
+export { normalizeGlopQuery } from '$lib/glop-query-normalize';
 
 export async function searchGlopAnswers(
 	platform: App.Platform | undefined,
@@ -106,6 +105,12 @@ function randomId(): string {
 	return `glo_${crypto.randomUUID().replace(/-/g, '')}`;
 }
 
+/** True when D1 is missing glop anti-spam tables (migrations 0006/0007 not applied). */
+export function isGlopSubmissionSchemaError(e: unknown): boolean {
+	const msg = (e instanceof Error ? e.message : String(e)).toLowerCase();
+	return msg.includes('no such table') && msg.includes('glop_client');
+}
+
 /**
  * Parses `http`/`https` links and bare host/path input (e.g. `gloop.gg/foo`,
  * `creator.gloopglop.com`, `//gloop.gg/...`) so URLs match how people paste from GloopGlop.
@@ -128,13 +133,27 @@ export function parseGlopAnswerUrl(raw: string): URL | null {
 	}
 }
 
+/** Validates anonymous browser id from POST /api/glop-search (stored with question for one-glop-per-browser). */
+export function assertValidBrowserClientKey(raw: unknown): string {
+	if (typeof raw !== 'string') {
+		throw new Error('This browser must send a client id to post a glop.');
+	}
+	const t = raw.trim();
+	if (!/^gg_[0-9a-f]{32}$/.test(t)) {
+		throw new Error('Invalid browser client id.');
+	}
+	return t;
+}
+
 export async function insertGlopAnswer(params: {
 	platform: App.Platform | undefined;
 	siteId: string;
 	queryRaw: string;
 	answerUrl: string;
+	/** When set (GloopGlop manual add), enforces one submission per (question, url) per browser. */
+	clientBrowserKey?: string;
 }): Promise<{ id: string }> {
-	const { platform, siteId, queryRaw, answerUrl } = params;
+	const { platform, siteId, queryRaw, answerUrl, clientBrowserKey } = params;
 	const display = queryRaw.trim();
 	if (display.length < 3 || display.length > 500) {
 		throw new Error('Question must be between 3 and 500 characters.');
@@ -156,6 +175,45 @@ export async function insertGlopAnswer(params: {
 
 	const db = getDb(platform);
 	const id = randomId();
+
+	if (clientBrowserKey !== undefined && clientBrowserKey !== '') {
+		const clientKey = assertValidBrowserClientKey(clientBrowserKey);
+		try {
+			await db
+				.prepare(
+					`INSERT INTO glop_client_question_url_submissions (site_id, query_normalized, client_key, answer_url)
+           VALUES (?, ?, ?, ?)`
+				)
+				.bind(siteId, norm, clientKey, url.href)
+				.run();
+		} catch (e) {
+			const msg = e instanceof Error ? e.message : String(e);
+			if (msg.includes('UNIQUE constraint') || msg.toLowerCase().includes('unique')) {
+				throw new Error('You already added this link for this question from this browser.');
+			}
+			throw e;
+		}
+		try {
+			await db
+				.prepare(
+					`INSERT INTO glop_answers (id, site_id, query_normalized, query_display, answer_url, created_at)
+           VALUES (?, ?, ?, ?, ?, datetime('now'))`
+				)
+				.bind(id, siteId, norm, display, url.href)
+				.run();
+		} catch (e) {
+			await db
+				.prepare(
+					`DELETE FROM glop_client_question_url_submissions
+           WHERE site_id = ? AND query_normalized = ? AND client_key = ? AND answer_url = ?`
+				)
+				.bind(siteId, norm, clientKey, url.href)
+				.run();
+			throw e;
+		}
+		return { id };
+	}
+
 	await db
 		.prepare(
 			`INSERT INTO glop_answers (id, site_id, query_normalized, query_display, answer_url, created_at)

@@ -99,6 +99,50 @@ function extractSeoFromHtml(html: string): UrlSeoSnippet {
 	};
 }
 
+/** Titles from bot checks / CDN challenges — not useful in search cards. */
+function isBotWallSeoTitle(title: string | null): boolean {
+	if (!title?.trim()) return false;
+	const t = title.trim();
+	const patterns = [
+		/please wait for verification/i,
+		/just a moment/i,
+		/attention required/i,
+		/access denied/i,
+		/verify you are human/i,
+		/security check/i,
+		/^reddit\s*[-–—|]\s*please wait/i
+	];
+	return patterns.some((re) => re.test(t));
+}
+
+/** Human-readable label when HTML meta is missing or blocked (e.g. Reddit bot wall). */
+function seoFallbackTitleFromUrl(parsed: URL): string | null {
+	const host = parsed.hostname.toLowerCase().replace(/^www\./, '');
+	if (host === 'reddit.com' || host === 'old.reddit.com' || host === 'np.reddit.com' || host === 'new.reddit.com') {
+		const parts = parsed.pathname.split('/').filter(Boolean);
+		if (parts[0] === 'r' && parts[1]) return `r/${parts[1]} · Reddit`;
+		if (parts[0] === 'u' && parts[1]) return `u/${parts[1]} · Reddit`;
+		return 'Reddit';
+	}
+	return null;
+}
+
+function sanitizeFetchedSeo(parsed: URL, seo: UrlSeoSnippet): UrlSeoSnippet {
+	let title = seo.title;
+	let description = seo.description;
+	if (isBotWallSeoTitle(title)) {
+		title = null;
+		if (description && isBotWallSeoTitle(description)) description = null;
+	}
+	if (!title?.trim()) {
+		title = seoFallbackTitleFromUrl(parsed);
+	}
+	return {
+		title: title && title.length > 0 ? title.slice(0, 500) : null,
+		description: description && description.length > 0 ? description.slice(0, 800) : null
+	};
+}
+
 async function readResponsePrefix(res: Response, maxBytes: number): Promise<string> {
 	const reader = res.body?.getReader();
 	if (!reader) {
@@ -151,13 +195,15 @@ export async function fetchUrlSeo(answerUrl: string): Promise<UrlSeoSnippet> {
 
 		const ct = res.headers.get('content-type')?.toLowerCase() ?? '';
 		if (!res.ok || (!ct.includes('text/html') && !ct.includes('application/xhtml'))) {
-			return { title: null, description: null };
+			const fallback = seoFallbackTitleFromUrl(parsed);
+			return { title: fallback, description: null };
 		}
 
 		const prefix = await readResponsePrefix(res, READ_MAX_BYTES);
-		return extractSeoFromHtml(prefix);
+		return sanitizeFetchedSeo(parsed, extractSeoFromHtml(prefix));
 	} catch {
-		return { title: null, description: null };
+		const fallback = seoFallbackTitleFromUrl(parsed);
+		return { title: fallback, description: null };
 	} finally {
 		clearTimeout(timer);
 	}

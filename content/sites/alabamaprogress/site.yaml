@@ -12,6 +12,8 @@ theme:
   preset: gloopglop
   mode: light
   overrides:
+    base-200: "#3587d6"
+
 routing:
   default_page: index
   gloop_gg_short_slug: alp

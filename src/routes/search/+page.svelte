@@ -1,9 +1,12 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
 	import { navigating } from '$app/state';
+	import { browser } from '$app/environment';
 	import type { PageData } from './$types';
 	import type { GlopAnswerRow } from '$lib/server/glop-search';
+	import {
+		getOrCreateBrowserClientId
+	} from '$lib/client/gloop-browser-glop-limit';
 	import Icons8BoogerAttribution from '$lib/components/Icons8BoogerAttribution.svelte';
 	import IconMagnify from '~icons/mdi/magnify';
 	import IconChevronDown from '~icons/mdi/chevron-down';
@@ -131,18 +134,28 @@
 
 	async function submitGloop() {
 		if (!data.query.trim()) return;
+		if (!browser) return;
 		gloopSubmit = 'loading';
 		gloopError = '';
+		let clientKey: string;
+		try {
+			clientKey = getOrCreateBrowserClientId();
+		} catch (e) {
+			gloopSubmit = 'error';
+			gloopError = e instanceof Error ? e.message : 'Could not use browser storage.';
+			return;
+		}
 		const res = await fetch('/api/glop-search', {
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({ query: data.query, url: gloopUrl })
+			body: JSON.stringify({ query: data.query, url: gloopUrl, clientKey })
 		});
 		if (!res.ok) {
 			gloopSubmit = 'error';
 			try {
 				const err = await res.json();
-				gloopError = typeof err?.message === 'string' ? err.message : res.statusText;
+				const msg = typeof err?.message === 'string' ? err.message : res.statusText;
+				gloopError = msg;
 			} catch {
 				gloopError = res.statusText || 'Something went wrong.';
 			}
@@ -190,16 +203,6 @@
 					method="get"
 					action="/search"
 					class="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:gap-3 sm:items-stretch"
-					use:enhance={() => {
-						searchResultsLoading = true;
-						return async ({ update }) => {
-							try {
-								await update();
-							} finally {
-								searchResultsLoading = false;
-							}
-						};
-					}}
 				>
 					<label class="input input-bordered flex min-w-0 flex-1 items-center gap-2">
 						<IconMagnify class="h-5 w-5 shrink-0 text-base-content/60" aria-hidden="true" />

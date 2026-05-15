@@ -559,7 +559,13 @@ async function promptInstallIfAvailable() {
 				<div class="pointer-events-none absolute left-1/2 top-[38%] h-px w-[84%] -translate-x-1/2 bg-white/20"></div>
 			{/if}
 			<div class={`card-body items-center text-center ${isCoopgalCosmicTheme ? 'relative z-10' : ''}`}>
-				<div class={`grid w-full items-start gap-2 ${isGloopglopTheme ? 'grid-cols-[2.5rem_minmax(0,1fr)]' : 'grid-cols-[2.5rem_minmax(0,1fr)_2.5rem]'}`}>
+				<div
+					class={`grid w-full items-start gap-2 ${
+						isGloopglopTheme
+							? 'grid-cols-1 sm:grid-cols-[2.5rem_minmax(0,1fr)]'
+							: 'grid-cols-[2.5rem_minmax(0,1fr)_2.5rem]'
+					}`}
+				>
 					{#if CREATOR_NOTIFICATIONS_UI_ENABLED}
 						<button
 							type="button"
@@ -576,24 +582,42 @@ async function promptInstallIfAvailable() {
 							<IconBell class="h-5 w-5" />
 						</button>
 					{:else}
-						<div class="h-8 w-8" aria-hidden="true"></div>
+						<div class={`h-8 w-8 ${isGloopglopTheme ? 'hidden sm:block' : ''}`} aria-hidden="true"></div>
 					{/if}
-					<div class="flex min-w-0 flex-1 items-center justify-center gap-4">
+					<div
+						class="flex min-w-0 w-full flex-col items-center gap-3 sm:flex-1 sm:flex-row sm:items-center sm:justify-center sm:gap-4"
+					>
 						{#if avatar}
 							<img
 								src={avatar}
 								alt={primaryName}
-								class={`h-16 w-16 shrink-0 rounded-full object-cover ${isCoopgalCosmicTheme ? 'ring-2 ring-cyan-300/70 ring-offset-2 ring-offset-[#111827] shadow-[0_0_22px_rgba(34,211,238,0.35)]' : ''}`}
+								class={`h-24 w-24 shrink-0 rounded-full object-cover sm:h-16 sm:w-16 ${isCoopgalCosmicTheme ? 'ring-2 ring-cyan-300/70 ring-offset-2 ring-offset-[#111827] shadow-[0_0_22px_rgba(34,211,238,0.35)]' : ''}`}
 							/>
 						{/if}
-						<div class="mx-auto w-full max-w-md text-left">
-							<h2 class={`card-title w-full justify-start text-2xl text-left ${isCoopgalCosmicTheme ? 'font-extrabold tracking-wide' : ''}`}>
+						<div class="min-w-0 w-full text-center sm:flex-1 sm:text-left">
+							<h2
+								class={`card-title profile-name-heading w-full min-w-0 max-w-full text-xl text-center sm:text-left sm:text-2xl ${isCoopgalCosmicTheme ? 'font-extrabold tracking-wide' : ''} ${nameOptions.length > 1 ? 'grid grid-cols-1' : 'max-sm:justify-center sm:justify-start'}`}
+							>
+								{#if nameOptions.length > 1}
+									{#each nameOptions as option (option)}
+										<span
+											class="profile-name-measure invisible col-start-1 row-start-1 block min-w-0 max-w-full pointer-events-none select-none"
+											aria-hidden="true"
+										>{option}</span>
+									{/each}
+								{/if}
 								{#key `${activeNameIndex}-${effectiveNameAnimation}`}
-									<span class={`inline-block profile-name-anim profile-name-anim-${effectiveNameAnimation} ${isCoopgalCosmicTheme ? 'bg-gradient-to-r from-cyan-200 via-white to-fuchsia-200 bg-clip-text text-transparent drop-shadow-[0_2px_8px_rgba(255,255,255,0.2)]' : ''}`}>{displayedName}</span>
+									<span
+										class={`profile-name-measure ${nameOptions.length > 1 ? 'col-start-1 row-start-1 ' : ''}block min-w-0 max-w-full profile-name-anim profile-name-anim-${effectiveNameAnimation} ${isCoopgalCosmicTheme ? 'bg-gradient-to-r from-cyan-200 via-white to-fuchsia-200 bg-clip-text text-transparent drop-shadow-[0_2px_8px_rgba(255,255,255,0.2)]' : ''}`}
+									>{displayedName}</span>
 								{/key}
 							</h2>
 							{#if tagline}
-								<p class={`mt-5 max-w-sm text-left ${isCoopgalCosmicTheme ? 'text-white/85' : 'opacity-80'}`}>{tagline}</p>
+								<p
+									class={`mx-auto mt-3 max-w-sm text-center sm:mx-0 sm:mt-5 sm:text-left ${isCoopgalCosmicTheme ? 'text-white/85' : 'opacity-80'}`}
+								>
+									{tagline}
+								</p>
 							{/if}
 						</div>
 					</div>
@@ -639,7 +663,7 @@ async function promptInstallIfAvailable() {
 					</div>
 				{/if}
 				{#if short_links?.length}
-					<div class={`mt-5 ${isGloopglopTheme ? 'grid w-full grid-cols-2 gap-2 sm:grid-cols-3' : 'flex flex-wrap gap-2'}`}>
+					<div class={`mt-5 ${isGloopglopTheme ? 'grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3' : 'flex flex-wrap gap-2'}`}>
 						{#each short_links as shortLink, i (`${shortLink.href}-${i}`)}
 							{@const Icon = iconComponent(shortLink.icon)}
 							<a
@@ -853,6 +877,16 @@ async function promptInstallIfAvailable() {
 {/if}
 
 <style>
+	.profile-name-heading {
+		overflow-wrap: anywhere;
+		word-break: break-word;
+	}
+
+	.profile-name-measure {
+		overflow-wrap: anywhere;
+		word-break: break-word;
+	}
+
 	.profile-name-anim {
 		will-change: transform, opacity;
 	}
