@@ -13,9 +13,11 @@ import {
 	fetchGlopAnswerCountsForQuestion,
 	isGlopSearchDbError,
 	listTopGlopedQuestions,
+	listUnansweredGlopQuestions,
 	recordGlopQuestionAsk,
 	searchGlopAnswers,
 	type GlopAnswerRow,
+	type GlopQuestionRow,
 	type TopGlopedQuestion
 } from '$lib/server/glop-search';
 import { normalizeGlopQuery } from '$lib/glop-query-normalize';
@@ -47,10 +49,16 @@ export const load: PageServerLoad = async ({ locals, url, platform: platformProp
 	const query = qRaw.trim();
 	if (query.length < 2) {
 		let topGlopedQuestions: TopGlopedQuestion[] = [];
+		let unansweredGlopQuestions: GlopQuestionRow[] = [];
 		try {
 			topGlopedQuestions = await listTopGlopedQuestions(platform, locals.site.siteId, 10);
 		} catch (topErr) {
 			console.error('Top gloped questions failed (landing continues):', topErr);
+		}
+		try {
+			unansweredGlopQuestions = await listUnansweredGlopQuestions(platform, locals.site.siteId, 10);
+		} catch (unansweredErr) {
+			console.error('Unanswered glop questions failed (landing continues):', unansweredErr);
 		}
 		return {
 			site: locals.site,
@@ -61,7 +69,8 @@ export const load: PageServerLoad = async ({ locals, url, platform: platformProp
 			canonicalHrefByAnswerUrl: {} as Record<string, string>,
 			glopCountByAnswerUrl: {} as Record<string, number>,
 			creatorSearchUi: null,
-			topGlopedQuestions
+			topGlopedQuestions,
+			unansweredGlopQuestions
 		};
 	}
 
@@ -229,7 +238,8 @@ export const load: PageServerLoad = async ({ locals, url, platform: platformProp
 			canonicalHrefByAnswerUrl,
 			glopCountByAnswerUrl,
 			creatorSearchUi,
-			topGlopedQuestions: [] as TopGlopedQuestion[]
+			topGlopedQuestions: [] as TopGlopedQuestion[],
+			unansweredGlopQuestions: [] as GlopQuestionRow[]
 		};
 	} catch (e) {
 		console.error('Search load failed:', e);
@@ -244,7 +254,8 @@ export const load: PageServerLoad = async ({ locals, url, platform: platformProp
 				canonicalHrefByAnswerUrl: {} as Record<string, string>,
 				glopCountByAnswerUrl: {} as Record<string, number>,
 				creatorSearchUi: null,
-				topGlopedQuestions: [] as TopGlopedQuestion[]
+				topGlopedQuestions: [] as TopGlopedQuestion[],
+				unansweredGlopQuestions: [] as GlopQuestionRow[]
 			};
 		}
 		throw error(503, 'Search is temporarily unavailable.');

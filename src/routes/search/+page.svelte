@@ -221,9 +221,9 @@
 		<div class="mx-auto w-full max-w-xl space-y-8">
 			<div class="flex flex-col items-center gap-3 sm:flex-row sm:items-center">
 				<a
-					href="/"
+					href="/search"
 					class="shrink-0 rounded-2xl ring-1 ring-base-300 transition-opacity hover:opacity-90"
-					aria-label="GloopGlop home"
+					aria-label="GloopGlop search"
 				>
 					<img
 						src={gloopglopLogoUrl}
@@ -260,6 +260,7 @@
 			</div>
 
 			{#if !data.searched && !data.dbUnavailable}
+				<div class="space-y-6">
 				<section
 					class="card overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-sm"
 					aria-label="Best gloops glopped right now"
@@ -307,6 +308,52 @@
 						</div>
 					{/if}
 				</section>
+
+					<section
+						class="card overflow-hidden rounded-2xl border border-warning/40 bg-base-100 shadow-sm"
+						aria-label="Unanswered gloops"
+					>
+						<div class="border-b border-base-300 bg-warning/10 px-4 py-3">
+							<h2 class="text-base font-semibold leading-snug">Unanswered gloops</h2>
+							<p class="mt-0.5 text-sm text-base-content/65">
+								Gloops people searched with no links yet. Maybe you should be the first to glop it!
+							</p>
+						</div>
+						{#if (data.unansweredGlopQuestions ?? []).length > 0}
+							<ul class="divide-y divide-base-200">
+								{#each data.unansweredGlopQuestions ?? [] as item (item.query_normalized)}
+									<li>
+										<a
+											href="/search?q={encodeURIComponent(item.query_display)}"
+											class="group flex items-center gap-3 px-4 py-3 no-underline transition-colors hover:bg-warning/10 focus-visible:bg-warning/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-warning"
+										>
+											<span
+												class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-warning/20 text-warning"
+												aria-hidden="true"
+											>
+												<IconMagnify class="h-4 w-4" />
+											</span>
+											<span class="min-w-0 flex-1">
+												<span
+													class="line-clamp-2 text-sm font-medium leading-snug text-base-content group-hover:text-primary"
+												>
+													{item.query_display}
+												</span>
+											</span>
+											<span class="shrink-0 text-xs text-base-content/55" title="Times searched">
+												{item.ask_count} search{item.ask_count === 1 ? '' : 'es'}
+											</span>
+										</a>
+									</li>
+								{/each}
+							</ul>
+						{:else}
+							<div class="px-4 py-6 text-center text-sm text-base-content/70">
+								<p>Every gloop has been glopped nice work, community. 🦾</p>
+							</div>
+						{/if}
+					</section>
+				</div>
 			{/if}
 
 			{#if data.dbUnavailable}
