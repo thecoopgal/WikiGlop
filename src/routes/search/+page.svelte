@@ -7,13 +7,13 @@
 	import {
 		getOrCreateBrowserClientId
 	} from '$lib/client/gloop-browser-glop-limit';
+	import { GLOOPGLOP_DEFAULT_LOGO_URL } from '$lib/glop-link-image';
 	import Icons8BoogerAttribution from '$lib/components/Icons8BoogerAttribution.svelte';
 	import IconMagnify from '~icons/mdi/magnify';
 	import IconChevronDown from '~icons/mdi/chevron-down';
 
-	/** Same asset as `content/sites/gloopglop` creator profile / site SEO image */
-	const gloopglopLogoUrl =
-		'https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/907061a8-51ae-454c-c739-83935616f900/public';
+	/** Header and all glop result card thumbnails */
+	const gloopglopLogoUrl = GLOOPGLOP_DEFAULT_LOGO_URL;
 
 	let { data }: { data: PageData } = $props();
 

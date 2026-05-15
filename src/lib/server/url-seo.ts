@@ -3,6 +3,8 @@ import { parseGlopAnswerUrl } from '$lib/server/glop-search';
 export type UrlSeoSnippet = {
 	title: string | null;
 	description: string | null;
+	/** Open Graph / Twitter image, or YAML override merged on the server. */
+	image: string | null;
 };
 
 const FETCH_TIMEOUT_MS = 4500;
@@ -93,9 +95,25 @@ function extractSeoFromHtml(html: string): UrlSeoSnippet {
 	const descRaw = (ogDesc || metaDesc || '').trim();
 	const description = descRaw ? decodeHtmlEntities(stripTags(descRaw)) : null;
 
+	const ogImage =
+		metaContent(head, 'property', 'og:image') ||
+		metaContent(head, 'name', 'og:image') ||
+		metaContent(head, 'property', 'twitter:image') ||
+		metaContent(head, 'name', 'twitter:image');
+	const imageRaw = (ogImage ?? '').trim();
+	let image: string | null = null;
+	if (imageRaw) {
+		try {
+			image = new URL(imageRaw, 'https://example.invalid/').href;
+		} catch {
+			image = null;
+		}
+	}
+
 	return {
 		title: title && title.length > 0 ? title.slice(0, 500) : null,
-		description: description && description.length > 0 ? description.slice(0, 800) : null
+		description: description && description.length > 0 ? description.slice(0, 800) : null,
+		image: image && image.length > 0 && image.length <= 2048 ? image : null
 	};
 }
 
@@ -139,7 +157,8 @@ function sanitizeFetchedSeo(parsed: URL, seo: UrlSeoSnippet): UrlSeoSnippet {
 	}
 	return {
 		title: title && title.length > 0 ? title.slice(0, 500) : null,
-		description: description && description.length > 0 ? description.slice(0, 800) : null
+		description: description && description.length > 0 ? description.slice(0, 800) : null,
+		image: seo.image && seo.image.length > 0 ? seo.image.slice(0, 2048) : null
 	};
 }
 
@@ -176,7 +195,7 @@ async function readResponsePrefix(res: Response, maxBytes: number): Promise<stri
 export async function fetchUrlSeo(answerUrl: string): Promise<UrlSeoSnippet> {
 	const parsed = parseGlopAnswerUrl(answerUrl);
 	if (!parsed || isBlockedSeoFetchHostname(parsed.hostname)) {
-		return { title: null, description: null };
+		return { title: null, description: null, image: null };
 	}
 
 	const ctrl = new AbortController();
@@ -196,14 +215,14 @@ export async function fetchUrlSeo(answerUrl: string): Promise<UrlSeoSnippet> {
 		const ct = res.headers.get('content-type')?.toLowerCase() ?? '';
 		if (!res.ok || (!ct.includes('text/html') && !ct.includes('application/xhtml'))) {
 			const fallback = seoFallbackTitleFromUrl(parsed);
-			return { title: fallback, description: null };
+			return { title: fallback, description: null, image: null };
 		}
 
 		const prefix = await readResponsePrefix(res, READ_MAX_BYTES);
 		return sanitizeFetchedSeo(parsed, extractSeoFromHtml(prefix));
 	} catch {
 		const fallback = seoFallbackTitleFromUrl(parsed);
-		return { title: fallback, description: null };
+		return { title: fallback, description: null, image: null };
 	} finally {
 		clearTimeout(timer);
 	}

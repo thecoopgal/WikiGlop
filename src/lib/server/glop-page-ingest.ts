@@ -1,6 +1,12 @@
 import type { PageYaml } from '$lib/server/content';
+import {
+	expandCreatorLinksShortcuts,
+	loadPageYaml,
+	publicGloopglopCreatorOriginForSearch
+} from '$lib/server/content';
 import { insertGlopAnswerIfAbsent, parseGlopAnswerUrl } from '$lib/server/glop-search';
 import type { ResolvedSite } from '$lib/server/sites';
+import { getAllSites } from '$lib/server/sites';
 import { isOmittedFromGloopglopSearch } from '$lib/server/url-public';
 
 const GLOOPGLOP_SEARCH_SITE_ID = 'gloopglop';
@@ -43,6 +49,15 @@ function isRecord(v: unknown): v is Record<string, unknown> {
 	return typeof v === 'object' && v !== null;
 }
 
+/** Per-link image from YAML (`seo_image`, `seo_icon`, `logo_override`, or `image`). */
+function linkItemImageUrl(raw: Record<string, unknown>): string | null {
+	for (const key of ['seo_image', 'seo_icon', 'logo_override', 'image'] as const) {
+		const v = typeof raw[key] === 'string' ? raw[key].trim() : '';
+		if (v.startsWith('http://') || v.startsWith('https://')) return v;
+	}
+	return null;
+}
+
 function collectFromLinksItems(
 	items: unknown,
 	base: URL,
@@ -59,6 +74,51 @@ function collectFromLinksItems(
 		const labelRaw = typeof raw.label === 'string' ? raw.label.trim() : '';
 		const label = labelRaw.length >= 2 ? labelRaw : pageTitle;
 		if (!out.has(abs)) out.set(abs, label);
+	}
+}
+
+function collectImagesFromLinksItems(items: unknown, base: URL, out: Map<string, string>): void {
+	if (!Array.isArray(items)) return;
+	for (const raw of items) {
+		if (!isRecord(raw)) continue;
+		if (raw.status === 'not_found') continue;
+		const href = typeof raw.href === 'string' ? raw.href : '';
+		const abs = resolveToHttpHref(href, base);
+		if (!abs || isOmittedFromGloopglopSearch(abs)) continue;
+		const img = linkItemImageUrl(raw);
+		if (img && !out.has(abs)) out.set(abs, img);
+	}
+}
+
+function walkBlocksForImages(blocks: unknown, base: URL, out: Map<string, string>): void {
+	if (!Array.isArray(blocks)) return;
+	for (const b of blocks) {
+		if (!isRecord(b)) continue;
+		const type = typeof b.type === 'string' ? b.type.trim().toLowerCase() : '';
+
+		if (type === 'section' && Array.isArray(b.blocks)) {
+			walkBlocksForImages(b.blocks, base, out);
+			continue;
+		}
+
+		if (type === 'links') {
+			collectImagesFromLinksItems(b.items, base, out);
+			continue;
+		}
+
+		if (type === 'creator_profile' && Array.isArray(b.short_links)) {
+			collectImagesFromLinksItems(b.short_links, base, out);
+			const avatar = typeof b.avatar === 'string' ? b.avatar.trim() : '';
+			if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
+				const home = new URL('/', base).href;
+				if (!isOmittedFromGloopglopSearch(home) && !out.has(home)) out.set(home, avatar);
+			}
+			continue;
+		}
+
+		if (type === 'hero' && Array.isArray(b.cta)) {
+			collectImagesFromLinksItems(b.cta, base, out);
+		}
 	}
 }
 
@@ -132,6 +192,41 @@ export function collectHttpHrefLabelsFromPage(
 		'Page';
 	const out = new Map<string, string>();
 	walkBlocks(page.blocks, baseUrl, pageTitle, out);
+	return out;
+}
+
+/**
+ * Image URLs declared on gloopglop-theme pages (link `seo_image` / `logo_override`, page `seo.image`, profile `avatar`).
+ */
+export function collectHttpHrefImagesFromPage(page: PageYaml, baseUrl: URL): Map<string, string> {
+	const out = new Map<string, string>();
+	const seoImg =
+		typeof page.seo?.image === 'string' && page.seo.image.trim().startsWith('http')
+			? page.seo.image.trim()
+			: null;
+	const home = new URL('/', baseUrl).href;
+	if (seoImg && !isOmittedFromGloopglopSearch(home)) out.set(home, seoImg);
+	walkBlocksForImages(page.blocks, baseUrl, out);
+	return out;
+}
+
+/** All gloopglop creator sites: href → YAML image for search result thumbnails. */
+export async function buildGloopglopYamlImageByUrl(requestUrl: URL): Promise<Map<string, string>> {
+	const out = new Map<string, string>();
+	const sites = await getAllSites();
+	for (const site of sites) {
+		if (!isGloopglopThemeSite(site)) continue;
+		const origin = publicGloopglopCreatorOriginForSearch(site);
+		if (!origin) continue;
+		const base = new URL(origin);
+		const indexPage = await loadPageYaml(site, []);
+		if (!indexPage) continue;
+		const hydrated = await expandCreatorLinksShortcuts(site, indexPage, requestUrl);
+		const imgs = collectHttpHrefImagesFromPage(hydrated, base);
+		for (const [href, img] of imgs) {
+			if (!out.has(href)) out.set(href, img);
+		}
+	}
 	return out;
 }
 

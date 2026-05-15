@@ -39,23 +39,16 @@ blocks:
       A collective of minority artists who like to share our creativity with the world.
     short_links:
       - label: CashApp
-        icon: cashapp
         href: https://cash.app/$ThePaperJelly
       - label: Venmo
-        icon: venmo
         href: https://venmo.com/u/thepaperjelly
       - label: Shop
-        icon: shop
         href: https://ko-fi.com/thepaperjelly
       - label: TikTok
-        icon: tiktok
         href: https://tiktok.com/@thepaperjelly
       - label: Instagram
-        icon: instagram
         href: https://www.instagram.com/thepaperjelly
       - label: Facebook
-        icon: facebook
         href: https://www.facebook.com/thepaperjelly
       - label: Threads
-        icon: threads
         href: https://www.threads.com/@thepaperjelly

@@ -16,31 +16,13 @@ page_settings:
 blocks:
   - type: creator_profile
     id: profile
+    profile_theme: gloopglop
     name: Alabamafella
-    tagline:  A fella from Alabama running for PSC seat 1. Working class politics is the path to progress.
+    tagline: A fella from Alabama running for PSC seat 1. Working class politics is the path to progress.
     avatar: https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/9de775b9-e0c4-4530-b7f7-37c57c790400/public
     bio: |
-     
 
     short_links:
-      - label: Instagram
-        icon: instagram
-        href: https://www.instagram.com/alabamafella
-      - label: YouTube
-        icon: youtube
-        href: https://www.youtube.com/@alabamafella
-      - label: TikTok
-        icon: tiktok
-        href: https://www.tiktok.com/@thatalabamafella
-      - label: Facebook
-        icon: facebook
-        href: https://www.facebook.com/profile.php?id=61583091163232&rdid=JD4yOuzZ3ShUJ2WQ&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F17UYdr6ncn%2F#
-
-  - type: links
-    id: social-links
-    title:
-    style: cards
-    items:
       - label: Jeff For Bama
         href: https://www.jeffforbama.com/
       - label: Act Blue
@@ -49,7 +31,9 @@ blocks:
         href: https://discord.com/invite/HpwQzJTke4
       - label: Instagram
         href: https://www.instagram.com/alabamafella
-      - label: Youtube
+      - label: YouTube
         href: https://www.youtube.com/@alabamafella
-
-
+      - label: TikTok
+        href: https://www.tiktok.com/@thatalabamafella
+      - label: Facebook
+        href: https://www.facebook.com/profile.php?id=61583091163232&rdid=JD4yOuzZ3ShUJ2WQ&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F17UYdr6ncn%2F#

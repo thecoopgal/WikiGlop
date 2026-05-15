@@ -23,7 +23,6 @@ blocks:
 
     short_links:
       - label: Creators
-        icon: users
         href: https://www.tkc.gloopglop.com/creators
 
   - type: links

@@ -21,9 +21,7 @@ blocks:
       groups.\n"
     short_links:
       - label: "Facebook"
-        icon: "facebook"
         href: "https://www.facebook.com/indivisible5thalabama/"
       - label: "Bluesky"
-        icon: "link"
         href: "https://bsky.app/profile/indivisible5al.bsky.social"
 path: "/"

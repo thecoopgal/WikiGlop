@@ -133,6 +133,7 @@ export const load: PageServerLoad = async ({ locals, url, platform }) => {
 		const canonicalUrls = [...new Set(Object.values(canonicalHrefByAnswerUrl))];
 		const seoByUrl =
 			canonicalUrls.length > 0 ? await fetchSeoForUrls(canonicalUrls) : ({} as Record<string, UrlSeoSnippet>);
+
 		return {
 			site: locals.site,
 			query,

@@ -23,11 +23,9 @@ blocks:
       We are a collective creators who like to create cool tools for other creators.
     short_links:
       - label: ByLaws
-        icon: document
         open_in: same_tab
         href: /bylaws
       - label: Our Creators
-        icon: users
         open_in: same_tab
         href: /creators
 

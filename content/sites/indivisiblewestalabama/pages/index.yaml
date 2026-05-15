@@ -26,14 +26,10 @@ blocks:
       Indivisible West Alabama is part of the Indivisible Alabama network of grassroots groups.
     short_links:
       - label: Facebook
-        icon: facebook
         href: https://www.facebook.com/profile.php?id=61575062221564
       - label: Instagram
-        icon: instagram
         href: https://www.instagram.com/Indivisiblewestalabama
       - label: TikTok
-        icon: tiktok
         href: https://www.tiktok.com/@indivisiblewestalabama
       - label: Bluesky
-        icon: link
         href: https://bsky.app/profile/indivisiblewestal.bsky.social

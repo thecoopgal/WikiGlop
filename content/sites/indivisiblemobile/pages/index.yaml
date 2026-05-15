@@ -21,12 +21,9 @@ blocks:
     bio: "Indivisible Mobile is part of the Indivisible Alabama network of grassroots groups.\n"
     short_links:
       - label: "Facebook"
-        icon: "facebook"
         href: "https://www.facebook.com/indivisiblemobile"
       - label: "Instagram"
-        icon: "instagram"
         href: "https://www.instagram.com/indivisiblemobile"
       - label: "Bluesky"
-        icon: "link"
         href: "https://bsky.app/profile/indivisiblemobile.bsky.social"
 path: "/"

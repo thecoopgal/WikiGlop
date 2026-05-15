@@ -23,11 +23,9 @@ blocks:
       We are a collective creators who like to create cool tools for other creators.
     short_links:
       - label: Home
-        icon: home
         open_in: same_tab
         href: /
       - label: Our Creators
-        icon: users
         open_in: same_tab
         href: /creators
 

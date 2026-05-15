@@ -41,6 +41,10 @@ import {
 			label?: string;
 			href: string;
 			icon?: string;
+			/** Card image URL (preferred over `icon` on GloopGlop theme). */
+			seo_image?: string;
+			seo_icon?: string;
+			logo_override?: string;
 			open_in?: 'same_tab' | 'new_tab' | string;
 		}>;
 		notifications?: {
@@ -268,6 +272,61 @@ function toggleTopic(topicId: string) {
 
 	function normalizeIconKey(value: string | undefined): string {
 		return (value ?? '').trim().toLowerCase().replace(/[\s_-]+/g, '');
+	}
+
+	const GLOOPGLOP_LINK_LOGO_URL =
+		'https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/907061a8-51ae-454c-c739-83935616f900/public';
+
+	type ShortLinkItem = NonNullable<Props['short_links']>[number];
+
+	function shortLinkImageOverride(link: ShortLinkItem): string | null {
+		for (const key of ['seo_image', 'seo_icon', 'logo_override'] as const) {
+			const v = (link[key] ?? '').trim();
+			if (v.startsWith('http://') || v.startsWith('https://')) return v;
+		}
+		return null;
+	}
+
+	function shortLinkHostname(href: string | undefined): string | null {
+		if (!href) return null;
+		try {
+			return new URL(href).hostname;
+		} catch {
+			return null;
+		}
+	}
+
+	function shortLinkFavicon(href: string | undefined): string | null {
+		const hostname = shortLinkHostname(href);
+		if (!hostname) return null;
+		return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(hostname)}&sz=64`;
+	}
+
+	function isGloopglopNetworkHost(hostname: string): boolean {
+		return (
+			hostname === 'gloopglop.com' ||
+			hostname.endsWith('.gloopglop.com') ||
+			hostname === 'localhost' ||
+			hostname.endsWith('.localhost') ||
+			hostname === '127.0.0.1'
+		);
+	}
+
+	function shortLinkAutoCardImage(href: string | undefined): string | null {
+		if (!href || href === '#') return null;
+		if (href.startsWith('/')) return GLOOPGLOP_LINK_LOGO_URL;
+		const hostname = shortLinkHostname(href);
+		if (hostname && isGloopglopNetworkHost(hostname)) return GLOOPGLOP_LINK_LOGO_URL;
+		return shortLinkFavicon(href);
+	}
+
+	/** GloopGlop grid: YAML image → site favicon (same as LinksBlock cards) → MDI `icon`. */
+	function resolveShortLinkCardImage(link: ShortLinkItem): string | null {
+		const override = shortLinkImageOverride(link);
+		if (override) return override;
+		const auto = shortLinkAutoCardImage(link.href);
+		if (auto) return auto;
+		return null;
 	}
 
 	function iconComponent(icon: string | undefined) {
@@ -663,16 +722,23 @@ async function promptInstallIfAvailable() {
 					</div>
 				{/if}
 				{#if short_links?.length}
-					<div class={`mt-5 ${isGloopglopTheme ? 'grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3' : 'flex flex-wrap gap-2'}`}>
+					<div
+						class={`mt-5 w-full ${
+							isGloopglopTheme
+								? 'mx-auto flex max-w-2xl flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-center lg:max-w-3xl'
+								: 'flex flex-wrap gap-2'
+						}`}
+					>
 						{#each short_links as shortLink, i (`${shortLink.href}-${i}`)}
 							{@const Icon = iconComponent(shortLink.icon)}
+							{@const cardImg = resolveShortLinkCardImage(shortLink)}
 							<a
 								href={shortLink.href}
 								class={`btn btn-sm btn-outline ${
 									isCoopgalCosmicTheme
 										? 'btn-circle border-white/45 bg-white/10 text-white backdrop-blur hover:bg-white/20 hover:border-white/70'
 										: isGloopglopTheme
-											? 'h-auto min-h-10 items-center justify-center gap-2 rounded-xl border-primary/25 bg-base-100/80 px-3 py-2 text-center font-medium normal-case hover:bg-primary/10'
+											? 'h-auto min-h-10 w-full min-w-0 flex-[1_1_100%] items-center justify-center gap-2 rounded-xl border-primary/25 bg-base-100/80 px-3 py-2 text-center font-medium normal-case hover:bg-primary/10 sm:max-w-[calc(50%-0.25rem)] sm:flex-[0_1_calc(50%-0.25rem)] lg:max-w-[calc(33.333%-0.34rem)] lg:flex-[0_1_calc(33.333%-0.34rem)]'
 											: `btn-circle ${cardShadow}`
 								}`}
 								target={shouldOpenSameTab(shortLink.open_in) ? undefined : '_blank'}
@@ -680,7 +746,18 @@ async function promptInstallIfAvailable() {
 								title={shortLink.label ?? shortLink.icon ?? 'Link'}
 								aria-label={shortLink.label ?? shortLink.icon ?? 'Link'}
 							>
-								<Icon class="h-5 w-5" />
+								{#if cardImg}
+									<img
+										src={cardImg}
+										alt=""
+										class="h-5 w-5 shrink-0 rounded object-cover"
+										width="20"
+										height="20"
+										decoding="async"
+									/>
+								{:else}
+									<Icon class="h-5 w-5 shrink-0" />
+								{/if}
 								{#if isGloopglopTheme}
 									<span class="truncate text-center text-xs leading-tight">{shortLink.label ?? shortLink.icon ?? 'Link'}</span>
 								{/if}

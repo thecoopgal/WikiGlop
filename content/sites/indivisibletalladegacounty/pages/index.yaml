@@ -20,6 +20,5 @@ blocks:
     bio: "Talladega County Indivisible is part of the Indivisible Alabama network of grassroots groups.\n"
     short_links:
       - label: "Facebook"
-        icon: "facebook"
         href: "https://www.facebook.com/profile.php?id=61586165706211"
 path: "/"

@@ -21,6 +21,5 @@ blocks:
       groups.\n"
     short_links:
       - label: "Facebook"
-        icon: "facebook"
         href: "https://www.facebook.com/IndivisibleTAG/"
 path: "/"

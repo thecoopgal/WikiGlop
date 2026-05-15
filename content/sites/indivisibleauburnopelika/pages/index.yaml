@@ -21,9 +21,7 @@ blocks:
     bio: "Indivisible Auburn/Opelika is part of the Indivisible Alabama network of grassroots groups.\n"
     short_links:
       - label: "Facebook"
-        icon: "facebook"
         href: "https://www.facebook.com/groups/IndivisibleAuburn"
       - label: "Instagram"
-        icon: "instagram"
         href: "https://www.instagram.com/indivisibleauburnopelika/"
 path: "/"

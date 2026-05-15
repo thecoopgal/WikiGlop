@@ -21,12 +21,9 @@ blocks:
     bio: "Phenix City Indivisible is part of the Indivisible Alabama network of grassroots groups.\n"
     short_links:
       - label: "Facebook"
-        icon: "facebook"
         href: "https://www.facebook.com/groups/1083898120231435"
       - label: "Instagram"
-        icon: "instagram"
         href: "https://www.instagram.com/phenixcityIndivisible"
       - label: "Website"
-        icon: "web"
         href: "https://www.indivisiblephenixcity.org/"
 path: "/"

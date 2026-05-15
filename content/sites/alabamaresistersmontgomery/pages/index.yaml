@@ -20,9 +20,7 @@ blocks:
     bio: "Alabama Resisters (Montgomery) is part of the Indivisible Alabama network of grassroots groups.\n"
     short_links:
       - label: "Facebook"
-        icon: "facebook"
         href: "https://www.facebook.com/alabamaresisters"
       - label: "Bluesky"
-        icon: "link"
         href: "https://bsky.app/profile/Alabamaresisters.bsky.social"
 path: "/"

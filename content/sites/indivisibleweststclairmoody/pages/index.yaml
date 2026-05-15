@@ -20,6 +20,5 @@ blocks:
     bio: "Indivisible West St. Clair County (Moody) is part of the Indivisible Alabama network of grassroots groups.\n"
     short_links:
       - label: "Facebook"
-        icon: "facebook"
         href: "https://www.facebook.com/profile.php?id=61581478587112"
 path: "/"
