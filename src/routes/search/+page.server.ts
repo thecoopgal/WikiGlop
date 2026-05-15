@@ -12,9 +12,11 @@ import { collectHttpHrefLabelsFromPage } from '$lib/server/glop-page-ingest';
 import {
 	fetchGlopAnswerCountsForQuestion,
 	isGlopSearchDbError,
+	listTopGlopedQuestions,
 	recordGlopQuestionAsk,
 	searchGlopAnswers,
-	type GlopAnswerRow
+	type GlopAnswerRow,
+	type TopGlopedQuestion
 } from '$lib/server/glop-search';
 import { normalizeGlopQuery } from '$lib/glop-query-normalize';
 import {
@@ -44,6 +46,12 @@ export const load: PageServerLoad = async ({ locals, url, platform: platformProp
 	const qRaw = url.searchParams.get('q') ?? '';
 	const query = qRaw.trim();
 	if (query.length < 2) {
+		let topGlopedQuestions: TopGlopedQuestion[] = [];
+		try {
+			topGlopedQuestions = await listTopGlopedQuestions(platform, locals.site.siteId, 10);
+		} catch (topErr) {
+			console.error('Top gloped questions failed (landing continues):', topErr);
+		}
 		return {
 			site: locals.site,
 			query,
@@ -52,7 +60,8 @@ export const load: PageServerLoad = async ({ locals, url, platform: platformProp
 			seoByUrl: {} as Record<string, UrlSeoSnippet>,
 			canonicalHrefByAnswerUrl: {} as Record<string, string>,
 			glopCountByAnswerUrl: {} as Record<string, number>,
-			creatorSearchUi: null
+			creatorSearchUi: null,
+			topGlopedQuestions
 		};
 	}
 
@@ -219,7 +228,8 @@ export const load: PageServerLoad = async ({ locals, url, platform: platformProp
 			seoByUrl,
 			canonicalHrefByAnswerUrl,
 			glopCountByAnswerUrl,
-			creatorSearchUi
+			creatorSearchUi,
+			topGlopedQuestions: [] as TopGlopedQuestion[]
 		};
 	} catch (e) {
 		console.error('Search load failed:', e);
@@ -233,7 +243,8 @@ export const load: PageServerLoad = async ({ locals, url, platform: platformProp
 				seoByUrl: {} as Record<string, UrlSeoSnippet>,
 				canonicalHrefByAnswerUrl: {} as Record<string, string>,
 				glopCountByAnswerUrl: {} as Record<string, number>,
-				creatorSearchUi: null
+				creatorSearchUi: null,
+				topGlopedQuestions: [] as TopGlopedQuestion[]
 			};
 		}
 		throw error(503, 'Search is temporarily unavailable.');

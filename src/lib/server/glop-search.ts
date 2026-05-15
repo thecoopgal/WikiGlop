@@ -203,6 +203,54 @@ export async function listUnansweredGlopQuestions(
 	}));
 }
 
+export type TopGlopedQuestion = {
+	query_display: string;
+	query_normalized: string;
+	ask_count: number;
+	glop_count: number;
+};
+
+/** Most-searched community questions (for /search landing with no `q`). */
+export async function listTopGlopedQuestions(
+	platform: App.Platform | undefined,
+	siteId: string,
+	limit = 10
+): Promise<TopGlopedQuestion[]> {
+	const db = getDb(platform);
+	const cap = Math.min(Math.max(1, limit), 50);
+	const { results } = await db
+		.prepare(
+			`SELECT
+         q.query_normalized,
+         q.query_display,
+         q.ask_count,
+         COALESCE(a.glop_count, 0) AS glop_count
+       FROM glop_questions q
+       LEFT JOIN (
+         SELECT site_id, query_normalized, COUNT(*) AS glop_count
+         FROM glop_answers
+         GROUP BY site_id, query_normalized
+       ) a ON a.site_id = q.site_id AND a.query_normalized = q.query_normalized
+       WHERE q.site_id = ?
+       ORDER BY q.ask_count DESC, COALESCE(a.glop_count, 0) DESC, q.last_asked_at DESC
+       LIMIT ?`
+		)
+		.bind(siteId, cap)
+		.all<{
+			query_normalized: string;
+			query_display: string;
+			ask_count: number | bigint;
+			glop_count: number | bigint;
+		}>();
+
+	return (results ?? []).map((r) => ({
+		query_normalized: r.query_normalized,
+		query_display: r.query_display,
+		ask_count: Number(r.ask_count) || 0,
+		glop_count: Number(r.glop_count) || 0
+	}));
+}
+
 function randomId(): string {
 	return `glo_${crypto.randomUUID().replace(/-/g, '')}`;
 }
