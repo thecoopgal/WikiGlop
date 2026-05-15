@@ -1,0 +1,103 @@
+id: consent
+title: Consent
+path: /consent
+layout: document
+
+seo:
+  title: Consent — GloopGlop Governance
+  description: How GloopGlop uses consent-based decision making.
+
+permissions:
+  view: public
+  propose: members
+  edit_mode: proposal_required
+
+page_settings:
+  table_of_contents: true
+  show_last_updated: true
+  show_edit_history: true
+
+blocks:
+  - type: creator_profile
+    id: profile
+    profile_theme: gloopglop
+    name: Gloop Glop
+    tagline: Gloop Glopping for all!
+    avatar: https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/907061a8-51ae-454c-c739-83935616f900/public
+    bio: |
+      We are a collective creators who like to create cool tools for other creators.
+    short_links:
+      - label: Home
+        open_in: same_tab
+        href: /
+      - label: Creators
+        open_in: same_tab
+        href: /creators
+      - label: ByLaws
+        open_in: same_tab
+        href: /bylaws
+      - label: Seven Principles
+        open_in: same_tab
+        href: /sevenprinciples
+      - label: Consent
+        open_in: same_tab
+        href: /consent
+      - label: GloopGlop
+        open_in: same_tab
+        href: /search
+
+  - type: document_header
+    id: top
+    title: Consent
+    summary: What consent means for GloopGlop governance.
+
+  - type: markdown
+    id: intro
+    content: |
+      Under [GloopGlop Bylaws](/bylaws) Article 5, the Cooperative makes decisions by **consent** unless the membership decides otherwise.
+
+      Consent is not the same as unanimous enthusiasm. It is a practical standard for moving forward together while respecting every member’s voice.
+
+  - type: heading
+    id: what-is-consent
+    level: 2
+    text: What is consent?
+
+  - type: markdown
+    id: what-is-consent-body
+    content: |
+      A proposal is adopted when **no member has a reasoned objection** that the proposal would cause harm to the Cooperative’s visions, missions, aims, operations, or values.
+
+      Members may:
+
+      - **Consent**: support the proposal or accept that it is safe to try
+      - **Object**: block the proposal only with a clear, reasoned concern tied to the Cooperative’s needs
+
+      Objections are invitations to improve the proposal, not vetoes for personal preference.
+
+  - type: heading
+    id: how-it-works
+    level: 2
+    text: How decisions are made
+
+  - type: markdown
+    id: how-it-works-body
+    content: |
+      1. A member presents a proposal in a meeting or other process open to the membership.
+      2. Members ask clarifying questions and suggest amendments.
+      3. The facilitator checks for objections: *“Do you have a reasoned objection?”*
+      4. If there are no reasoned objections, the proposal is adopted. If there are, the group works to address them and may bring a revised proposal back.
+
+      Consent works alongside **one member, one vote** and democratic participation described in the bylaws.
+
+  - type: heading
+    id: relationship-to-vote
+    level: 2
+    text: Consent and one member, one vote
+
+  - type: markdown
+    id: relationship-to-vote-body
+    content: |
+      Each member has one vote and the right to participate in governance. Consent defines **how** the membership reaches decisions in ordinary business: by looking for alignment and surfacing real risks, not by requiring everyone to agree for the same reasons.
+
+      The membership may adopt different rules for specific decisions (for example, elections or major changes) by consent or as otherwise provided in the bylaws.

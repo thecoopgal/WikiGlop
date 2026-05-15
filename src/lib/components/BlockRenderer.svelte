@@ -40,13 +40,7 @@ let { blocks, block, site }: any = $props();
 		<MarkdownBlock {...(block as any)} />
 	{/if}
 {:else if blockType === 'heading'}
-	{#if (block as any)?.id}
-		<div id={(block as any).id}>
-			<HeadingBlock {...(block as any)} />
-		</div>
-	{:else}
-		<HeadingBlock {...(block as any)} />
-	{/if}
+	<HeadingBlock {...(block as any)} />
 {:else if blockType === 'links'}
 	{#if (block as any)?.id}
 		<div id={(block as any).id}>

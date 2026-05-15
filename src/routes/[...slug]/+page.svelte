@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+	import { afterNavigate, goto } from '$app/navigation';
+	import { scrollToLocationHash } from '$lib/client/scroll-to-hash';
 	import type { PageYaml } from '$lib/server/content';
 	import type { SiteNavLink } from '$lib/server/sites';
 	import LandingPage from '$lib/components/page-layouts/LandingPage.svelte';
@@ -36,6 +37,10 @@
 
 	$effect(() => {
 		activeModalId = data.initialModalId ?? null;
+	});
+
+	afterNavigate(() => {
+		scrollToLocationHash();
 	});
 
 	function modalIdFromPath(pathname: string): string | null {

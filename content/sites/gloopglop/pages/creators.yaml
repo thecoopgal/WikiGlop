@@ -16,6 +16,7 @@ page_settings:
 blocks:
   - type: creator_profile
     id: profile
+    profile_theme: gloopglop
     name: Gloop Glop
     tagline: Gloop Glopping for all!
     avatar: https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/907061a8-51ae-454c-c739-83935616f900/public
@@ -25,12 +26,21 @@ blocks:
       - label: Home
         open_in: same_tab
         href: /
+      - label: Creators
+        open_in: same_tab
+        href: /creators
       - label: ByLaws
         open_in: same_tab
         href: /bylaws
-      - label: Our Creators
+      - label: Seven Principles
         open_in: same_tab
-        href: /creators
+        href: /sevenprinciples
+      - label: Consent
+        open_in: same_tab
+        href: /consent
+      - label: GloopGlop
+        open_in: same_tab
+        href: /search
 
   - type: links
     id: social-links
@@ -39,4 +49,3 @@ blocks:
     items:
       - source: "@thecoopgal"
       - source: "@thepaperjelly"
-

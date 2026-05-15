@@ -1,0 +1,159 @@
+id: sevenprinciples
+title: Seven Cooperative Principles
+path: /sevenprinciples
+layout: document
+
+seo:
+  title: Seven Cooperative Principles
+  description: The seven international cooperative principles adopted by GloopGlop.
+
+permissions:
+  view: public
+  propose: members
+  edit_mode: proposal_required
+
+page_settings:
+  table_of_contents: true
+  show_last_updated: true
+  show_edit_history: true
+
+blocks:
+  - type: creator_profile
+    id: profile
+    profile_theme: gloopglop
+    name: Gloop Glop
+    tagline: Gloop Glopping for all!
+    avatar: https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/907061a8-51ae-454c-c739-83935616f900/public
+    bio: |
+      We are a collective creators who like to create cool tools for other creators.
+    short_links:
+      - label: Home
+        open_in: same_tab
+        href: /
+      - label: Creators
+        open_in: same_tab
+        href: /creators
+      - label: ByLaws
+        open_in: same_tab
+        href: /bylaws
+      - label: Seven Principles
+        open_in: same_tab
+        href: /sevenprinciples
+      - label: Consent
+        open_in: same_tab
+        href: /consent
+      - label: GloopGlop
+        open_in: same_tab
+        href: /search
+
+  - type: document_header
+    id: top
+    title: Seven Cooperative Principles
+    summary: The international cooperative principles that guide GloopGlop.
+
+  - type: markdown
+    id: spacer-after-header
+
+  - type: markdown
+    id: intro
+    content: |
+      Cooperatives around the world share a set of guiding ideas. These principles were adopted by the [International Co-operative Alliance](https://ica.coop/en) and define how cooperatives put their values into practice.
+
+  - type: markdown
+    id: spacer-before-principle-1
+
+  - type: heading
+    id: principle-1
+    level: 2
+    text: 1. Voluntary and Open Membership
+
+  - type: markdown
+    id: principle-1-body
+    content: |
+      Cooperatives are voluntary organisations, open to all persons able to use their services and willing to accept the responsibilities of membership, without gender, social, racial, political or religious discrimination.
+
+  - type: markdown
+    id: spacer-before-principle-2
+
+  - type: heading
+    id: principle-2
+    level: 2
+    text: 2. Democratic Member Control
+
+  - type: markdown
+    id: principle-2-body
+    content: |
+      Cooperatives are democratic organisations controlled by their members, who actively participate in setting their policies and making decisions. Anyone serving as elected representatives are accountable to the membership. In primary cooperatives members have equal voting rights (one member, one vote) and cooperatives at other levels are also organised in a democratic manner.
+
+  - type: markdown
+    id: spacer-before-principle-3
+
+  - type: heading
+    id: principle-3
+    level: 2
+    text: 3. Member Economic Participation
+
+  - type: markdown
+    id: principle-3-body
+    content: |
+      Members contribute equitably to, and democratically control, the capital of their cooperative. At least part of that capital is usually the common property of the cooperative. Members usually receive limited compensation, if any, on capital subscribed as a condition of membership. Members allocate surpluses for any or all of the following purposes: developing their cooperative, possibly by setting up reserves, part of which at least would be indivisible; benefiting members in proportion to their transactions with the cooperative; and supporting other activities approved by the membership.
+
+  - type: markdown
+    id: spacer-before-principle-4
+
+  - type: heading
+    id: principle-4
+    level: 2
+    text: 4. Autonomy and Independence
+
+  - type: markdown
+    id: principle-4-body
+    content: |
+      Cooperatives are autonomous, self-help organisations controlled by their members. If they enter into agreements with other organisations, including governments, or raise capital from external sources, they do so on terms that ensure democratic control by their members and maintain their cooperative autonomy.
+
+  - type: markdown
+    id: spacer-before-principle-5
+
+  - type: heading
+    id: principle-5
+    level: 2
+    text: 5. Education, Training, and Information
+
+  - type: markdown
+    id: principle-5-body
+    content: |
+      Cooperatives provide education and training for their members, elected representatives, managers, and employees so they can contribute effectively to the development of their co-operatives. They inform the general public – particularly young people and opinion leaders – about the nature and benefits of co-operation.
+
+  - type: markdown
+    id: spacer-before-principle-6
+
+  - type: heading
+    id: principle-6
+    level: 2
+    text: 6. Cooperation among Cooperatives
+
+  - type: markdown
+    id: principle-6-body
+    content: |
+      Cooperatives serve their members most effectively and strengthen the cooperative movement by working together through local, national, regional and international structures.
+
+  - type: markdown
+    id: spacer-before-principle-7
+
+  - type: heading
+    id: principle-7
+    level: 2
+    text: 7. Concern for Community
+
+  - type: markdown
+    id: principle-7-body
+    content: |
+      Cooperatives work for the sustainable development of their communities through policies approved by their members.
+
+  - type: markdown
+    id: spacer-before-credit
+
+  - type: markdown
+    id: credit
+    content: |
+      Principle text adapted from [Encirca — 7 Cooperative Principles (PDF)](https://www.encirca.com/pdfs/7-cooperative-principles.pdf).

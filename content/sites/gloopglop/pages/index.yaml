@@ -16,42 +16,28 @@ page_settings:
 blocks:
   - type: creator_profile
     id: profile
+    profile_theme: gloopglop
     name: Gloop Glop
     tagline: Gloop Glopping for all!
     avatar: https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/907061a8-51ae-454c-c739-83935616f900/public
     bio: |
       We are a collective creators who like to create cool tools for other creators.
     short_links:
+      - label: Home
+        open_in: same_tab
+        href: /
+      - label: Creators
+        open_in: same_tab
+        href: /creators
       - label: ByLaws
         open_in: same_tab
         href: /bylaws
-      - label: Our Creators
+      - label: Seven Principles
         open_in: same_tab
-        href: /creators
-
-  - type: links
-    id: social-links
-    title:
-    style: cards
-    items:
-      - label: Creators
-        href: /creators
+        href: /sevenprinciples
+      - label: Consent
         open_in: same_tab
-      - label: Bylaws
-        href: /bylaws
+        href: /consent
+      - label: GloopGlop
         open_in: same_tab
-      - label: Document
-        href: /document
-        open_in: same_tab
-      - label: Publication
-        href: /publication
-        open_in: same_tab
-      - label: Form
-        href: /form
-        open_in: same_tab
-      - label: Modal
-        href: /modal
-        open_in: same_tab
-      - label: Glop search
         href: /search
-        open_in: same_tab
