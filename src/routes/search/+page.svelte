@@ -329,9 +329,9 @@
 														target="_blank"
 														rel="noopener noreferrer"
 														title={profileGlopGroup.answerUrl}
-														class="group flex cursor-pointer flex-row items-stretch gap-4 rounded-lg no-underline outline-none transition-colors hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-base-100"
+														class="group flex cursor-pointer flex-row items-start gap-4 rounded-lg no-underline outline-none transition-colors hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-base-100"
 													>
-														<div class="relative shrink-0">
+														<div class="relative shrink-0 self-start">
 															<img
 																src={gloopglopLogoUrl}
 																alt=""
@@ -396,9 +396,9 @@
 																		target="_blank"
 																		rel="noopener noreferrer"
 																		title={group.answerUrl}
-																		class="group flex cursor-pointer flex-row items-stretch gap-3 px-3 py-3 no-underline outline-none transition-colors hover:bg-base-200/70 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+																		class="group flex cursor-pointer flex-row items-start gap-3 px-3 py-3 no-underline outline-none transition-colors hover:bg-base-200/70 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
 																	>
-																		<div class="relative shrink-0">
+																		<div class="relative shrink-0 self-start">
 																			<img
 																				src={gloopglopLogoUrl}
 																				alt=""
@@ -453,9 +453,9 @@
 													target="_blank"
 													rel="noopener noreferrer"
 													title={group.answerUrl}
-													class="group flex cursor-pointer flex-row items-stretch gap-4 px-4 py-4 no-underline outline-none transition-colors hover:bg-base-200/60 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+													class="group flex cursor-pointer flex-row items-start gap-4 px-4 py-4 no-underline outline-none transition-colors hover:bg-base-200/60 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
 												>
-													<div class="relative shrink-0">
+													<div class="relative shrink-0 self-start">
 														<img
 															src={gloopglopLogoUrl}
 															alt=""
@@ -501,9 +501,9 @@
 													target="_blank"
 													rel="noopener noreferrer"
 													title={group.answerUrl}
-													class="group flex cursor-pointer flex-row items-stretch gap-4 px-4 py-4 no-underline outline-none transition-colors hover:bg-base-200/60 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+													class="group flex cursor-pointer flex-row items-start gap-4 px-4 py-4 no-underline outline-none transition-colors hover:bg-base-200/60 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
 												>
-													<div class="relative shrink-0">
+													<div class="relative shrink-0 self-start">
 														<img
 															src={gloopglopLogoUrl}
 															alt=""

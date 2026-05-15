@@ -34,7 +34,7 @@ export async function searchGlopAnswers(
          AND (
            query_normalized = ?
            OR query_normalized LIKE '%' || ? || '%'
-           OR ? LIKE '%' || query_normalized || '%'
+           OR instr(?, query_normalized) > 0
          )
        ORDER BY
          CASE WHEN query_normalized = ? THEN 0 ELSE 1 END,
@@ -106,7 +106,6 @@ export function isGlopSearchDbError(e: unknown): boolean {
 	const msg = errorMessage(e).toLowerCase();
 	if (msg.includes('db binding')) return true;
 	if (msg.includes('no such table') && msg.includes('glop')) return true;
-	if (msg.includes('sqlite_error') || msg.includes('d1_error')) return true;
 	return false;
 }
 
