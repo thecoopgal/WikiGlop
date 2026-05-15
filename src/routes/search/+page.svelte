@@ -184,7 +184,7 @@
 >
 	<main class="flex flex-1 flex-col px-4 pb-16 pt-10">
 		<div class="mx-auto w-full max-w-xl space-y-8">
-			<div class="flex flex-row items-center gap-3">
+			<div class="flex flex-col items-center gap-3 sm:flex-row sm:items-center">
 				<a
 					href="/"
 					class="shrink-0 rounded-2xl ring-1 ring-base-300 transition-opacity hover:opacity-90"
@@ -202,7 +202,7 @@
 				<form
 					method="get"
 					action="/search"
-					class="flex min-w-0 flex-1 flex-col gap-2 sm:flex-row sm:gap-3 sm:items-stretch"
+					class="flex w-full min-w-0 flex-row items-stretch gap-2 sm:flex-1 sm:gap-3"
 				>
 					<label class="input input-bordered flex min-w-0 flex-1 items-center gap-2">
 						<IconMagnify class="h-5 w-5 shrink-0 text-base-content/60" aria-hidden="true" />

@@ -1,10 +1,15 @@
 import { canonicalOriginForSite } from '$lib/server/content';
 import { isMeNotificationsHost } from '$lib/server/me-host';
-import { getAllSites, resolveSiteByHostname, resolveSiteForGloopGgPath, resolveSiteById } from '$lib/server/sites';
+import { getAllSites, resolveSiteByHostname, resolveSiteForGloopGgPath } from '$lib/server/sites';
 import type { Handle } from '@sveltejs/kit';
 import { dev } from '$app/environment';
 
 const GLOOP_GG_APEX = new Set(['gloop.gg', 'www.gloop.gg']);
+
+/** Canonical GloopGlop host for apex gloop.gg traffic (platform pages, not creator short links). */
+function gloopglopOriginForGloopGgApex(hostname: string): string {
+	return hostname === 'www.gloop.gg' ? 'https://www.gloopglop.com' : 'https://gloopglop.com';
+}
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const hostname = event.url.hostname;
@@ -19,22 +24,27 @@ export const handle: Handle = async ({ event, resolve }) => {
 		let site: Awaited<ReturnType<typeof resolveSiteByHostname>> = null;
 
 		if (GLOOP_GG_APEX.has(hn)) {
+			const platformOrigin = gloopglopOriginForGloopGgApex(hn);
+
 			if (segments.length === 0) {
-				site = await resolveSiteById('gloopglop');
-			} else {
-				site = await resolveSiteForGloopGgPath(segments[0]);
-				if (site) {
-					const origin = canonicalOriginForSite(site, event.url);
-					if (origin) {
-						const rest = segments.slice(1);
-						const path =
-							rest.length > 0 ? `/${rest.map((s) => encodeURIComponent(s)).join('/')}` : '/';
-						const destination = `${origin}${path}${event.url.search}`;
-						return Response.redirect(destination, 301);
-					}
-				}
-				event.locals.gloopGgPageSlugParts = segments.slice(1);
+				return Response.redirect(`${platformOrigin}/${event.url.search}`, 301);
 			}
+
+			const creatorSite = await resolveSiteForGloopGgPath(segments[0]);
+			if (creatorSite) {
+				const origin = canonicalOriginForSite(creatorSite, event.url);
+				if (origin) {
+					const rest = segments.slice(1);
+					const path =
+						rest.length > 0 ? `/${rest.map((s) => encodeURIComponent(s)).join('/')}` : '/';
+					const destination = `${origin}${path}${event.url.search}`;
+					return Response.redirect(destination, 301);
+				}
+			}
+
+			// Not a creator short slug — send platform paths (/creators, /search, …) to gloopglop.com.
+			const destination = `${platformOrigin}${pathname}${event.url.search}`;
+			return Response.redirect(destination, 301);
 		} else {
 			site = await resolveSiteByHostname(hostname);
 		}
