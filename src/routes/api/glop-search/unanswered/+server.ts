@@ -1,6 +1,10 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { isGlopSearchDbError, listUnansweredGlopQuestions } from '$lib/server/glop-search';
+import { isGlopSearchDbError } from '$lib/server/glop-search';
+import {
+	listUnansweredGlopQuestions,
+	parseUnansweredGlopSort
+} from '$lib/server/glop-search-resolve';
 
 const GLOOPGLOP_SITE_ID = 'gloopglop';
 
@@ -14,12 +18,15 @@ export const GET: RequestHandler = async ({ locals, platform, url }) => {
 	const limit = limitRaw ? Number.parseInt(limitRaw, 10) : 50;
 
 	try {
+		const sort = parseUnansweredGlopSort(url.searchParams.get('sort'));
 		const questions = await listUnansweredGlopQuestions(
 			platform,
 			locals.site.siteId,
-			Number.isFinite(limit) ? limit : 50
+			url,
+			Number.isFinite(limit) ? limit : 50,
+			sort
 		);
-		return json({ ok: true as const, count: questions.length, questions });
+		return json({ ok: true as const, sort, count: questions.length, questions });
 	} catch (e) {
 		if (isGlopSearchDbError(e)) {
 			throw error(

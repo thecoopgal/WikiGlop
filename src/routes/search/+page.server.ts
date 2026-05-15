@@ -1,37 +1,26 @@
 import { getRequestEvent } from '$app/server';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { buildCanonicalHrefByAnswerUrl, canonicalGlopAnswerHref } from '$lib/server/glop-answer-canonical';
-import {
-	findGloopglopCreatorSiteMentionedInQuery,
-	findGloopglopPlatformSiteMentionedInQuery,
-	sortGlopAnswersForCreatorAwareSearch,
-	syntheticGlopAnswerRow
-} from '$lib/server/glop-creator-search';
-import { collectHttpHrefLabelsFromPage } from '$lib/server/glop-page-ingest';
+import { buildCanonicalHrefByAnswerUrl } from '$lib/server/glop-answer-canonical';
+import { sortGlopAnswersForCreatorAwareSearch } from '$lib/server/glop-creator-search';
 import {
 	fetchGlopAnswerCountsForQuestion,
 	isGlopSearchDbError,
 	listTopGlopedQuestions,
-	listUnansweredGlopQuestions,
 	recordGlopQuestionAsk,
-	searchGlopAnswers,
 	type GlopAnswerRow,
 	type GlopQuestionRow,
 	type TopGlopedQuestion
 } from '$lib/server/glop-search';
-import { normalizeGlopQuery } from '$lib/glop-query-normalize';
 import {
-	expandCreatorLinksShortcuts,
-	loadPageYaml,
-	publicGloopglopCreatorOriginForSearch
-} from '$lib/server/content';
-import { getAllSites } from '$lib/server/sites';
+	listUnansweredGlopQuestions,
+	mergeGlopSearchAnswersForQuery,
+	parseUnansweredGlopSort,
+	type UnansweredGlopSort
+} from '$lib/server/glop-search-resolve';
 import { fetchSeoForUrls, type UrlSeoSnippet } from '$lib/server/url-seo';
-import { isOmittedFromGloopglopSearch } from '$lib/server/url-public';
 
 const GLOOPGLOP_SITE_ID = 'gloopglop';
-const MAX_CREATOR_SYNTHETIC_LINKS = 56;
 /** Cap outbound SEO fetches so /search stays under Workers subrequest limits. */
 const MAX_SEO_PREFETCH = 12;
 
@@ -47,6 +36,9 @@ export const load: PageServerLoad = async ({ locals, url, platform: platformProp
 
 	const qRaw = url.searchParams.get('q') ?? '';
 	const query = qRaw.trim();
+	const unansweredSort: UnansweredGlopSort = parseUnansweredGlopSort(
+		url.searchParams.get('unansweredSort')
+	);
 	if (query.length < 2) {
 		let topGlopedQuestions: TopGlopedQuestion[] = [];
 		let unansweredGlopQuestions: GlopQuestionRow[] = [];
@@ -56,7 +48,13 @@ export const load: PageServerLoad = async ({ locals, url, platform: platformProp
 			console.error('Top gloped questions failed (landing continues):', topErr);
 		}
 		try {
-			unansweredGlopQuestions = await listUnansweredGlopQuestions(platform, locals.site.siteId, 10);
+			unansweredGlopQuestions = await listUnansweredGlopQuestions(
+				platform,
+				locals.site.siteId,
+				url,
+				10,
+				unansweredSort
+			);
 		} catch (unansweredErr) {
 			console.error('Unanswered glop questions failed (landing continues):', unansweredErr);
 		}
@@ -70,7 +68,8 @@ export const load: PageServerLoad = async ({ locals, url, platform: platformProp
 			glopCountByAnswerUrl: {} as Record<string, number>,
 			creatorSearchUi: null,
 			topGlopedQuestions,
-			unansweredGlopQuestions
+			unansweredGlopQuestions,
+			unansweredSort
 		};
 	}
 
@@ -81,94 +80,13 @@ export const load: PageServerLoad = async ({ locals, url, platform: platformProp
 			console.error('Record glop question failed (search continues):', questionErr);
 		}
 
-		let merged = (await searchGlopAnswers(platform, locals.site.siteId, query)).filter(
-			(r) => !isOmittedFromGloopglopSearch(r.answer_url)
-		);
-		let profileCanonicalHref: string | null = null;
-		let creatorSearchUi: {
-			siteId: string;
-			displayName: string;
-			profileCanonicalUrl: string;
-			bundleCanonicalUrls: string[];
-		} | null = null;
-
-		const norm = normalizeGlopQuery(query);
-		const sites = await getAllSites();
-		const matchedCreator = findGloopglopCreatorSiteMentionedInQuery(norm, sites);
-		const matchedPlatform = matchedCreator
-			? null
-			: findGloopglopPlatformSiteMentionedInQuery(norm, sites);
-		const matchedSite = matchedCreator ?? matchedPlatform;
-
-		if (matchedSite) {
-			try {
-				const origin = publicGloopglopCreatorOriginForSearch(matchedSite);
-				if (origin) {
-					const siteBase = new URL(origin);
-					const displayName = matchedSite.name?.trim() || matchedSite.id || matchedSite.siteId;
-					const isPlatform = matchedSite.siteId === GLOOPGLOP_SITE_ID;
-					const pageSlugLists: string[][] = isPlatform ? [[], ['creators']] : [[]];
-					const hrefLabels = new Map<string, string>();
-
-					for (const slugParts of pageSlugLists) {
-						const page = await loadPageYaml(matchedSite, slugParts);
-						if (!page) continue;
-						const hydrated = await expandCreatorLinksShortcuts(matchedSite, page, url);
-						const fromPage = collectHttpHrefLabelsFromPage(hydrated, siteBase, displayName);
-						for (const [href, label] of fromPage) {
-							if (!hrefLabels.has(href)) hrefLabels.set(href, label);
-						}
-					}
-
-					const homeHref = new URL('/', siteBase).href;
-					profileCanonicalHref = isOmittedFromGloopglopSearch(homeHref)
-						? null
-						: await canonicalGlopAnswerHref(homeHref);
-
-					const homeLabel = isPlatform
-						? 'GloopGlop · home'
-						: `${displayName} · GloopGlop page`;
-					if (!isOmittedFromGloopglopSearch(homeHref) && !hrefLabels.has(homeHref)) {
-						hrefLabels.set(homeHref, homeLabel);
-					}
-
-					if (profileCanonicalHref) {
-						const bundleCanonMap = await buildCanonicalHrefByAnswerUrl([...hrefLabels.keys()]);
-						const bundleCanonicalUrls = [...new Set(Object.values(bundleCanonMap))];
-						creatorSearchUi = {
-							siteId: matchedSite.siteId,
-							displayName,
-							profileCanonicalUrl: profileCanonicalHref,
-							bundleCanonicalUrls
-						};
-					}
-
-					const existingUrls = new Set(merged.map((r) => r.answer_url));
-					let added = 0;
-					for (const [href, label] of hrefLabels) {
-						if (added >= MAX_CREATOR_SYNTHETIC_LINKS) break;
-						if (isOmittedFromGloopglopSearch(href)) continue;
-						if (existingUrls.has(href)) continue;
-						existingUrls.add(href);
-						const qd = isPlatform ? `GloopGlop · ${label}` : `Creator link · ${label}`;
-						merged.push(syntheticGlopAnswerRow(href, qd));
-						added += 1;
-					}
-				}
-			} catch (bundleErr) {
-				console.error('Creator/platform search bundle failed:', bundleErr);
-				profileCanonicalHref = null;
-				creatorSearchUi = null;
-			}
-		}
-
-		merged = merged.filter((r) => !isOmittedFromGloopglopSearch(r.answer_url));
-		if (profileCanonicalHref && isOmittedFromGloopglopSearch(profileCanonicalHref)) {
-			profileCanonicalHref = null;
-		}
-		if (!profileCanonicalHref) {
-			creatorSearchUi = null;
-		}
+		const { answers: merged, creatorSearchUi } = await mergeGlopSearchAnswersForQuery({
+			platform,
+			siteId: locals.site.siteId,
+			queryRaw: query,
+			requestUrl: url
+		});
+		const profileCanonicalHref = creatorSearchUi?.profileCanonicalUrl ?? null;
 
 		let canonicalHrefByAnswerUrl: Record<string, string> = {};
 		if (merged.length > 0) {
@@ -239,7 +157,8 @@ export const load: PageServerLoad = async ({ locals, url, platform: platformProp
 			glopCountByAnswerUrl,
 			creatorSearchUi,
 			topGlopedQuestions: [] as TopGlopedQuestion[],
-			unansweredGlopQuestions: [] as GlopQuestionRow[]
+			unansweredGlopQuestions: [] as GlopQuestionRow[],
+			unansweredSort
 		};
 	} catch (e) {
 		console.error('Search load failed:', e);
@@ -255,7 +174,8 @@ export const load: PageServerLoad = async ({ locals, url, platform: platformProp
 				glopCountByAnswerUrl: {} as Record<string, number>,
 				creatorSearchUi: null,
 				topGlopedQuestions: [] as TopGlopedQuestion[],
-				unansweredGlopQuestions: [] as GlopQuestionRow[]
+				unansweredGlopQuestions: [] as GlopQuestionRow[],
+				unansweredSort
 			};
 		}
 		throw error(503, 'Search is temporarily unavailable.');

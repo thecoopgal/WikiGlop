@@ -1,6 +1,10 @@
 import { normalizeGlopQuery } from '$lib/glop-query-normalize';
 import { getDbBinding } from '$lib/server/platform-env';
-import { isOmittedFromGloopglopSearch } from '$lib/server/url-public';
+import {
+	isAllowedUserGlopAnswerUrl,
+	isOmittedFromGloopglopSearch,
+	USER_GLOP_ALLOWED_SITES_LABEL
+} from '$lib/server/url-public';
 
 type Db = ReturnType<typeof getDbBinding>;
 
@@ -155,54 +159,6 @@ export async function recordGlopQuestionAsk(
 		.run();
 }
 
-/** Questions with at least one search and zero gloops (answers) stored. */
-export async function listUnansweredGlopQuestions(
-	platform: App.Platform | undefined,
-	siteId: string,
-	limit = 50
-): Promise<GlopQuestionRow[]> {
-	const db = getDb(platform);
-	const cap = Math.min(Math.max(1, limit), 200);
-	const { results } = await db
-		.prepare(
-			`SELECT
-         q.query_normalized,
-         q.query_display,
-         q.first_asked_at,
-         q.last_asked_at,
-         q.ask_count,
-         COALESCE(a.answer_count, 0) AS answer_count
-       FROM glop_questions q
-       LEFT JOIN (
-         SELECT site_id, query_normalized, COUNT(*) AS answer_count
-         FROM glop_answers
-         GROUP BY site_id, query_normalized
-       ) a ON a.site_id = q.site_id AND a.query_normalized = q.query_normalized
-       WHERE q.site_id = ?
-         AND COALESCE(a.answer_count, 0) = 0
-       ORDER BY q.last_asked_at DESC
-       LIMIT ?`
-		)
-		.bind(siteId, cap)
-		.all<{
-			query_normalized: string;
-			query_display: string;
-			first_asked_at: string;
-			last_asked_at: string;
-			ask_count: number | bigint;
-			answer_count: number | bigint;
-		}>();
-
-	return (results ?? []).map((r) => ({
-		query_normalized: r.query_normalized,
-		query_display: r.query_display,
-		first_asked_at: r.first_asked_at,
-		last_asked_at: r.last_asked_at,
-		ask_count: Number(r.ask_count) || 0,
-		answer_count: Number(r.answer_count) || 0
-	}));
-}
-
 export type TopGlopedQuestion = {
 	query_display: string;
 	query_normalized: string;
@@ -318,10 +274,8 @@ export async function insertGlopAnswer(params: {
 	answerUrl: string;
 	/** When set (GloopGlop manual add), enforces one submission per (question, url) per browser. */
 	clientBrowserKey?: string;
-	/** Submitter chose not to be attributed publicly (anti-spam still uses client key when provided). */
-	anonymous?: boolean;
 }): Promise<{ id: string }> {
-	const { platform, siteId, queryRaw, answerUrl, clientBrowserKey, anonymous = false } = params;
+	const { platform, siteId, queryRaw, answerUrl, clientBrowserKey } = params;
 	const display = queryRaw.trim();
 	if (display.length < 3 || display.length > 500) {
 		throw new Error('Question must be between 3 and 500 characters.');
@@ -334,16 +288,18 @@ export async function insertGlopAnswer(params: {
 	const url = parseGlopAnswerUrl(answerUrl);
 	if (!url || url.href.length > 2048) {
 		throw new Error(
-			'Please enter a valid link — https://… or a bare Gloop host like gloop.gg/… or yourname.gloopglop.com/…'
+			`Please enter a valid ${USER_GLOP_ALLOWED_SITES_LABEL} link (https://…).`
 		);
 	}
 	if (isOmittedFromGloopglopSearch(url.href)) {
 		throw new Error('Local and loopback hosts are not allowed for community search.');
 	}
+	if (!isAllowedUserGlopAnswerUrl(url.href)) {
+		throw new Error(`Community gloops only accept links from ${USER_GLOP_ALLOWED_SITES_LABEL}.`);
+	}
 
 	const db = getDb(platform);
 	const id = randomId();
-	const isAnonymous = anonymous ? 1 : 0;
 
 	try {
 		await recordGlopQuestionAsk(platform, siteId, queryRaw);
@@ -371,10 +327,10 @@ export async function insertGlopAnswer(params: {
 		try {
 			await db
 				.prepare(
-					`INSERT INTO glop_answers (id, site_id, query_normalized, query_display, answer_url, is_anonymous, created_at)
-           VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`
+					`INSERT INTO glop_answers (id, site_id, query_normalized, query_display, answer_url, created_at)
+           VALUES (?, ?, ?, ?, ?, datetime('now'))`
 				)
-				.bind(id, siteId, norm, display, url.href, isAnonymous)
+				.bind(id, siteId, norm, display, url.href)
 				.run();
 		} catch (e) {
 			await db
@@ -391,10 +347,10 @@ export async function insertGlopAnswer(params: {
 
 	await db
 		.prepare(
-			`INSERT INTO glop_answers (id, site_id, query_normalized, query_display, answer_url, is_anonymous, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`
+			`INSERT INTO glop_answers (id, site_id, query_normalized, query_display, answer_url, created_at)
+       VALUES (?, ?, ?, ?, ?, datetime('now'))`
 		)
-		.bind(id, siteId, norm, display, url.href, isAnonymous)
+		.bind(id, siteId, norm, display, url.href)
 		.run();
 
 	return { id };
@@ -431,8 +387,8 @@ export async function insertGlopAnswerIfAbsent(params: {
 	await recordGlopQuestionAsk(platform, siteId, queryRaw);
 	await db
 		.prepare(
-			`INSERT INTO glop_answers (id, site_id, query_normalized, query_display, answer_url, is_anonymous, created_at)
-       VALUES (?, ?, ?, ?, ?, 0, datetime('now'))`
+			`INSERT INTO glop_answers (id, site_id, query_normalized, query_display, answer_url, created_at)
+       VALUES (?, ?, ?, ?, ?, datetime('now'))`
 		)
 		.bind(id, siteId, norm, display, url.href)
 		.run();

@@ -31,7 +31,6 @@
 
 	let gloopModalOpen = $state(false);
 	let gloopUrl = $state('');
-	let gloopAnonymous = $state(false);
 	let gloopSubmit = $state<'idle' | 'loading' | 'success' | 'error'>('idle');
 	let gloopError = $state('');
 	let searchInputEl = $state<HTMLInputElement | null>(null);
@@ -127,6 +126,20 @@
 		return h === 'localhost' || h === '127.0.0.1' || h.endsWith('.localhost');
 	});
 
+	const unansweredSort = $derived(data.unansweredSort ?? 'recent');
+
+	function unansweredSortHref(sort: 'recent' | 'searches'): string {
+		const u = new URL(page.url);
+		u.searchParams.delete('q');
+		if (sort === 'recent') {
+			u.searchParams.delete('unansweredSort');
+		} else {
+			u.searchParams.set('unansweredSort', sort);
+		}
+		const qs = u.searchParams.toString();
+		return qs ? `${u.pathname}?${qs}` : u.pathname;
+	}
+
 	type GlopSeo = { title?: string | null; description?: string | null };
 
 	function isTikTokUrl(answerUrl: string): boolean {
@@ -152,7 +165,6 @@
 
 	function openGloopModal() {
 		gloopUrl = '';
-		gloopAnonymous = false;
 		gloopSubmit = 'idle';
 		gloopError = '';
 		gloopModalOpen = true;
@@ -178,12 +190,7 @@
 		const res = await fetch('/api/glop-search', {
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({
-				query: data.query,
-				url: gloopUrl,
-				clientKey,
-				anonymous: gloopAnonymous
-			})
+			body: JSON.stringify({ query: data.query, url: gloopUrl, clientKey })
 		});
 		if (!res.ok) {
 			gloopSubmit = 'error';
@@ -263,10 +270,10 @@
 				<div class="space-y-6">
 				<section
 					class="card overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-sm"
-					aria-label="Best gloops glopped right now"
+					aria-label="Trending Gloops glopped right now"
 				>
 					<div class="border-b border-base-300 px-4 py-3">
-						<h2 class="text-base font-semibold leading-snug">Best gloops glopped right now</h2>
+						<h2 class="text-base font-semibold leading-snug">Trending Gloops glopped right now</h2>
 						
 					</div>
 					{#if (data.topGlopedQuestions ?? []).length > 0}
@@ -314,10 +321,38 @@
 						aria-label="Unanswered gloops"
 					>
 						<div class="border-b border-base-300 bg-warning/10 px-4 py-3">
-							<h2 class="text-base font-semibold leading-snug">Unanswered gloops</h2>
-							<p class="mt-0.5 text-sm text-base-content/65">
-								Gloops people searched with no links yet. Maybe you should be the first to glop it!
-							</p>
+							<div class="flex flex-wrap items-start justify-between gap-3">
+								<div class="min-w-0">
+									<h2 class="text-base font-semibold leading-snug">Unanswered gloops</h2>
+									<p class="mt-0.5 text-sm text-base-content/65">
+										Gloops people searched with no links yet. Maybe you should be the first to glop it!
+									</p>
+								</div>
+								<div
+									class="join shrink-0"
+									role="group"
+									aria-label="Sort unanswered gloops"
+								>
+									<a
+										href={unansweredSortHref('recent')}
+										class="btn btn-xs join-item no-underline{unansweredSort === 'recent'
+											? ' btn-warning'
+											: ' btn-ghost border border-base-300'}"
+										aria-current={unansweredSort === 'recent' ? 'true' : undefined}
+									>
+										Recent
+									</a>
+									<a
+										href={unansweredSortHref('searches')}
+										class="btn btn-xs join-item no-underline{unansweredSort === 'searches'
+											? ' btn-warning'
+											: ' btn-ghost border border-base-300'}"
+										aria-current={unansweredSort === 'searches' ? 'true' : undefined}
+									>
+										Most searched
+									</a>
+								</div>
+							</div>
 						</div>
 						{#if (data.unansweredGlopQuestions ?? []).length > 0}
 							<ul class="divide-y divide-base-200">
@@ -696,22 +731,13 @@
 					<input
 						type="text"
 						class="input input-bordered w-full"
-						placeholder="gloop.gg/… or https://…"
+						placeholder="YouTube, TikTok, Instagram, Wikipedia, Reddit, or Facebook link"
 						aria-label="Paste a public link"
 						bind:value={gloopUrl}
 						inputmode="url"
 						autocomplete="off"
 						disabled={gloopSubmit === 'loading'}
 					/>
-				</label>
-				<label class="label cursor-pointer justify-start gap-3 py-0">
-					<input
-						type="checkbox"
-						class="checkbox checkbox-primary checkbox-sm"
-						bind:checked={gloopAnonymous}
-						disabled={gloopSubmit === 'loading'}
-					/>
-					<span class="label-text text-sm">Gloop anonymously</span>
 				</label>
 				{#if gloopSubmit === 'error' && gloopError}
 					<p class="text-sm text-error">{gloopError}</p>

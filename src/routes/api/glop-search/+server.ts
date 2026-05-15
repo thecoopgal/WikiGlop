@@ -26,16 +26,13 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	if (!clientKey) {
 		throw error(400, 'Browser client id is required to post a glop.');
 	}
-	const anonymous = data.anonymous === true;
-
 	try {
 		const { id } = await insertGlopAnswer({
 			platform,
 			siteId: locals.site.siteId,
 			queryRaw,
 			answerUrl: urlRaw,
-			clientBrowserKey: clientKey,
-			anonymous
+			clientBrowserKey: clientKey
 		});
 		return json({ ok: true as const, id });
 	} catch (e) {
@@ -51,6 +48,8 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 			message.includes('between') ||
 			message.includes('valid link') ||
 			message.includes('valid http') ||
+			message.includes('Community gloops only accept') ||
+			message.includes('Please enter a valid') ||
 			message.includes('Local and loopback') ||
 			message.includes('Browser client id') ||
 			message.includes('Invalid browser client id') ||
