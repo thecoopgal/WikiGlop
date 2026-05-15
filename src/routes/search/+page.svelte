@@ -262,11 +262,11 @@
 			{#if !data.searched && !data.dbUnavailable}
 				<section
 					class="card overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-sm"
-					aria-label="Top gloops being gloped"
+					aria-label="Best gloops glopped right now"
 				>
 					<div class="border-b border-base-300 px-4 py-3">
-						<h2 class="text-base font-semibold leading-snug">Top gloops being gloped</h2>
-						<p class="mt-0.5 text-sm text-base-content/65">Community questions people are searching right now</p>
+						<h2 class="text-base font-semibold leading-snug">Best gloops glopped right now</h2>
+						
 					</div>
 					{#if (data.topGlopedQuestions ?? []).length > 0}
 						<ol class="divide-y divide-base-200">
