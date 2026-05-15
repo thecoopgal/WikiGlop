@@ -10,8 +10,9 @@ import {
 } from '$lib/server/glop-creator-search';
 import { collectHttpHrefLabelsFromPage } from '$lib/server/glop-page-ingest';
 import {
-	fetchGlopAnswerCountsForUrls,
+	fetchGlopAnswerCountsForQuestion,
 	isGlopSearchDbError,
+	recordGlopQuestionAsk,
 	searchGlopAnswers,
 	type GlopAnswerRow
 } from '$lib/server/glop-search';
@@ -50,12 +51,18 @@ export const load: PageServerLoad = async ({ locals, url, platform: platformProp
 			searched: false,
 			seoByUrl: {} as Record<string, UrlSeoSnippet>,
 			canonicalHrefByAnswerUrl: {} as Record<string, string>,
-			glopGlobalCountByAnswerUrl: {} as Record<string, number>,
+			glopCountByAnswerUrl: {} as Record<string, number>,
 			creatorSearchUi: null
 		};
 	}
 
 	try {
+		try {
+			await recordGlopQuestionAsk(platform, locals.site.siteId, query);
+		} catch (questionErr) {
+			console.error('Record glop question failed (search continues):', questionErr);
+		}
+
 		let merged = (await searchGlopAnswers(platform, locals.site.siteId, query)).filter(
 			(r) => !isOmittedFromGloopglopSearch(r.answer_url)
 		);
@@ -160,16 +167,17 @@ export const load: PageServerLoad = async ({ locals, url, platform: platformProp
 		}
 
 		const rawUrls = [...new Set(merged.map((r) => r.answer_url))];
-		let glopGlobalCountByAnswerUrl: Record<string, number> = {};
+		let glopCountByAnswerUrl: Record<string, number> = {};
 		if (rawUrls.length > 0) {
 			try {
-				glopGlobalCountByAnswerUrl = await fetchGlopAnswerCountsForUrls(
+				glopCountByAnswerUrl = await fetchGlopAnswerCountsForQuestion(
 					platform,
 					locals.site.siteId,
+					query,
 					rawUrls
 				);
 			} catch (countsErr) {
-				console.error('Glop per-URL counts failed (search continues):', countsErr);
+				console.error('Glop per-question answer counts failed (search continues):', countsErr);
 			}
 		}
 
@@ -177,7 +185,7 @@ export const load: PageServerLoad = async ({ locals, url, platform: platformProp
 			rows: merged,
 			canonicalHrefByAnswerUrl,
 			profileCanonicalHref,
-			globalCountByAnswerUrl: glopGlobalCountByAnswerUrl
+			globalCountByAnswerUrl: glopCountByAnswerUrl
 		});
 
 		const seoPrefetchOrder: string[] = [];
@@ -210,7 +218,7 @@ export const load: PageServerLoad = async ({ locals, url, platform: platformProp
 			searched: true,
 			seoByUrl,
 			canonicalHrefByAnswerUrl,
-			glopGlobalCountByAnswerUrl,
+			glopCountByAnswerUrl,
 			creatorSearchUi
 		};
 	} catch (e) {
@@ -224,7 +232,7 @@ export const load: PageServerLoad = async ({ locals, url, platform: platformProp
 				dbUnavailable: true as const,
 				seoByUrl: {} as Record<string, UrlSeoSnippet>,
 				canonicalHrefByAnswerUrl: {} as Record<string, string>,
-				glopGlobalCountByAnswerUrl: {} as Record<string, number>,
+				glopCountByAnswerUrl: {} as Record<string, number>,
 				creatorSearchUi: null
 			};
 		}

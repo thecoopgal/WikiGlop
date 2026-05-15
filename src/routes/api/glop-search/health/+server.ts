@@ -22,12 +22,41 @@ export const GET: RequestHandler = async ({ locals, platform }) => {
 			.bind(GLOOPGLOP_SITE_ID)
 			.first<{ n: number | bigint }>();
 		const count = row?.n != null ? Number(row.n) : 0;
+
+		let glopQuestionCount: number | null = null;
+		let unansweredQuestionCount: number | null = null;
+		try {
+			const qRow = await db
+				.prepare('SELECT COUNT(*) AS n FROM glop_questions WHERE site_id = ?')
+				.bind(GLOOPGLOP_SITE_ID)
+				.first<{ n: number | bigint }>();
+			glopQuestionCount = qRow?.n != null ? Number(qRow.n) : 0;
+
+			const uRow = await db
+				.prepare(
+					`SELECT COUNT(*) AS n
+           FROM glop_questions q
+           WHERE q.site_id = ?
+             AND NOT EXISTS (
+               SELECT 1 FROM glop_answers a
+               WHERE a.site_id = q.site_id AND a.query_normalized = q.query_normalized
+             )`
+				)
+				.bind(GLOOPGLOP_SITE_ID)
+				.first<{ n: number | bigint }>();
+			unansweredQuestionCount = uRow?.n != null ? Number(uRow.n) : 0;
+		} catch {
+			// migrations 0008+ not applied yet
+		}
+
 		return json({
 			ok: true,
 			hasPlatform,
 			hasEnv,
 			hasDbBinding,
-			glopAnswerCount: Number.isFinite(count) ? count : null
+			glopAnswerCount: Number.isFinite(count) ? count : null,
+			glopQuestionCount,
+			unansweredQuestionCount
 		});
 	} catch (e) {
 		const message = e instanceof Error ? e.message : String(e);

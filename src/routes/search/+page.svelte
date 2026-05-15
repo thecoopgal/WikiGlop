@@ -31,6 +31,7 @@
 
 	let gloopModalOpen = $state(false);
 	let gloopUrl = $state('');
+	let gloopAnonymous = $state(false);
 	let gloopSubmit = $state<'idle' | 'loading' | 'success' | 'error'>('idle');
 	let gloopError = $state('');
 	let searchInputEl = $state<HTMLInputElement | null>(null);
@@ -55,13 +56,12 @@
 	type GroupedGlop = { answerUrl: string; gloopCount: number };
 
 	/**
-	 * One card per canonical URL. Badge = total `glop_answers` rows for stored URLs in that group
-	 * (community “upvotes”), falling back to 1 when unknown.
+	 * One card per canonical URL. Badge = gloops for this question + URL (not global across all questions).
 	 */
 	const groupedGlops = $derived.by(() => {
 		const rows = (data.answers ?? []) as GlopAnswerRow[];
 		const canon = data.canonicalHrefByAnswerUrl ?? {};
-		const globalMap = data.glopGlobalCountByAnswerUrl ?? {};
+		const countMap = data.glopCountByAnswerUrl ?? {};
 
 		const rawByCanonical = new Map<string, Set<string>>();
 		const order: string[] = [];
@@ -80,8 +80,8 @@
 		for (const c of order) {
 			let sum = 0;
 			for (const raw of rawByCanonical.get(c) ?? []) {
-				const n = globalMap[raw];
-				sum += typeof n === 'number' && n > 0 ? n : 1;
+				const n = countMap[raw];
+				sum += typeof n === 'number' && n > 0 ? n : 0;
 			}
 			map.get(c)!.gloopCount = sum;
 		}
@@ -152,6 +152,7 @@
 
 	function openGloopModal() {
 		gloopUrl = '';
+		gloopAnonymous = false;
 		gloopSubmit = 'idle';
 		gloopError = '';
 		gloopModalOpen = true;
@@ -177,7 +178,12 @@
 		const res = await fetch('/api/glop-search', {
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({ query: data.query, url: gloopUrl, clientKey })
+			body: JSON.stringify({
+				query: data.query,
+				url: gloopUrl,
+				clientKey,
+				anonymous: gloopAnonymous
+			})
 		});
 		if (!res.ok) {
 			gloopSubmit = 'error';
@@ -342,7 +348,7 @@
 															/>
 															<span
 																class="badge badge-sm absolute -bottom-1 -right-1 min-w-[1.25rem] justify-center border-0 bg-primary px-1.5 text-primary-content"
-																title="Total gloops for this URL (all questions)"
+																title="Gloops for this question and link"
 															>
 																{profileGlopGroup.gloopCount}
 															</span>
@@ -409,7 +415,7 @@
 																			/>
 																			<span
 																				class="badge badge-sm absolute -bottom-0.5 -right-0.5 min-w-[1.1rem] scale-90 justify-center border-0 bg-primary px-1 text-[10px] text-primary-content"
-																				title="Total gloops for this URL (all questions)"
+																				title="Gloops for this question and link"
 																			>
 																				{group.gloopCount}
 																			</span>
@@ -466,7 +472,7 @@
 														/>
 														<span
 															class="badge badge-sm absolute -bottom-1 -right-1 min-w-[1.25rem] justify-center border-0 bg-primary px-1.5 text-primary-content"
-															title="Total gloops for this URL (all questions)"
+															title="Gloops for this question and link"
 														>
 															{group.gloopCount}
 														</span>
@@ -514,7 +520,7 @@
 														/>
 														<span
 															class="badge badge-sm absolute -bottom-1 -right-1 min-w-[1.25rem] justify-center border-0 bg-primary px-1.5 text-primary-content"
-															title="Total gloops for this URL (all questions)"
+															title="Gloops for this question and link"
 														>
 															{group.gloopCount}
 														</span>
@@ -600,6 +606,15 @@
 						autocomplete="off"
 						disabled={gloopSubmit === 'loading'}
 					/>
+				</label>
+				<label class="label cursor-pointer justify-start gap-3 py-0">
+					<input
+						type="checkbox"
+						class="checkbox checkbox-primary checkbox-sm"
+						bind:checked={gloopAnonymous}
+						disabled={gloopSubmit === 'loading'}
+					/>
+					<span class="label-text text-sm">Gloop anonymously</span>
 				</label>
 				{#if gloopSubmit === 'error' && gloopError}
 					<p class="text-sm text-error">{gloopError}</p>

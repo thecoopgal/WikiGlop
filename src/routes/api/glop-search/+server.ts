@@ -26,6 +26,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	if (!clientKey) {
 		throw error(400, 'Browser client id is required to post a glop.');
 	}
+	const anonymous = data.anonymous === true;
 
 	try {
 		const { id } = await insertGlopAnswer({
@@ -33,7 +34,8 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 			siteId: locals.site.siteId,
 			queryRaw,
 			answerUrl: urlRaw,
-			clientBrowserKey: clientKey
+			clientBrowserKey: clientKey,
+			anonymous
 		});
 		return json({ ok: true as const, id });
 	} catch (e) {
