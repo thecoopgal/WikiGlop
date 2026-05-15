@@ -1,19 +1,8 @@
 import { normalizeGlopQuery } from '$lib/glop-query-normalize';
+import { getDbBinding } from '$lib/server/platform-env';
 import { isOmittedFromGloopglopSearch } from '$lib/server/url-public';
 
-type Db = NonNullable<GlopSearchEnv['DB']>;
-
-type GlopSearchEnv = {
-	DB?: {
-		prepare(query: string): {
-			bind(...values: unknown[]): {
-				first<T = Record<string, unknown>>(): Promise<T | null>;
-				all<T = Record<string, unknown>>(): Promise<{ results?: T[] }>;
-				run(): Promise<unknown>;
-			};
-		};
-	};
-};
+type Db = ReturnType<typeof getDbBinding>;
 
 export type GlopAnswerRow = {
 	id: string;
@@ -22,15 +11,8 @@ export type GlopAnswerRow = {
 	created_at: string;
 };
 
-function extractEnv(platform: App.Platform | undefined): GlopSearchEnv {
-	return (((platform as { env?: GlopSearchEnv } | undefined)?.env as GlopSearchEnv | undefined) ??
-		{}) as GlopSearchEnv;
-}
-
 function getDb(platform: App.Platform | undefined): Db {
-	const env = extractEnv(platform);
-	if (!env.DB) throw new Error('DB binding is not configured');
-	return env.DB;
+	return getDbBinding(platform);
 }
 
 export { normalizeGlopQuery } from '$lib/glop-query-normalize';
@@ -111,13 +93,20 @@ export function isGlopSubmissionSchemaError(e: unknown): boolean {
 	return msg.includes('no such table') && msg.includes('glop_client');
 }
 
-/** D1 missing/misconfigured or Worker limits — show search DB warning instead of opaque 503. */
-export function isGlopSearchInfrastructureError(e: unknown): boolean {
-	const msg = (e instanceof Error ? e.message : String(e)).toLowerCase();
+function errorMessage(e: unknown): string {
+	if (e instanceof Error) return e.message;
+	if (typeof e === 'object' && e !== null && 'message' in e) {
+		return String((e as { message: unknown }).message);
+	}
+	return String(e);
+}
+
+/** True when D1 is missing or the glop schema is not migrated. */
+export function isGlopSearchDbError(e: unknown): boolean {
+	const msg = errorMessage(e).toLowerCase();
 	if (msg.includes('db binding')) return true;
-	if (msg.includes('no such table')) return true;
-	if (msg.includes('sqlite') || msg.includes('d1_')) return true;
-	if (msg.includes('subrequest') || msg.includes('too many')) return true;
+	if (msg.includes('no such table') && msg.includes('glop')) return true;
+	if (msg.includes('sqlite_error') || msg.includes('d1_error')) return true;
 	return false;
 }
 

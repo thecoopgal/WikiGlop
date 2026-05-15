@@ -1,3 +1,4 @@
+import { getRequestEvent } from '$app/server';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { buildCanonicalHrefByAnswerUrl, canonicalGlopAnswerHref } from '$lib/server/glop-answer-canonical';
@@ -10,7 +11,7 @@ import {
 import { collectHttpHrefLabelsFromPage } from '$lib/server/glop-page-ingest';
 import {
 	fetchGlopAnswerCountsForUrls,
-	isGlopSearchInfrastructureError,
+	isGlopSearchDbError,
 	searchGlopAnswers,
 	type GlopAnswerRow
 } from '$lib/server/glop-search';
@@ -29,7 +30,12 @@ const MAX_CREATOR_SYNTHETIC_LINKS = 56;
 /** Cap outbound SEO fetches so /search stays under Workers subrequest limits. */
 const MAX_SEO_PREFETCH = 12;
 
-export const load: PageServerLoad = async ({ locals, url, platform }) => {
+function resolvePlatform(platform: App.Platform | undefined): App.Platform | undefined {
+	return platform ?? getRequestEvent()?.platform;
+}
+
+export const load: PageServerLoad = async ({ locals, url, platform: platformProp }) => {
+	const platform = resolvePlatform(platformProp);
 	if (locals.site?.siteId !== GLOOPGLOP_SITE_ID) {
 		throw error(404, 'Not found');
 	}
@@ -154,10 +160,18 @@ export const load: PageServerLoad = async ({ locals, url, platform }) => {
 		}
 
 		const rawUrls = [...new Set(merged.map((r) => r.answer_url))];
-		const glopGlobalCountByAnswerUrl =
-			rawUrls.length > 0
-				? await fetchGlopAnswerCountsForUrls(platform, locals.site.siteId, rawUrls)
-				: {};
+		let glopGlobalCountByAnswerUrl: Record<string, number> = {};
+		if (rawUrls.length > 0) {
+			try {
+				glopGlobalCountByAnswerUrl = await fetchGlopAnswerCountsForUrls(
+					platform,
+					locals.site.siteId,
+					rawUrls
+				);
+			} catch (countsErr) {
+				console.error('Glop per-URL counts failed (search continues):', countsErr);
+			}
+		}
 
 		const sortedAnswers = sortGlopAnswersForCreatorAwareSearch({
 			rows: merged,
@@ -200,7 +214,8 @@ export const load: PageServerLoad = async ({ locals, url, platform }) => {
 			creatorSearchUi
 		};
 	} catch (e) {
-		if (isGlopSearchInfrastructureError(e)) {
+		console.error('Search load failed:', e);
+		if (isGlopSearchDbError(e)) {
 			return {
 				site: locals.site,
 				query,
@@ -213,7 +228,6 @@ export const load: PageServerLoad = async ({ locals, url, platform }) => {
 				creatorSearchUi: null
 			};
 		}
-		console.error(e);
 		throw error(503, 'Search is temporarily unavailable.');
 	}
 };

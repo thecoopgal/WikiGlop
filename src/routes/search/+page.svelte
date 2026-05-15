@@ -11,6 +11,7 @@
 	import Icons8BoogerAttribution from '$lib/components/Icons8BoogerAttribution.svelte';
 	import IconMagnify from '~icons/mdi/magnify';
 	import IconChevronDown from '~icons/mdi/chevron-down';
+	import { page } from '$app/state';
 
 	/** Header and all glop result card thumbnails */
 	const gloopglopLogoUrl = GLOOPGLOP_DEFAULT_LOGO_URL;
@@ -120,6 +121,11 @@
 	});
 
 	const useCreatorStackLayout = $derived(!!creatorUi && !!profileGlopGroup);
+
+	const isLocalDevHost = $derived.by(() => {
+		const h = page.url.hostname.toLowerCase();
+		return h === 'localhost' || h === '127.0.0.1' || h.endsWith('.localhost');
+	});
 
 	type GlopSeo = { title?: string | null; description?: string | null };
 
@@ -250,9 +256,15 @@
 			{#if data.dbUnavailable}
 				<div role="alert" class="alert alert-warning text-sm">
 					<span>
-						Community search needs a D1 binding: run <code class="text-xs">npm run db:migrate:local</code> once,
-						then <code class="text-xs">npm run cf:dev</code> (plain <code class="text-xs">vite dev</code> has no
-						D1).
+						{#if isLocalDevHost}
+							Community search needs D1 locally: run <code class="text-xs">npm run db:migrate:local</code>, then
+							<code class="text-xs">npm run cf:dev</code> (plain <code class="text-xs">vite dev</code> has no D1).
+						{:else}
+							Community search could not reach the database. Redeploy with <code class="text-xs">npm run deploy</code>
+							after confirming the Worker has a D1 binding named <code class="text-xs">DB</code> (database
+							<code class="text-xs">gloopglop</code>), then run
+							<code class="text-xs">npm run db:migrate:remote</code>.
+						{/if}
 					</span>
 				</div>
 			{/if}
