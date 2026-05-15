@@ -218,6 +218,34 @@ export function canonicalOriginForSite(site: ResolvedSite, requestUrl: URL): str
 	return buildAbsoluteUrl(host, requestUrl);
 }
 
+/**
+ * HTTPS origin on a public Gloop host for GloopGlop search synthesis.
+ * In local dev, `canonicalOriginForSite` often yields `*.localhost`, which is omitted from search results;
+ * this prefers production hosts from `site.yaml` so creator pages still surface when nothing is in the DB yet.
+ */
+export function publicGloopglopCreatorOriginForSearch(site: ResolvedSite): string | null {
+	const hosts = (site.hosts ?? []).map((h) => h.trim().toLowerCase()).filter(Boolean);
+	const pick = (pred: (h: string) => boolean) => hosts.find(pred);
+
+	const gglop =
+		pick((h) => h.endsWith('.gloopglop.com') && !h.startsWith('www.')) ??
+		pick((h) => h.endsWith('.gloopglop.com'));
+	if (gglop) return `https://${gglop}`;
+
+	const gloopSub =
+		pick((h) => h.endsWith('.gloop.gg') && !h.startsWith('www.') && h !== 'gloop.gg') ??
+		pick((h) => h.endsWith('.gloop.gg') && h !== 'gloop.gg' && h !== 'www.gloop.gg');
+	if (gloopSub) return `https://${gloopSub}`;
+
+	const slug =
+		typeof site.routing?.gloop_gg_short_slug === 'string'
+			? site.routing.gloop_gg_short_slug.trim().toLowerCase()
+			: '';
+	if (slug) return `https://gloop.gg/${encodeURIComponent(slug)}/`;
+
+	return null;
+}
+
 function parsePageYaml(raw: string, filePathForError: string): PageYaml {
 	const parsed = parseYaml(raw);
 	if (!isRecord(parsed)) throw new Error(`Invalid YAML structure in ${filePathForError}`);

@@ -15,7 +15,8 @@
 		{
 			"binding": "DB",
 			"database_name": "gloopglop",
-			"database_id": "9ad087f7-5cdb-4e67-817c-5e47c080692a"
+			"database_id": "9ad087f7-5cdb-4e67-817c-5e47c080692a",
+			"migrations_dir": "migrations"
 		}
 	],
 	// Empty default for local / typegen; use `wrangler secret put RESEND_API_KEY` in production (overrides var).

@@ -668,18 +668,21 @@ ${cleanLinks.map((l) => `      - label: ${q(l.label)}
 									{#if active.id === 'name'}
 						<label class="form-control relative">
 							<div class="flex w-full justify-center">
-								<div in:fly={{ y: -32, duration: 420, delay: 500 }} class="join w-full max-w-[500px]">
+								<div in:fly={{ y: -32, duration: 420, delay: 500 }} class="join join-horizontal w-full max-w-[500px]">
 									<input
-										class="peer input input-bordered join-item w-full rounded-l-2xl text-base"
+										class="peer join-item input input-bordered h-12 min-h-12 w-full min-w-0 flex-1 rounded-l-2xl rounded-r-none text-base focus:z-10"
 										bind:value={creatorHandle}
 										placeholder="thecoopgal"
 										onkeydown={onCreatorHandleKeydown}
 									/>
-									<span class="join-item input input-bordered inline-flex w-auto min-w-fit items-center justify-center rounded-l-none rounded-r-2xl bg-base-200 px-3 text-sm opacity-80">
+									<span
+										class="join-item input input-bordered flex h-12 min-h-12 shrink-0 items-center justify-center rounded-none bg-base-200 px-3 text-sm opacity-80"
+										aria-hidden="true"
+									>
 										.gloopglop.com
 									</span>
 									<button
-										class={`join-item inline-flex h-12 items-center justify-center rounded-l-none rounded-r-2xl border px-4 transition-colors ${
+										class={`join-item flex h-12 min-h-12 shrink-0 items-center justify-center rounded-l-none rounded-r-2xl border px-4 transition-colors focus:z-10 focus:outline-none ${
 											canAdvanceFromName
 												? 'border-[#5f9626] bg-[#7ac943] text-[#10210a] hover:border-[#4c7a1f] hover:bg-[#6fb93b]'
 												: 'border-base-300 bg-base-200 text-base-content/50'
@@ -707,9 +710,9 @@ ${cleanLinks.map((l) => `      - label: ${q(l.label)}
 							{:else if active.id === 'handle'}
 						<label class="form-control">
 							<div class="mx-auto w-full max-w-[500px] space-y-3">
-								<div class="join w-full">
+								<div class="join join-horizontal w-full">
 									<input
-										class="input input-bordered join-item w-full rounded-l-2xl text-center text-base"
+										class="join-item input input-bordered h-12 min-h-12 w-full min-w-0 flex-1 rounded-l-2xl rounded-r-none text-center text-base focus:z-10"
 										value={creatorName}
 										placeholder="@thecoopgal"
 										oninput={(e) => (creatorName = normalizePrimaryCreatorName((e.currentTarget as HTMLInputElement).value))}
@@ -717,7 +720,7 @@ ${cleanLinks.map((l) => `      - label: ${q(l.label)}
 										onkeydown={onPrimaryCreatorNameKeydown}
 									/>
 									<button
-										class={`join-item inline-flex h-12 items-center justify-center rounded-l-none rounded-r-2xl border px-4 transition-colors ${
+										class={`join-item flex h-12 min-h-12 shrink-0 items-center justify-center rounded-l-none rounded-r-2xl border px-4 transition-colors focus:z-10 focus:outline-none ${
 											canNext
 												? 'border-[#5f9626] bg-[#7ac943] text-[#10210a] hover:border-[#4c7a1f] hover:bg-[#6fb93b]'
 												: 'border-base-300 bg-base-200 text-base-content/50'
@@ -731,16 +734,16 @@ ${cleanLinks.map((l) => `      - label: ${q(l.label)}
 									</button>
 								</div>
 								{#each additionalCreatorNames as additionalName, i}
-									<div class="join w-full">
+									<div class="join join-horizontal w-full">
 										<input
-											class="input input-bordered join-item w-full rounded-l-2xl text-base"
+											class="join-item input input-bordered h-12 min-h-12 w-full min-w-0 flex-1 rounded-l-2xl rounded-r-none text-base focus:z-10"
 											value={additionalName}
 											placeholder={`Extra name ${i + 2} (optional)`}
 											oninput={(e) => updateAdditionalCreatorName(i, (e.currentTarget as HTMLInputElement).value)}
 											onkeydown={onCreatorNameKeydown}
 										/>
 										<button
-											class="join-item inline-flex h-12 items-center justify-center rounded-l-none rounded-r-2xl border border-base-300 bg-base-200 px-4 text-base-content/70 transition-colors hover:bg-base-300"
+											class="join-item flex h-12 min-h-12 shrink-0 items-center justify-center rounded-l-none rounded-r-2xl border border-base-300 bg-base-200 px-4 text-base-content/70 transition-colors hover:bg-base-300 focus:z-10 focus:outline-none"
 											type="button"
 											aria-label="Remove name"
 											onclick={() => removeAdditionalCreatorName(i)}
@@ -765,18 +768,21 @@ ${cleanLinks.map((l) => `      - label: ${q(l.label)}
 							{:else if active.id === 'slug'}
 						<label class="form-control">
 							<div class="mx-auto flex w-full max-w-[500px] justify-center">
-								<div class="join w-full">
-									<span class="join-item input input-bordered inline-flex w-auto min-w-fit items-center justify-center rounded-l-2xl rounded-r-none bg-base-200 px-3 text-sm opacity-80">
+								<div class="join join-horizontal w-full">
+									<span
+										class="join-item input input-bordered flex h-12 min-h-12 shrink-0 items-center justify-center rounded-l-2xl rounded-r-none bg-base-200 px-3 text-sm opacity-80"
+										aria-hidden="true"
+									>
 										gloop.gg/
 									</span>
 									<input
-										class="input input-bordered join-item w-full rounded-l-none rounded-r-2xl text-base"
+										class="join-item input input-bordered h-12 min-h-12 w-full min-w-0 flex-1 rounded-none text-base focus:z-10"
 										bind:value={shortSlug}
 										placeholder="ggg"
 										onkeydown={onShortSlugKeydown}
 									/>
 									<button
-										class={`join-item inline-flex h-12 items-center justify-center rounded-l-none rounded-r-2xl border px-4 transition-colors ${
+										class={`join-item flex h-12 min-h-12 shrink-0 items-center justify-center rounded-l-none rounded-r-2xl border px-4 transition-colors focus:z-10 focus:outline-none ${
 											canNext
 												? 'border-[#5f9626] bg-[#7ac943] text-[#10210a] hover:border-[#4c7a1f] hover:bg-[#6fb93b]'
 												: 'border-base-300 bg-base-200 text-base-content/50'

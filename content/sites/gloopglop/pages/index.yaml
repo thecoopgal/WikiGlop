@@ -54,3 +54,6 @@ blocks:
       - label: Modal
         href: /modal
         open_in: same_tab
+      - label: Glop search
+        href: /search
+        open_in: same_tab

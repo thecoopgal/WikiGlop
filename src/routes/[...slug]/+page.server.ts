@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { expandCreatorLinksShortcuts, loadAllModals, loadPageYaml } from '$lib/server/content';
+import { scheduleGloopglopPageGlopIngest } from '$lib/server/glop-page-ingest';
 
 function normalizeSlugParts(slugParam: unknown): string[] {
 	// In `[...slug]`, params.slug is usually a single string like "bylaws" or "a/b".
@@ -22,7 +23,7 @@ function normalizeSlugParts(slugParam: unknown): string[] {
 		});
 }
 
-export const load: PageServerLoad = async ({ params, locals, url }) => {
+export const load: PageServerLoad = async ({ params, locals, url, platform }) => {
 	const site = locals.site;
 	if (!site) {
 		throw error(404, 'Site not found for this hostname.');
@@ -40,6 +41,7 @@ export const load: PageServerLoad = async ({ params, locals, url }) => {
 	const page = await loadPageYaml(site, slugParts);
 	if (page) {
 		const hydratedPage = await expandCreatorLinksShortcuts(site, page, url);
+		scheduleGloopglopPageGlopIngest({ platform, requestUrl: url, site, page: hydratedPage });
 		return { site, page: hydratedPage, modals, initialModalId: null, formSlugParts: slugParts };
 	}
 
@@ -50,6 +52,7 @@ export const load: PageServerLoad = async ({ params, locals, url }) => {
 			const basePage = await loadPageYaml(site, []);
 			if (!basePage) throw error(404, 'Base page not found.');
 			const hydratedBasePage = await expandCreatorLinksShortcuts(site, basePage, url);
+			scheduleGloopglopPageGlopIngest({ platform, requestUrl: url, site, page: hydratedBasePage });
 			return {
 				site,
 				page: hydratedBasePage,
