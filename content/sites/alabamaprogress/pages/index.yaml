@@ -42,19 +42,7 @@ blocks:
     bio: |
       Alabama Progress is building working-class power in Alabama through community leadership, organizing, advocacy, and mutual aid.
     short_links:
-      - label: Instagram
-        icon: instagram
-        href: '#'
-        open_in: same_tab
-      - label: Facebook
-        icon: facebook
-        href: '#'
-        open_in: same_tab
       - label: TikTok
         icon: tiktok
-        href: '#'
-        open_in: same_tab
-      - label: YouTube
-        icon: youtube
-        href: '#'
-        open_in: same_tab
+        href: 'https://www.tiktok.com/@alabama.progress'
+        open_in: new_tab
