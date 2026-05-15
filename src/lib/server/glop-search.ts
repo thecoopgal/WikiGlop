@@ -111,6 +111,16 @@ export function isGlopSubmissionSchemaError(e: unknown): boolean {
 	return msg.includes('no such table') && msg.includes('glop_client');
 }
 
+/** D1 missing/misconfigured or Worker limits — show search DB warning instead of opaque 503. */
+export function isGlopSearchInfrastructureError(e: unknown): boolean {
+	const msg = (e instanceof Error ? e.message : String(e)).toLowerCase();
+	if (msg.includes('db binding')) return true;
+	if (msg.includes('no such table')) return true;
+	if (msg.includes('sqlite') || msg.includes('d1_')) return true;
+	if (msg.includes('subrequest') || msg.includes('too many')) return true;
+	return false;
+}
+
 /**
  * Parses `http`/`https` links and bare host/path input (e.g. `gloop.gg/foo`,
  * `creator.gloopglop.com`, `//gloop.gg/...`) so URLs match how people paste from GloopGlop.

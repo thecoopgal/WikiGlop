@@ -229,8 +229,12 @@ export async function fetchUrlSeo(answerUrl: string): Promise<UrlSeoSnippet> {
 }
 
 /** Fetch SEO for many URLs with a small concurrency cap (subrequest / latency control). */
-export async function fetchSeoForUrls(urls: string[], concurrency = 4): Promise<Record<string, UrlSeoSnippet>> {
-	const unique = [...new Set(urls.map((u) => u.trim()).filter(Boolean))];
+export async function fetchSeoForUrls(
+	urls: string[],
+	concurrency = 4,
+	maxUrls = 24
+): Promise<Record<string, UrlSeoSnippet>> {
+	const unique = [...new Set(urls.map((u) => u.trim()).filter(Boolean))].slice(0, maxUrls);
 	const out: Record<string, UrlSeoSnippet> = {};
 	for (let i = 0; i < unique.length; i += concurrency) {
 		const slice = unique.slice(i, i + concurrency);
