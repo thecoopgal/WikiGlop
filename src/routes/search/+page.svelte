@@ -121,6 +121,29 @@
 
 	const useCreatorStackLayout = $derived(!!creatorUi && !!profileGlopGroup);
 
+	type GlopSeo = { title?: string | null; description?: string | null };
+
+	function isTikTokUrl(answerUrl: string): boolean {
+		try {
+			const h = new URL(answerUrl).hostname.toLowerCase().replace(/^www\./, '');
+			return h === 'tiktok.com' || h.endsWith('.tiktok.com');
+		} catch {
+			return false;
+		}
+	}
+
+	/** Always show the URL; use SEO title/description only when they add context (not on TikTok). */
+	function glopResultDisplay(answerUrl: string, seo: GlopSeo | undefined) {
+		const linkLabel = answerUrl;
+		const skipSeo = isTikTokUrl(answerUrl);
+		const rawTitle = seo?.title?.trim() ?? '';
+		const title =
+			skipSeo || !rawTitle || rawTitle === linkLabel ? null : rawTitle;
+		const rawDesc = seo?.description?.trim() ?? '';
+		const description = skipSeo || !rawDesc ? null : rawDesc;
+		return { linkLabel, title, description };
+	}
+
 	function openGloopModal() {
 		gloopUrl = '';
 		gloopSubmit = 'idle';
@@ -288,12 +311,13 @@
 												</p>
 												{#if profileGlopGroup}
 													{@const seo = data.seoByUrl[profileGlopGroup.answerUrl]}
+													{@const display = glopResultDisplay(profileGlopGroup.answerUrl, seo)}
 													<a
 														href={profileGlopGroup.answerUrl}
 														target="_blank"
 														rel="noopener noreferrer"
 														title={profileGlopGroup.answerUrl}
-														class="group flex cursor-pointer flex-row items-start gap-4 rounded-lg no-underline outline-none transition-colors hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-base-100"
+														class="group flex cursor-pointer flex-row items-stretch gap-4 rounded-lg no-underline outline-none transition-colors hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-base-100"
 													>
 														<div class="relative shrink-0">
 															<img
@@ -311,20 +335,25 @@
 																{profileGlopGroup.gloopCount}
 															</span>
 														</div>
-														<div class="min-w-0 flex-1 space-y-1">
+														<div class="flex min-w-0 flex-1 flex-col gap-1">
 															<p class="text-xs font-medium text-base-content/70">
 																{creatorUi?.displayName ?? 'Creator'}
 															</p>
-															<p
-																class="block break-words text-base font-semibold text-primary group-hover:underline"
-															>
-																{seo?.title?.trim() ? seo.title.trim() : profileGlopGroup.answerUrl}
-															</p>
-															{#if seo?.description?.trim()}
-																<p class="line-clamp-3 text-sm leading-relaxed opacity-75">
-																	{seo.description.trim()}
+															{#if display.title}
+																<p class="line-clamp-2 text-base leading-snug opacity-90">
+																	{display.title}
 																</p>
 															{/if}
+															{#if display.description}
+																<p class="line-clamp-3 text-sm leading-relaxed opacity-75">
+																	{display.description}
+																</p>
+															{/if}
+															<p
+																class="mt-auto block break-words pt-1 text-sm font-semibold text-primary group-hover:underline"
+															>
+																{display.linkLabel}
+															</p>
 														</div>
 													</a>
 												{/if}
@@ -348,13 +377,14 @@
 														<ul class="divide-y divide-base-200 border-t border-base-200 bg-base-100/90">
 															{#each nestedCreatorGlopGroups as group (group.answerUrl)}
 																{@const nSeo = data.seoByUrl[group.answerUrl]}
+																{@const display = glopResultDisplay(group.answerUrl, nSeo)}
 																<li class="p-0">
 																	<a
 																		href={group.answerUrl}
 																		target="_blank"
 																		rel="noopener noreferrer"
 																		title={group.answerUrl}
-																		class="group flex cursor-pointer flex-row items-start gap-3 px-3 py-3 no-underline outline-none transition-colors hover:bg-base-200/70 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+																		class="group flex cursor-pointer flex-row items-stretch gap-3 px-3 py-3 no-underline outline-none transition-colors hover:bg-base-200/70 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
 																	>
 																		<div class="relative shrink-0">
 																			<img
@@ -372,17 +402,22 @@
 																				{group.gloopCount}
 																			</span>
 																		</div>
-																		<div class="min-w-0 flex-1 space-y-0.5">
-																			<p
-																				class="block break-words text-sm font-semibold text-primary group-hover:underline"
-																			>
-																				{nSeo?.title?.trim() ? nSeo.title.trim() : group.answerUrl}
-																			</p>
-																			{#if nSeo?.description?.trim()}
-																				<p class="line-clamp-2 text-xs leading-relaxed opacity-70">
-																					{nSeo.description.trim()}
+																		<div class="flex min-w-0 flex-1 flex-col gap-0.5">
+																			{#if display.title}
+																				<p class="line-clamp-2 text-sm leading-snug opacity-85">
+																					{display.title}
 																				</p>
 																			{/if}
+																			{#if display.description}
+																				<p class="line-clamp-2 text-xs leading-relaxed opacity-70">
+																					{display.description}
+																				</p>
+																			{/if}
+																			<p
+																				class="mt-auto block break-words pt-1 text-xs font-semibold text-primary group-hover:underline"
+																			>
+																				{display.linkLabel}
+																			</p>
 																		</div>
 																	</a>
 																</li>
@@ -399,13 +434,14 @@
 										{/if}
 										{#each standaloneGlopGroups as group (group.answerUrl)}
 											{@const seo = data.seoByUrl[group.answerUrl]}
+											{@const display = glopResultDisplay(group.answerUrl, seo)}
 											<li class="p-0">
 												<a
 													href={group.answerUrl}
 													target="_blank"
 													rel="noopener noreferrer"
 													title={group.answerUrl}
-													class="group flex cursor-pointer flex-row items-start gap-4 px-4 py-4 no-underline outline-none transition-colors hover:bg-base-200/60 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+													class="group flex cursor-pointer flex-row items-stretch gap-4 px-4 py-4 no-underline outline-none transition-colors hover:bg-base-200/60 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
 												>
 													<div class="relative shrink-0">
 														<img
@@ -423,17 +459,22 @@
 															{group.gloopCount}
 														</span>
 													</div>
-													<div class="min-w-0 flex-1 space-y-1">
-														<p
-															class="block break-words text-base font-semibold text-primary group-hover:underline"
-														>
-															{seo?.title?.trim() ? seo.title.trim() : group.answerUrl}
-														</p>
-														{#if seo?.description?.trim()}
-															<p class="line-clamp-3 text-sm leading-relaxed opacity-75">
-																{seo.description.trim()}
+													<div class="flex min-w-0 flex-1 flex-col gap-1">
+														{#if display.title}
+															<p class="line-clamp-2 text-base leading-snug opacity-90">
+																{display.title}
 															</p>
 														{/if}
+														{#if display.description}
+															<p class="line-clamp-3 text-sm leading-relaxed opacity-75">
+																{display.description}
+															</p>
+														{/if}
+														<p
+															class="mt-auto block break-words pt-1 text-sm font-semibold text-primary group-hover:underline"
+														>
+															{display.linkLabel}
+														</p>
 													</div>
 												</a>
 											</li>
@@ -441,13 +482,14 @@
 									{:else}
 										{#each groupedGlops as group (group.answerUrl)}
 											{@const seo = data.seoByUrl[group.answerUrl]}
+											{@const display = glopResultDisplay(group.answerUrl, seo)}
 											<li class="p-0">
 												<a
 													href={group.answerUrl}
 													target="_blank"
 													rel="noopener noreferrer"
 													title={group.answerUrl}
-													class="group flex cursor-pointer flex-row items-start gap-4 px-4 py-4 no-underline outline-none transition-colors hover:bg-base-200/60 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
+													class="group flex cursor-pointer flex-row items-stretch gap-4 px-4 py-4 no-underline outline-none transition-colors hover:bg-base-200/60 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
 												>
 													<div class="relative shrink-0">
 														<img
@@ -465,17 +507,22 @@
 															{group.gloopCount}
 														</span>
 													</div>
-													<div class="min-w-0 flex-1 space-y-1">
-														<p
-															class="block break-words text-base font-semibold text-primary group-hover:underline"
-														>
-															{seo?.title?.trim() ? seo.title.trim() : group.answerUrl}
-														</p>
-														{#if seo?.description?.trim()}
-															<p class="line-clamp-3 text-sm leading-relaxed opacity-75">
-																{seo.description.trim()}
+													<div class="flex min-w-0 flex-1 flex-col gap-1">
+														{#if display.title}
+															<p class="line-clamp-2 text-base leading-snug opacity-90">
+																{display.title}
 															</p>
 														{/if}
+														{#if display.description}
+															<p class="line-clamp-3 text-sm leading-relaxed opacity-75">
+																{display.description}
+															</p>
+														{/if}
+														<p
+															class="mt-auto block break-words pt-1 text-sm font-semibold text-primary group-hover:underline"
+														>
+															{display.linkLabel}
+														</p>
 													</div>
 												</a>
 											</li>

@@ -3,6 +3,7 @@ import type { PageServerLoad } from './$types';
 import { buildCanonicalHrefByAnswerUrl, canonicalGlopAnswerHref } from '$lib/server/glop-answer-canonical';
 import {
 	findGloopglopCreatorSiteMentionedInQuery,
+	findGloopglopPlatformSiteMentionedInQuery,
 	sortGlopAnswersForCreatorAwareSearch,
 	syntheticGlopAnswerRow
 } from '$lib/server/glop-creator-search';
@@ -60,48 +61,63 @@ export const load: PageServerLoad = async ({ locals, url, platform }) => {
 		const norm = normalizeGlopQuery(query);
 		const sites = await getAllSites();
 		const matchedCreator = findGloopglopCreatorSiteMentionedInQuery(norm, sites);
+		const matchedPlatform = matchedCreator
+			? null
+			: findGloopglopPlatformSiteMentionedInQuery(norm, sites);
+		const matchedSite = matchedCreator ?? matchedPlatform;
 
-		if (matchedCreator) {
-			const origin = publicGloopglopCreatorOriginForSearch(matchedCreator);
+		if (matchedSite) {
+			const origin = publicGloopglopCreatorOriginForSearch(matchedSite);
 			if (origin) {
-				const creatorBase = new URL(origin);
-				const indexPage = await loadPageYaml(matchedCreator, []);
-				if (indexPage) {
-					const hydrated = await expandCreatorLinksShortcuts(matchedCreator, indexPage, url);
-					const homeHref = new URL('/', creatorBase).href;
-					profileCanonicalHref = isOmittedFromGloopglopSearch(homeHref)
-						? null
-						: await canonicalGlopAnswerHref(homeHref);
+				const siteBase = new URL(origin);
+				const displayName = matchedSite.name?.trim() || matchedSite.id || matchedSite.siteId;
+				const isPlatform = matchedSite.siteId === GLOOPGLOP_SITE_ID;
+				const pageSlugLists: string[][] = isPlatform ? [[], ['creators']] : [[]];
+				const hrefLabels = new Map<string, string>();
 
-					const displayName = matchedCreator.name?.trim() || matchedCreator.id || matchedCreator.siteId;
-					const hrefLabels = collectHttpHrefLabelsFromPage(hydrated, creatorBase, displayName);
-					const homeLabel = `${displayName} · GloopGlop page`;
-					if (!isOmittedFromGloopglopSearch(homeHref) && !hrefLabels.has(homeHref)) {
-						hrefLabels.set(homeHref, homeLabel);
+				for (const slugParts of pageSlugLists) {
+					const page = await loadPageYaml(matchedSite, slugParts);
+					if (!page) continue;
+					const hydrated = await expandCreatorLinksShortcuts(matchedSite, page, url);
+					const fromPage = collectHttpHrefLabelsFromPage(hydrated, siteBase, displayName);
+					for (const [href, label] of fromPage) {
+						if (!hrefLabels.has(href)) hrefLabels.set(href, label);
 					}
+				}
 
-					if (profileCanonicalHref) {
-						const bundleCanonMap = await buildCanonicalHrefByAnswerUrl([...hrefLabels.keys()]);
-						const bundleCanonicalUrls = [...new Set(Object.values(bundleCanonMap))];
-						creatorSearchUi = {
-							siteId: matchedCreator.siteId,
-							displayName,
-							profileCanonicalUrl: profileCanonicalHref,
-							bundleCanonicalUrls
-						};
-					}
+				const homeHref = new URL('/', siteBase).href;
+				profileCanonicalHref = isOmittedFromGloopglopSearch(homeHref)
+					? null
+					: await canonicalGlopAnswerHref(homeHref);
 
-					const existingUrls = new Set(merged.map((r) => r.answer_url));
-					let added = 0;
-					for (const [href, label] of hrefLabels) {
-						if (added >= MAX_CREATOR_SYNTHETIC_LINKS) break;
-						if (isOmittedFromGloopglopSearch(href)) continue;
-						if (existingUrls.has(href)) continue;
-						existingUrls.add(href);
-						const qd = `Creator link · ${label}`;
-						merged.push(syntheticGlopAnswerRow(href, qd));
-						added += 1;
-					}
+				const homeLabel = isPlatform
+					? 'GloopGlop · home'
+					: `${displayName} · GloopGlop page`;
+				if (!isOmittedFromGloopglopSearch(homeHref) && !hrefLabels.has(homeHref)) {
+					hrefLabels.set(homeHref, homeLabel);
+				}
+
+				if (profileCanonicalHref) {
+					const bundleCanonMap = await buildCanonicalHrefByAnswerUrl([...hrefLabels.keys()]);
+					const bundleCanonicalUrls = [...new Set(Object.values(bundleCanonMap))];
+					creatorSearchUi = {
+						siteId: matchedSite.siteId,
+						displayName,
+						profileCanonicalUrl: profileCanonicalHref,
+						bundleCanonicalUrls
+					};
+				}
+
+				const existingUrls = new Set(merged.map((r) => r.answer_url));
+				let added = 0;
+				for (const [href, label] of hrefLabels) {
+					if (added >= MAX_CREATOR_SYNTHETIC_LINKS) break;
+					if (isOmittedFromGloopglopSearch(href)) continue;
+					if (existingUrls.has(href)) continue;
+					existingUrls.add(href);
+					const qd = isPlatform ? `GloopGlop · ${label}` : `Creator link · ${label}`;
+					merged.push(syntheticGlopAnswerRow(href, qd));
+					added += 1;
 				}
 			}
 		}

@@ -67,6 +67,20 @@ export function findGloopglopCreatorSiteMentionedInQuery(
 	return best;
 }
 
+/** When the query names the GloopGlop platform (not a creator subdomain), return the platform site. */
+export function findGloopglopPlatformSiteMentionedInQuery(
+	normQuery: string,
+	sites: ResolvedSite[]
+): ResolvedSite | null {
+	const platform = sites.find((s) => s.siteId === 'gloopglop');
+	if (!platform) return null;
+	const q = normQuery.trim().toLowerCase();
+	if (q.length < 2) return null;
+	const qCompact = q.replace(/\s+/g, '');
+	if (q.includes('gloopglop') || qCompact.includes('gloopglop')) return platform;
+	return null;
+}
+
 function canonicalForRow(
 	row: GlopAnswerRow,
 	canonicalHrefByAnswerUrl: Record<string, string>
