@@ -2,6 +2,8 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import Icons8BoogerAttribution from '$lib/components/Icons8BoogerAttribution.svelte';
+	import LoadingGloop from '$lib/components/LoadingGloop.svelte';
+	import LoadingGloopPanel from '$lib/components/LoadingGloopPanel.svelte';
 	import IconYoutube from '~icons/mdi/youtube';
 	import IconUpload from '~icons/mdi/upload';
 	import IconCheck from '~icons/mdi/check-circle';
@@ -162,6 +164,7 @@
 					type="file"
 					accept="video/*"
 					class="file-input file-input-bordered w-full"
+					disabled={uploadPhase === 'uploading'}
 					onchange={onFileChange}
 				/>
 
@@ -181,15 +184,17 @@
 					></video>
 				{/if}
 
-				{#if uploadPhase !== 'staged'}
+				{#if uploadPhase === 'uploading'}
+					<LoadingGloopPanel message="Glooping your video…" />
+				{:else if uploadPhase !== 'staged'}
 					<button
 						type="button"
 						class="btn w-full border-0 text-white"
 						style="background-color: #7ac943"
-						disabled={!selectedFile || uploadPhase === 'uploading'}
+						disabled={!selectedFile}
 						onclick={stageUpload}
 					>
-						{uploadPhase === 'uploading' ? 'Uploading…' : 'Upload to GloopGlop'}
+						Upload to GloopGlop
 					</button>
 				{:else}
 					<div class="alert alert-success text-sm">
@@ -248,6 +253,7 @@
 							class="input input-bordered w-full"
 							bind:value={youtubeTitle}
 							maxlength="100"
+							disabled={publishPhase === 'loading'}
 						/>
 					</label>
 
@@ -257,34 +263,37 @@
 							class="textarea textarea-bordered w-full"
 							rows="3"
 							bind:value={youtubeDescription}
+							disabled={publishPhase === 'loading'}
 						></textarea>
 					</label>
 
 					<label class="form-control w-full">
 						<span class="label-text">Visibility</span>
-						<select class="select select-bordered w-full" bind:value={youtubePrivacy}>
+						<select
+							class="select select-bordered w-full"
+							bind:value={youtubePrivacy}
+							disabled={publishPhase === 'loading'}
+						>
 							<option value="private">Private</option>
 							<option value="unlisted">Unlisted</option>
 							<option value="public">Public</option>
 						</select>
 					</label>
 
-					<button
-						type="button"
-						class="btn w-full gap-2 border-0 text-white"
-						style="background-color: #7ac943"
-						disabled={publishPhase === 'loading' || !googleConfigured}
-						onclick={publishToYoutube}
-					>
-						<IconYoutube class="size-5" />
-						{#if publishPhase === 'loading'}
-							Uploading to YouTube…
-						{:else if !googleConnected}
-							Sign in & upload to YouTube
-						{:else}
-							Upload to YouTube
-						{/if}
-					</button>
+					{#if publishPhase === 'loading'}
+						<LoadingGloopPanel message="Glooping to YouTube…" />
+					{:else}
+						<button
+							type="button"
+							class="btn w-full gap-2 border-0 text-white"
+							style="background-color: #7ac943"
+							disabled={!googleConfigured}
+							onclick={publishToYoutube}
+						>
+							<IconYoutube class="size-5" />
+							{!googleConnected ? 'Sign in & upload to YouTube' : 'Upload to YouTube'}
+						</button>
+					{/if}
 
 					{#if publishPhase === 'done' && youtubeUrl}
 						<div class="alert alert-success text-sm">

@@ -9,6 +9,7 @@
 	} from '$lib/client/gloop-browser-glop-limit';
 	import { GLOOPGLOP_DEFAULT_LOGO_URL } from '$lib/glop-link-image';
 	import Icons8BoogerAttribution from '$lib/components/Icons8BoogerAttribution.svelte';
+	import LoadingGloop from '$lib/components/LoadingGloop.svelte';
 	import IconMagnify from '~icons/mdi/magnify';
 	import IconChevronDown from '~icons/mdi/chevron-down';
 	import { page } from '$app/state';
@@ -232,14 +233,7 @@
 					class="shrink-0 rounded-2xl ring-1 ring-base-300 transition-opacity hover:opacity-90"
 					aria-label="GloopGlop search"
 				>
-					<img
-						src={gloopglopLogoUrl}
-						alt="GloopGlop"
-						class={`h-11 w-11 rounded-2xl object-cover motion-safe:transition-transform motion-safe:duration-500 sm:h-12 sm:w-12${spinHeaderLogo ? ' motion-safe:animate-spin' : ''}`}
-						width="48"
-						height="48"
-						decoding="async"
-					/>
+					<LoadingGloop spinning={spinHeaderLogo} size="md" />
 				</a>
 				<form
 					method="get"
@@ -744,7 +738,14 @@
 				{/if}
 				<div class="modal-action mt-2 flex-wrap gap-2">
 					<button type="button" class="btn btn-primary" disabled={gloopSubmit === 'loading'} onclick={submitGloop}>
-						{gloopSubmit === 'loading' ? 'Saving…' : 'Submit'}
+						{#if gloopSubmit === 'loading'}
+							<span class="inline-flex items-center gap-2">
+								<LoadingGloop spinning size="sm" />
+								Saving…
+							</span>
+						{:else}
+							Submit
+						{/if}
 					</button>
 					<button
 						type="button"
