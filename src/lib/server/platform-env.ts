@@ -1,3 +1,18 @@
+export type R2ObjectBody = {
+	body: ReadableStream;
+	size: number;
+};
+
+export type R2BucketBinding = {
+	put(
+		key: string,
+		value: ReadableStream | ArrayBuffer | ArrayBufferView | string | Blob | null,
+		options?: { httpMetadata?: { contentType?: string } }
+	): Promise<unknown>;
+	get(key: string): Promise<R2ObjectBody | null>;
+	delete(key: string): Promise<void>;
+};
+
 /** D1 + secrets from wrangler (`binding = "DB"`). */
 export type WorkerBindings = {
 	DB?: {
@@ -9,6 +24,11 @@ export type WorkerBindings = {
 			};
 		};
 	};
+	UPLOADS?: R2BucketBinding;
+	GOOGLE_OAUTH_CLIENT_ID?: string;
+	GOOGLE_OAUTH_CLIENT_SECRET?: string;
+	GOOGLE_OAUTH_REDIRECT_URI?: string;
+	UPLOAD_SESSION_SECRET?: string;
 	[key: string]: unknown;
 };
 
@@ -30,4 +50,14 @@ export function getDbBinding(platform: App.Platform | undefined): NonNullable<Wo
 		throw new Error('DB binding is not configured');
 	}
 	return bindings.DB;
+}
+
+export function getUploadsBucket(
+	platform: App.Platform | undefined
+): NonNullable<WorkerBindings['UPLOADS']> {
+	const bindings = getWorkerBindings(platform);
+	if (!bindings.UPLOADS) {
+		throw new Error('UPLOADS R2 binding is not configured');
+	}
+	return bindings.UPLOADS;
 }

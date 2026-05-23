@@ -1,0 +1,12 @@
+# Copy to .dev.vars for local wrangler dev (never commit .dev.vars).
+RESEND_API_KEY=
+CREATOR_NOTIFY_API_KEY=
+VAPID_PRIVATE_KEY=
+
+# Google OAuth (YouTube upload) — https://console.cloud.google.com/apis/credentials
+GOOGLE_OAUTH_CLIENT_ID=
+GOOGLE_OAUTH_CLIENT_SECRET=
+GOOGLE_OAUTH_REDIRECT_URI=http://localhost:8787/api/auth/google/callback
+
+# Signs gg_google_session cookies (min 16 chars)
+UPLOAD_SESSION_SECRET=change-me-local-dev-secret
