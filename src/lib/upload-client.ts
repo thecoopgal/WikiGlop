@@ -5,12 +5,16 @@ export type UploadApiResult = {
 	sizeBytes: number;
 };
 
+export type UploadDestinationId = 'gloopglop' | 'youtube' | 'tiktok';
+
 export type UploadDestinationInfo = {
-	id: string;
+	id: UploadDestinationId;
 	label: string;
 	connected: boolean;
 	accountEmail: string | null;
 	configured: boolean;
+	available: boolean;
+	comingSoon?: boolean;
 };
 
 export type UploadStatusResult = {
@@ -48,15 +52,56 @@ async function parseJson<T>(res: Response): Promise<T> {
 	return data as T;
 }
 
+export type UploadProgressHandler = (percent: number) => void;
+
 /** Stage a video file on GloopGlop (R2). Reuse from any page. */
-export async function uploadVideoFile(file: File, clientKey?: string): Promise<UploadApiResult> {
+export async function uploadVideoFile(
+	file: File,
+	opts?: { clientKey?: string; onProgress?: UploadProgressHandler }
+): Promise<UploadApiResult> {
 	const form = new FormData();
 	form.append('file', file);
-	if (clientKey?.trim()) form.append('clientKey', clientKey.trim());
+	if (opts?.clientKey?.trim()) form.append('clientKey', opts.clientKey.trim());
 
-	const res = await fetch('/api/upload', { method: 'POST', body: form });
-	const data = await parseJson<{ ok: true; upload: UploadApiResult }>(res);
-	return data.upload;
+	return new Promise((resolve, reject) => {
+		const xhr = new XMLHttpRequest();
+		xhr.open('POST', '/api/upload');
+
+		xhr.upload.addEventListener('progress', (e) => {
+			if (!e.lengthComputable || !opts?.onProgress) return;
+			const percent = Math.min(100, Math.round((e.loaded / e.total) * 100));
+			opts.onProgress(percent);
+		});
+
+		xhr.addEventListener('load', () => {
+			let data: unknown;
+			try {
+				data = JSON.parse(xhr.responseText);
+			} catch {
+				reject(new Error(`Request failed (${xhr.status})`));
+				return;
+			}
+			if (xhr.status < 200 || xhr.status >= 300) {
+				const err =
+					typeof (data as { message?: string }).message === 'string'
+						? (data as { message: string }).message
+						: typeof (data as { error?: string }).error === 'string'
+							? (data as { error: string }).error
+							: `Request failed (${xhr.status})`;
+				reject(new Error(err));
+				return;
+			}
+			const payload = data as { ok: true; upload: UploadApiResult };
+			opts?.onProgress?.(100);
+			resolve(payload.upload);
+		});
+
+		xhr.addEventListener('error', () => reject(new Error('Upload failed')));
+		xhr.addEventListener('abort', () => reject(new Error('Upload cancelled')));
+
+		opts?.onProgress?.(0);
+		xhr.send(form);
+	});
 }
 
 export async function fetchUploadStatus(uploadId: string): Promise<UploadStatusResult> {

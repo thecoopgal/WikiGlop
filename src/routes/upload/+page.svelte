@@ -2,8 +2,10 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import Icons8BoogerAttribution from '$lib/components/Icons8BoogerAttribution.svelte';
-	import LoadingGloop from '$lib/components/LoadingGloop.svelte';
 	import LoadingGloopPanel from '$lib/components/LoadingGloopPanel.svelte';
+	import UploadDestinationPicker, {
+		type UploadDestinationId
+	} from '$lib/components/UploadDestinationPicker.svelte';
 	import IconYoutube from '~icons/mdi/youtube';
 	import IconUpload from '~icons/mdi/upload';
 	import IconCheck from '~icons/mdi/check-circle';
@@ -24,8 +26,12 @@
 	let selectedFile = $state<File | null>(null);
 	let previewUrl = $state('');
 	let uploadPhase = $state<'idle' | 'uploading' | 'staged' | 'error'>('idle');
+	let uploadPercent = $state<number | null>(null);
 	let uploadError = $state('');
 	let staged = $state<UploadApiResult | null>(null);
+	let selectedDestinations = $state<Set<UploadDestinationId>>(
+		new Set(['gloopglop', 'youtube'])
+	);
 	let youtubeTitle = $state('');
 	let youtubeDescription = $state('');
 	let youtubePrivacy = $state<'private' | 'unlisted' | 'public'>('private');
@@ -35,6 +41,10 @@
 	let googleConnected = $state(false);
 	let googleEmail = $state<string | null>(null);
 	let googleConfigured = $state(false);
+
+	const wantsYoutube = $derived(selectedDestinations.has('youtube'));
+	const wantsTiktok = $derived(selectedDestinations.has('tiktok'));
+	const isBusy = $derived(uploadPhase === 'uploading' || publishPhase === 'loading');
 
 	$effect(() => {
 		googleConnected = data.google.connected;
@@ -79,6 +89,7 @@
 		selectedFile = file ?? null;
 		staged = null;
 		uploadPhase = 'idle';
+		uploadPercent = null;
 		if (file) {
 			previewUrl = URL.createObjectURL(file);
 			if (!youtubeTitle.trim()) {
@@ -94,11 +105,18 @@
 		}
 		uploadPhase = 'uploading';
 		uploadError = '';
+		uploadPercent = 0;
 		try {
-			staged = await uploadVideoFile(selectedFile);
+			staged = await uploadVideoFile(selectedFile, {
+				onProgress: (p) => {
+					uploadPercent = p;
+				}
+			});
 			uploadPhase = 'staged';
+			uploadPercent = 100;
 		} catch (e) {
 			uploadPhase = 'error';
+			uploadPercent = null;
 			uploadError = e instanceof Error ? e.message : 'Upload failed';
 		}
 	}
@@ -148,7 +166,7 @@
 		<header class="mb-8 text-center">
 			<h1 class="text-3xl font-bold tracking-tight">Upload</h1>
 			<p class="mt-2 text-base-content/70">
-				Stage a video on GloopGlop, then publish it to connected platforms.
+				Choose where your video should go while it uploads.
 			</p>
 		</header>
 
@@ -164,7 +182,7 @@
 					type="file"
 					accept="video/*"
 					class="file-input file-input-bordered w-full"
-					disabled={uploadPhase === 'uploading'}
+					disabled={isBusy}
 					onchange={onFileChange}
 				/>
 
@@ -174,7 +192,7 @@
 					</p>
 				{/if}
 
-				{#if previewUrl && selectedFile?.type.startsWith('video/')}
+				{#if previewUrl && selectedFile?.type.startsWith('video/') && uploadPhase !== 'uploading'}
 					<!-- svelte-ignore a11y_media_has_caption — local preview only -->
 					<video
 						src={previewUrl}
@@ -185,8 +203,34 @@
 				{/if}
 
 				{#if uploadPhase === 'uploading'}
-					<LoadingGloopPanel message="Glooping your video…" />
-				{:else if uploadPhase !== 'staged'}
+					<LoadingGloopPanel message="Glooping your video…" percent={uploadPercent} />
+					<UploadDestinationPicker
+						selected={selectedDestinations}
+						onSelectedChange={(s) => (selectedDestinations = s)}
+						{googleConnected}
+						{googleConfigured}
+						compact
+					/>
+				{:else if uploadPhase === 'staged'}
+					<div class="alert alert-success text-sm">
+						<IconCheck class="size-5 shrink-0" />
+						<span>Saved on GloopGlop.</span>
+					</div>
+					<UploadDestinationPicker
+						selected={selectedDestinations}
+						onSelectedChange={(s) => (selectedDestinations = s)}
+						disabled={publishPhase === 'loading'}
+						{googleConnected}
+						{googleConfigured}
+					/>
+				{:else}
+					<UploadDestinationPicker
+						selected={selectedDestinations}
+						onSelectedChange={(s) => (selectedDestinations = s)}
+						disabled={!selectedFile}
+						{googleConnected}
+						{googleConfigured}
+					/>
 					<button
 						type="button"
 						class="btn w-full border-0 text-white"
@@ -194,13 +238,8 @@
 						disabled={!selectedFile}
 						onclick={stageUpload}
 					>
-						Upload to GloopGlop
+						Upload video
 					</button>
-				{:else}
-					<div class="alert alert-success text-sm">
-						<IconCheck class="size-5 shrink-0" />
-						<span>Staged on GloopGlop — ready to publish.</span>
-					</div>
 				{/if}
 
 				{#if uploadError}
@@ -212,10 +251,13 @@
 			</div>
 		</section>
 
-		{#if uploadPhase === 'staged' && staged}
+		{#if uploadPhase === 'staged' && staged && wantsYoutube}
 			<section class="card mt-6 bg-base-100 shadow-xl">
 				<div class="card-body gap-4">
-					<h2 class="card-title text-lg">Upload to:</h2>
+					<h2 class="card-title text-lg gap-2">
+						<IconYoutube class="size-6 text-[#FF0000]" />
+						YouTube
+					</h2>
 
 					{#if !googleConfigured}
 						<div class="alert alert-warning text-sm">
@@ -225,73 +267,65 @@
 								<code class="text-xs">GOOGLE_OAUTH_*</code> secrets to enable YouTube.
 							</span>
 						</div>
-					{/if}
-
-					<div class="flex flex-col gap-3 sm:flex-row sm:items-start">
+					{:else if !googleConnected}
 						<button
 							type="button"
-							class="btn flex-1 gap-2"
-							class:btn-outline={!googleConnected}
-							disabled={!googleConfigured}
+							class="btn btn-outline w-full gap-2"
+							disabled={publishPhase === 'loading'}
 							onclick={connectGoogle}
 						>
 							<IconYoutube class="size-5 text-[#FF0000]" />
-							{#if googleConnected}
-								{googleEmail ? `YouTube · ${googleEmail}` : 'YouTube · Connected'}
-							{:else}
-								Connect Google for YouTube
-							{/if}
+							Connect Google for YouTube
 						</button>
-					</div>
+					{/if}
 
-					<div class="divider my-0 text-xs">YouTube details</div>
+					{#if googleConnected || !googleConfigured}
+						<label class="form-control w-full">
+							<span class="label-text">Title</span>
+							<input
+								type="text"
+								class="input input-bordered w-full"
+								bind:value={youtubeTitle}
+								maxlength="100"
+								disabled={publishPhase === 'loading'}
+							/>
+						</label>
 
-					<label class="form-control w-full">
-						<span class="label-text">Title</span>
-						<input
-							type="text"
-							class="input input-bordered w-full"
-							bind:value={youtubeTitle}
-							maxlength="100"
-							disabled={publishPhase === 'loading'}
-						/>
-					</label>
+						<label class="form-control w-full">
+							<span class="label-text">Description</span>
+							<textarea
+								class="textarea textarea-bordered w-full"
+								rows="3"
+								bind:value={youtubeDescription}
+								disabled={publishPhase === 'loading'}
+							></textarea>
+						</label>
 
-					<label class="form-control w-full">
-						<span class="label-text">Description</span>
-						<textarea
-							class="textarea textarea-bordered w-full"
-							rows="3"
-							bind:value={youtubeDescription}
-							disabled={publishPhase === 'loading'}
-						></textarea>
-					</label>
-
-					<label class="form-control w-full">
-						<span class="label-text">Visibility</span>
-						<select
-							class="select select-bordered w-full"
-							bind:value={youtubePrivacy}
-							disabled={publishPhase === 'loading'}
-						>
-							<option value="private">Private</option>
-							<option value="unlisted">Unlisted</option>
-							<option value="public">Public</option>
-						</select>
-					</label>
+						<label class="form-control w-full">
+							<span class="label-text">Visibility</span>
+							<select
+								class="select select-bordered w-full"
+								bind:value={youtubePrivacy}
+								disabled={publishPhase === 'loading'}
+							>
+								<option value="private">Private</option>
+								<option value="unlisted">Unlisted</option>
+								<option value="public">Public</option>
+							</select>
+						</label>
+					{/if}
 
 					{#if publishPhase === 'loading'}
 						<LoadingGloopPanel message="Glooping to YouTube…" />
-					{:else}
+					{:else if googleConnected && googleConfigured}
 						<button
 							type="button"
 							class="btn w-full gap-2 border-0 text-white"
 							style="background-color: #7ac943"
-							disabled={!googleConfigured}
 							onclick={publishToYoutube}
 						>
 							<IconYoutube class="size-5" />
-							{!googleConnected ? 'Sign in & upload to YouTube' : 'Upload to YouTube'}
+							Upload to YouTube
 						</button>
 					{/if}
 
@@ -315,6 +349,24 @@
 					{/if}
 				</div>
 			</section>
+		{/if}
+
+		{#if uploadPhase === 'staged' && staged && wantsTiktok}
+			<section class="card mt-6 bg-base-100 shadow-xl">
+				<div class="card-body gap-3">
+					<h2 class="card-title text-lg">TikTok</h2>
+					<div class="alert alert-info text-sm">
+						<IconAlert class="size-5 shrink-0" />
+						<span>TikTok uploads are coming soon. Your video is saved on GloopGlop in the meantime.</span>
+					</div>
+				</div>
+			</section>
+		{/if}
+
+		{#if uploadPhase === 'staged' && staged && !wantsYoutube && !wantsTiktok}
+			<p class="mt-6 text-center text-sm text-base-content/70">
+				Your video is on GloopGlop. Pick YouTube or TikTok above to publish elsewhere.
+			</p>
 		{/if}
 
 		<p class="mt-8 text-center text-xs text-base-content/50">

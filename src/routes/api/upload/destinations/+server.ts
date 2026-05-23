@@ -23,11 +23,29 @@ export const GET: RequestHandler = async ({ locals, platform, cookies }) => {
 	return json({
 		destinations: [
 			{
+				id: 'gloopglop',
+				label: 'GloopGlop',
+				connected: true,
+				accountEmail: null,
+				configured: true,
+				available: true
+			},
+			{
 				id: 'youtube',
 				label: 'YouTube',
 				connected: !!linked,
 				accountEmail: linked?.email ?? null,
-				configured
+				configured,
+				available: configured
+			},
+			{
+				id: 'tiktok',
+				label: 'TikTok',
+				connected: false,
+				accountEmail: null,
+				configured: false,
+				available: false,
+				comingSoon: true
 			}
 		],
 		google: {
