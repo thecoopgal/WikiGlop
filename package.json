@@ -40,6 +40,7 @@
 		"jszip": "^3.10.1",
 		"marked": "^17.0.5",
 		"svelte-awesome": "^3.3.5",
+		"tus-js-client": "^4.3.1",
 		"web-push": "^3.6.7",
 		"yaml": "^2.8.3"
 	}

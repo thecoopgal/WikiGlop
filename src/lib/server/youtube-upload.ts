@@ -1,6 +1,6 @@
 import { getValidGoogleAccessToken } from '$lib/server/google-oauth';
 import type { UploadSessionRow } from '$lib/server/uploads';
-import { getR2ObjectForUpload } from '$lib/server/uploads';
+import { getStreamVideoBodyForExport } from '$lib/server/uploads';
 
 export type YoutubeUploadMetadata = {
 	title: string;
@@ -20,9 +20,9 @@ export async function uploadVideoToYoutube(opts: {
 	metadata: YoutubeUploadMetadata;
 }): Promise<YoutubeUploadResult> {
 	const accessToken = await getValidGoogleAccessToken(opts.platform, opts.googleSub);
-	const object = await getR2ObjectForUpload(opts.platform, opts.session);
-	const contentType = opts.session.content_type || 'video/mp4';
-	const size = opts.session.size_bytes;
+	const object = await getStreamVideoBodyForExport(opts.platform, opts.session);
+	const contentType = object.contentType;
+	const size = object.sizeBytes;
 
 	const initRes = await fetch(
 		'https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status',

@@ -12,11 +12,13 @@
 	import IconAlert from '~icons/mdi/alert-circle';
 	import type { PageData } from './$types';
 	import {
+		completeStreamUpload,
+		createStreamUploadSession,
 		fetchUploadDestinations,
 		fetchUploadStatus,
 		publishUploadToYoutube,
 		startGoogleUploadAuth,
-		uploadVideoFile,
+		uploadFileToStream,
 		type UploadApiResult
 	} from '$lib/upload-client';
 
@@ -27,6 +29,7 @@
 	let previewUrl = $state('');
 	let uploadPhase = $state<'idle' | 'uploading' | 'staged' | 'error'>('idle');
 	let uploadPercent = $state<number | null>(null);
+	let uploadStatusMessage = $state('Uploading to Cloudflare Stream…');
 	let uploadError = $state('');
 	let staged = $state<UploadApiResult | null>(null);
 	let selectedDestinations = $state<Set<UploadDestinationId>>(
@@ -106,14 +109,17 @@
 		uploadPhase = 'uploading';
 		uploadError = '';
 		uploadPercent = 0;
+		uploadStatusMessage = 'Uploading to Cloudflare Stream…';
 		try {
-			staged = await uploadVideoFile(selectedFile, {
-				onProgress: (p) => {
-					uploadPercent = p;
-				}
+			const session = await createStreamUploadSession(selectedFile);
+			await uploadFileToStream(selectedFile, session, (p) => {
+				uploadPercent = p;
+				uploadStatusMessage = 'Uploading to Cloudflare Stream…';
 			});
-			uploadPhase = 'staged';
 			uploadPercent = 100;
+			uploadStatusMessage = 'Processing on Stream…';
+			staged = await completeStreamUpload(session.id);
+			uploadPhase = 'staged';
 		} catch (e) {
 			uploadPhase = 'error';
 			uploadPercent = null;
@@ -166,7 +172,7 @@
 		<header class="mb-8 text-center">
 			<h1 class="text-3xl font-bold tracking-tight">Upload</h1>
 			<p class="mt-2 text-base-content/70">
-				Choose where your video should go while it uploads.
+				Your video uploads directly to Cloudflare Stream. Pick destinations while it uploads.
 			</p>
 		</header>
 
@@ -203,7 +209,7 @@
 				{/if}
 
 				{#if uploadPhase === 'uploading'}
-					<LoadingGloopPanel message="Glooping your video…" percent={uploadPercent} />
+					<LoadingGloopPanel message={uploadStatusMessage} percent={uploadPercent} />
 					<UploadDestinationPicker
 						selected={selectedDestinations}
 						onSelectedChange={(s) => (selectedDestinations = s)}
@@ -214,7 +220,7 @@
 				{:else if uploadPhase === 'staged'}
 					<div class="alert alert-success text-sm">
 						<IconCheck class="size-5 shrink-0" />
-						<span>Saved on GloopGlop.</span>
+						<span>Saved on GloopGlop (Cloudflare Stream).</span>
 					</div>
 					<UploadDestinationPicker
 						selected={selectedDestinations}

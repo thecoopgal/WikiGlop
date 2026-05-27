@@ -3,6 +3,11 @@ RESEND_API_KEY=
 CREATOR_NOTIFY_API_KEY=
 VAPID_PRIVATE_KEY=
 
+# Cloudflare Stream (video uploads) — required for local wrangler dev (binding createDirectUpload is not supported locally)
+# Account ID from dashboard; API token needs Stream:Edit
+CLOUDFLARE_ACCOUNT_ID=
+CLOUDFLARE_API_TOKEN=
+
 # Google OAuth (YouTube upload) — https://console.cloud.google.com/apis/credentials
 GOOGLE_OAUTH_CLIENT_ID=
 GOOGLE_OAUTH_CLIENT_SECRET=

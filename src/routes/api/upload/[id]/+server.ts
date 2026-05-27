@@ -34,6 +34,8 @@ export const GET: RequestHandler = async ({ params, locals, platform, cookies })
 				filename: session.filename,
 				contentType: session.content_type,
 				sizeBytes: session.size_bytes,
+				streamUid: session.stream_uid ?? undefined,
+				playbackUrl: session.stream_playback_url,
 				createdAt: session.created_at
 			},
 			destinations: jobs.map((j) => ({

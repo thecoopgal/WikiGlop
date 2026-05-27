@@ -1,4 +1,9 @@
-import { getDbBinding, getUploadsBucket } from '$lib/server/platform-env';
+import { getDbBinding } from '$lib/server/platform-env';
+import {
+	getStreamMp4DownloadUrl,
+	provisionStreamDirectUpload,
+	waitForStreamReady
+} from '$lib/server/cloudflare-stream';
 
 export const MAX_UPLOAD_BYTES = 500 * 1024 * 1024;
 
@@ -15,6 +20,8 @@ export type UploadSessionRow = {
 	id: string;
 	site_id: string;
 	r2_key: string;
+	stream_uid: string | null;
+	stream_playback_url: string | null;
 	filename: string;
 	content_type: string;
 	size_bytes: number;
@@ -35,13 +42,13 @@ export type DestinationJobRow = {
 	updated_at: string;
 };
 
-function newUploadId(): string {
+export function newUploadId(): string {
 	const bytes = new Uint8Array(12);
 	crypto.getRandomValues(bytes);
 	return `up_${[...bytes].map((b) => b.toString(16).padStart(2, '0')).join('')}`;
 }
 
-export function assertAllowedVideoUpload(file: File): void {
+export function assertAllowedVideoUpload(file: { size: number; type?: string }): void {
 	if (!file.size) throw new Error('Choose a video file to upload.');
 	if (file.size > MAX_UPLOAD_BYTES) {
 		throw new Error(`Video must be under ${Math.round(MAX_UPLOAD_BYTES / (1024 * 1024))} MB.`);
@@ -52,45 +59,86 @@ export function assertAllowedVideoUpload(file: File): void {
 	}
 }
 
-export async function storeUpload(opts: {
+/** Create D1 row + Stream direct-upload credentials (client uploads to Stream, not our Worker). */
+export async function createStreamUploadSession(opts: {
 	platform: App.Platform | undefined;
 	siteId: string;
-	file: File;
+	filename: string;
+	sizeBytes: number;
+	contentType: string;
 	clientKey?: string;
-}): Promise<{ id: string; filename: string; contentType: string; sizeBytes: number }> {
-	assertAllowedVideoUpload(opts.file);
-	const bucket = getUploadsBucket(opts.platform);
+}): Promise<{
+	id: string;
+	streamUid: string;
+	method: 'post' | 'tus';
+	uploadURL?: string;
+	tusEndpoint?: string;
+}> {
+	assertAllowedVideoUpload({ size: opts.sizeBytes, type: opts.contentType });
 	const db = getDbBinding(opts.platform);
 	const id = newUploadId();
-	const ext = opts.file.name.includes('.') ? opts.file.name.split('.').pop() : 'mp4';
-	const r2Key = `${opts.siteId}/${id}.${ext?.replace(/[^a-z0-9]/gi, '') || 'mp4'}`;
-	const contentType = opts.file.type || 'video/mp4';
 
-	await bucket.put(r2Key, opts.file.stream(), {
-		httpMetadata: { contentType }
+	const provision = await provisionStreamDirectUpload({
+		platform: opts.platform,
+		uploadId: id,
+		filename: opts.filename,
+		sizeBytes: opts.sizeBytes
 	});
 
 	await db
 		.prepare(
-			`INSERT INTO upload_sessions (id, site_id, r2_key, filename, content_type, size_bytes, client_key)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
+			`INSERT INTO upload_sessions (id, site_id, r2_key, stream_uid, stream_playback_url, filename, content_type, size_bytes, client_key)
+       VALUES (?, ?, '', ?, NULL, ?, ?, ?, ?)`
 		)
 		.bind(
 			id,
 			opts.siteId,
-			r2Key,
-			opts.file.name,
-			contentType,
-			opts.file.size,
+			provision.streamUid,
+			opts.filename,
+			opts.contentType || 'video/mp4',
+			opts.sizeBytes,
 			opts.clientKey ?? null
 		)
 		.run();
 
+	return { id, ...provision };
+}
+
+export async function finalizeStreamUpload(opts: {
+	platform: App.Platform | undefined;
+	uploadId: string;
+	siteId: string;
+}): Promise<{
+	id: string;
+	filename: string;
+	contentType: string;
+	sizeBytes: number;
+	streamUid: string;
+	playbackUrl: string | null;
+}> {
+	const session = await getUploadSession(opts.platform, opts.uploadId, opts.siteId);
+	if (!session) throw new Error('Upload not found');
+	if (!session.stream_uid) throw new Error('Upload is missing Stream video id');
+
+	const details = await waitForStreamReady({
+		platform: opts.platform,
+		streamUid: session.stream_uid
+	});
+	const playbackUrl = details.playback?.hls ?? null;
+
+	const db = getDbBinding(opts.platform);
+	await db
+		.prepare(`UPDATE upload_sessions SET stream_playback_url = ? WHERE id = ?`)
+		.bind(playbackUrl, opts.uploadId)
+		.run();
+
 	return {
-		id,
-		filename: opts.file.name,
-		contentType,
-		sizeBytes: opts.file.size
+		id: session.id,
+		filename: session.filename,
+		contentType: session.content_type,
+		sizeBytes: session.size_bytes,
+		streamUid: session.stream_uid,
+		playbackUrl
 	};
 }
 
@@ -102,21 +150,33 @@ export async function getUploadSession(
 	const db = getDbBinding(platform);
 	return db
 		.prepare(
-			`SELECT id, site_id, r2_key, filename, content_type, size_bytes, client_key, created_at
+			`SELECT id, site_id, r2_key, stream_uid, stream_playback_url, filename, content_type, size_bytes, client_key, created_at
        FROM upload_sessions WHERE id = ? AND site_id = ?`
 		)
 		.bind(uploadId, siteId)
 		.first<UploadSessionRow>();
 }
 
-export async function getR2ObjectForUpload(
+/** ReadableStream of MP4 bytes from Stream (for YouTube publish). */
+export async function getStreamVideoBodyForExport(
 	platform: App.Platform | undefined,
 	session: UploadSessionRow
-) {
-	const bucket = getUploadsBucket(platform);
-	const object = await bucket.get(session.r2_key);
-	if (!object?.body) throw new Error('Uploaded file is missing from storage');
-	return object;
+): Promise<{ body: ReadableStream; contentType: string; sizeBytes: number }> {
+	if (!session.stream_uid) {
+		throw new Error('Video is not on Stream');
+	}
+	await waitForStreamReady({ platform, streamUid: session.stream_uid });
+	const mp4Url = await getStreamMp4DownloadUrl({ platform, streamUid: session.stream_uid });
+	const res = await fetch(mp4Url);
+	if (!res.ok || !res.body) {
+		throw new Error('Could not download video from Stream for export');
+	}
+	const len = res.headers.get('Content-Length');
+	return {
+		body: res.body,
+		contentType: 'video/mp4',
+		sizeBytes: len ? parseInt(len, 10) : session.size_bytes
+	};
 }
 
 export async function listDestinationJobs(
@@ -173,6 +233,7 @@ export function isUploadSchemaError(e: unknown): boolean {
 	const msg = e instanceof Error ? e.message : String(e);
 	return (
 		msg.includes('no such table: upload_sessions') ||
+		msg.includes('no such column: stream_uid') ||
 		msg.includes('no such table: google_oauth_accounts') ||
 		msg.includes('no such table: upload_destination_jobs')
 	);
