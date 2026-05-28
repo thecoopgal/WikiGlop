@@ -67,7 +67,10 @@ async function parseJson<T>(res: Response): Promise<T> {
 }
 
 /** Step 1: reserve Stream upload + get one-time upload URL (browser uploads directly to Stream). */
-export async function createStreamUploadSession(file: File, clientKey?: string): Promise<UploadSessionStart> {
+export async function createStreamUploadSession(
+	file: File,
+	opts?: { clientKey?: string; creator?: string }
+): Promise<UploadSessionStart> {
 	const res = await fetch('/api/upload/session', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
@@ -75,7 +78,8 @@ export async function createStreamUploadSession(file: File, clientKey?: string):
 			filename: file.name,
 			sizeBytes: file.size,
 			contentType: file.type || 'video/mp4',
-			clientKey: clientKey?.trim() || undefined
+			clientKey: opts?.clientKey?.trim() || undefined,
+			creator: opts?.creator?.trim() || undefined
 		})
 	});
 	const data = await parseJson<{ ok: true; session: UploadSessionStart }>(res);
@@ -180,9 +184,12 @@ export async function completeStreamUpload(uploadId: string): Promise<UploadApiR
  */
 export async function uploadVideoFile(
 	file: File,
-	opts?: { clientKey?: string; onProgress?: UploadProgressHandler }
+	opts?: { clientKey?: string; creator?: string; onProgress?: UploadProgressHandler }
 ): Promise<UploadApiResult> {
-	const session = await createStreamUploadSession(file, opts?.clientKey);
+	const session = await createStreamUploadSession(file, {
+		clientKey: opts?.clientKey,
+		creator: opts?.creator
+	});
 	await uploadFileToStream(file, session, opts?.onProgress);
 	return completeStreamUpload(session.id);
 }

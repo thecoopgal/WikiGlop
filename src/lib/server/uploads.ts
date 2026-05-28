@@ -1,6 +1,7 @@
 import { getDbBinding } from '$lib/server/platform-env';
 import {
 	getStreamMp4DownloadUrl,
+	normalizeStreamCreator,
 	provisionStreamDirectUpload,
 	waitForStreamReady
 } from '$lib/server/cloudflare-stream';
@@ -16,6 +17,8 @@ const ALLOWED_VIDEO_TYPES = new Set([
 	'video/ogg'
 ]);
 
+export type UploadApprovalStatus = 'pending' | 'approved' | 'rejected';
+
 export type UploadSessionRow = {
 	id: string;
 	site_id: string;
@@ -26,8 +29,24 @@ export type UploadSessionRow = {
 	content_type: string;
 	size_bytes: number;
 	client_key: string | null;
+	creator_id: string | null;
+	approval_status: UploadApprovalStatus | string | null;
+	approved_at: string | null;
+	thumbnail_url: string | null;
 	created_at: string;
 };
+
+export type WatchVideoRow = {
+	id: string;
+	filename: string;
+	streamUid: string;
+	playbackUrl: string | null;
+	thumbnailUrl: string | null;
+	createdAt: string;
+	approvedAt: string | null;
+};
+
+const UPLOAD_SESSION_COLUMNS = `id, site_id, r2_key, stream_uid, stream_playback_url, filename, content_type, size_bytes, client_key, creator_id, approval_status, approved_at, thumbnail_url, created_at`;
 
 export type UploadDestination = 'youtube';
 
@@ -67,6 +86,7 @@ export async function createStreamUploadSession(opts: {
 	sizeBytes: number;
 	contentType: string;
 	clientKey?: string;
+	creator?: string;
 }): Promise<{
 	id: string;
 	streamUid: string;
@@ -78,17 +98,20 @@ export async function createStreamUploadSession(opts: {
 	const db = getDbBinding(opts.platform);
 	const id = newUploadId();
 
+	const creator = normalizeStreamCreator(opts.creator)?.toLowerCase();
+
 	const provision = await provisionStreamDirectUpload({
 		platform: opts.platform,
 		uploadId: id,
 		filename: opts.filename,
-		sizeBytes: opts.sizeBytes
+		sizeBytes: opts.sizeBytes,
+		creator
 	});
 
 	await db
 		.prepare(
-			`INSERT INTO upload_sessions (id, site_id, r2_key, stream_uid, stream_playback_url, filename, content_type, size_bytes, client_key)
-       VALUES (?, ?, '', ?, NULL, ?, ?, ?, ?)`
+			`INSERT INTO upload_sessions (id, site_id, r2_key, stream_uid, stream_playback_url, filename, content_type, size_bytes, client_key, creator_id, approval_status)
+       VALUES (?, ?, '', ?, NULL, ?, ?, ?, ?, ?, 'pending')`
 		)
 		.bind(
 			id,
@@ -97,7 +120,8 @@ export async function createStreamUploadSession(opts: {
 			opts.filename,
 			opts.contentType || 'video/mp4',
 			opts.sizeBytes,
-			opts.clientKey ?? null
+			opts.clientKey ?? null,
+			creator ?? null
 		)
 		.run();
 
@@ -125,11 +149,14 @@ export async function finalizeStreamUpload(opts: {
 		streamUid: session.stream_uid
 	});
 	const playbackUrl = details.playback?.hls ?? null;
+	const thumbnailUrl = details.thumbnail ?? null;
 
 	const db = getDbBinding(opts.platform);
 	await db
-		.prepare(`UPDATE upload_sessions SET stream_playback_url = ? WHERE id = ?`)
-		.bind(playbackUrl, opts.uploadId)
+		.prepare(
+			`UPDATE upload_sessions SET stream_playback_url = ?, thumbnail_url = ? WHERE id = ?`
+		)
+		.bind(playbackUrl, thumbnailUrl, opts.uploadId)
 		.run();
 
 	return {
@@ -150,11 +177,110 @@ export async function getUploadSession(
 	const db = getDbBinding(platform);
 	return db
 		.prepare(
-			`SELECT id, site_id, r2_key, stream_uid, stream_playback_url, filename, content_type, size_bytes, client_key, created_at
-       FROM upload_sessions WHERE id = ? AND site_id = ?`
+			`SELECT ${UPLOAD_SESSION_COLUMNS} FROM upload_sessions WHERE id = ? AND site_id = ?`
 		)
 		.bind(uploadId, siteId)
 		.first<UploadSessionRow>();
+}
+
+function rowToWatchVideo(row: UploadSessionRow): WatchVideoRow | null {
+	if (!row.stream_uid) return null;
+	return {
+		id: row.id,
+		filename: row.filename,
+		streamUid: row.stream_uid,
+		playbackUrl: row.stream_playback_url,
+		thumbnailUrl: row.thumbnail_url,
+		createdAt: row.created_at,
+		approvedAt: row.approved_at
+	};
+}
+
+/** Approved videos for a creator watch page (D1 is source of truth for approval). */
+export async function listApprovedWatchVideos(opts: {
+	platform: App.Platform | undefined;
+	siteId: string;
+	creatorId: string;
+	limit?: number;
+}): Promise<WatchVideoRow[]> {
+	const db = getDbBinding(opts.platform);
+	const limit = Math.min(Math.max(opts.limit ?? 50, 1), 100);
+	const { results } = await db
+		.prepare(
+			`SELECT ${UPLOAD_SESSION_COLUMNS}
+       FROM upload_sessions
+       WHERE site_id = ? AND creator_id = ? AND approval_status = 'approved' AND stream_uid IS NOT NULL
+       ORDER BY COALESCE(approved_at, created_at) DESC
+       LIMIT ?`
+		)
+		.bind(opts.siteId, opts.creatorId, limit)
+		.all<UploadSessionRow>();
+
+	return (results ?? [])
+		.map((row) => rowToWatchVideo(row))
+		.filter((v): v is WatchVideoRow => v !== null);
+}
+
+export async function getApprovedWatchVideo(opts: {
+	platform: App.Platform | undefined;
+	siteId: string;
+	creatorId: string;
+	uploadId: string;
+}): Promise<WatchVideoRow | null> {
+	const session = await getUploadSession(opts.platform, opts.uploadId, opts.siteId);
+	if (!session) return null;
+	if (session.creator_id !== opts.creatorId) return null;
+	if (session.approval_status !== 'approved') return null;
+	return rowToWatchVideo(session);
+}
+
+export async function setUploadApproval(opts: {
+	platform: App.Platform | undefined;
+	uploadId: string;
+	siteId: string;
+	status: Extract<UploadApprovalStatus, 'approved' | 'rejected'>;
+}): Promise<UploadSessionRow | null> {
+	const session = await getUploadSession(opts.platform, opts.uploadId, opts.siteId);
+	if (!session) return null;
+
+	const db = getDbBinding(opts.platform);
+	if (opts.status === 'approved') {
+		await db
+			.prepare(
+				`UPDATE upload_sessions SET approval_status = 'approved', approved_at = datetime('now') WHERE id = ?`
+			)
+			.bind(opts.uploadId)
+			.run();
+	} else {
+		await db
+			.prepare(
+				`UPDATE upload_sessions SET approval_status = 'rejected', approved_at = NULL WHERE id = ?`
+			)
+			.bind(opts.uploadId)
+			.run();
+	}
+
+	return getUploadSession(opts.platform, opts.uploadId, opts.siteId);
+}
+
+export async function listPendingUploads(opts: {
+	platform: App.Platform | undefined;
+	siteId: string;
+	limit?: number;
+}): Promise<UploadSessionRow[]> {
+	const db = getDbBinding(opts.platform);
+	const limit = Math.min(Math.max(opts.limit ?? 50, 1), 100);
+	const { results } = await db
+		.prepare(
+			`SELECT ${UPLOAD_SESSION_COLUMNS}
+       FROM upload_sessions
+       WHERE site_id = ? AND approval_status = 'pending' AND stream_uid IS NOT NULL
+       ORDER BY created_at DESC
+       LIMIT ?`
+		)
+		.bind(opts.siteId, limit)
+		.all<UploadSessionRow>();
+	return results ?? [];
 }
 
 /** ReadableStream of MP4 bytes from Stream (for YouTube publish). */
@@ -234,7 +360,17 @@ export function isUploadSchemaError(e: unknown): boolean {
 	return (
 		msg.includes('no such table: upload_sessions') ||
 		msg.includes('no such column: stream_uid') ||
+		msg.includes('no such column: creator_id') ||
+		msg.includes('no such column: approval_status') ||
 		msg.includes('no such table: google_oauth_accounts') ||
 		msg.includes('no such table: upload_destination_jobs')
 	);
+}
+
+export function normalizeCreatorRouteId(raw: string): string {
+	const id = raw.trim().toLowerCase();
+	if (!id || !/^[a-z0-9][a-z0-9._-]{0,119}$/.test(id)) {
+		throw new Error('Invalid creator id');
+	}
+	return id;
 }

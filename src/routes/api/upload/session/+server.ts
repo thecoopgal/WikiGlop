@@ -1,6 +1,6 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { isStreamConfigured } from '$lib/server/cloudflare-stream';
+import { isStreamConfigured, normalizeStreamCreator } from '$lib/server/cloudflare-stream';
 import { assertGloopglopUploadSite } from '$lib/server/upload-gate';
 import { createStreamUploadSession, isUploadSchemaError } from '$lib/server/uploads';
 
@@ -29,6 +29,12 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	const clientKeyRaw = data.clientKey;
 	const clientKey =
 		typeof clientKeyRaw === 'string' && clientKeyRaw.trim() ? clientKeyRaw.trim() : undefined;
+	let creator: string | undefined;
+	try {
+		creator = normalizeStreamCreator(data.creator);
+	} catch (e) {
+		throw error(400, e instanceof Error ? e.message : 'Invalid creator');
+	}
 
 	if (!filename) throw error(400, 'filename is required');
 	if (!Number.isFinite(sizeBytes) || sizeBytes <= 0) throw error(400, 'sizeBytes is required');
@@ -40,7 +46,8 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 			filename,
 			sizeBytes,
 			contentType,
-			clientKey
+			clientKey,
+			creator
 		});
 		return json({ ok: true as const, session });
 	} catch (e) {
@@ -48,7 +55,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 		if (isUploadSchemaError(e)) {
 			throw error(
 				503,
-				'Upload needs D1 migrations 0010 and 0011. Run npm run db:migrate:local (dev) or wrangler d1 migrations apply gloopglop --remote.'
+				'Upload needs D1 migrations 0010–0012. Run npm run db:migrate:local (dev) or npm run db:migrate:remote.'
 			);
 		}
 		if (

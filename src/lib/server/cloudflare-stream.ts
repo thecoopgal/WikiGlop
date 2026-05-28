@@ -119,6 +119,16 @@ async function streamApiRequest<T>(
 	return data.result;
 }
 
+export function normalizeStreamCreator(raw: unknown): string | undefined {
+	if (typeof raw !== 'string') return undefined;
+	const creator = raw.trim();
+	if (!creator) return undefined;
+	if (creator.length > 200) {
+		throw new Error('Creator must be 200 characters or less.');
+	}
+	return creator;
+}
+
 /** tus Upload-Metadata: `key base64value` pairs comma-separated. */
 export function buildTusUploadMetadata(opts: {
 	filename: string;
@@ -134,16 +144,20 @@ async function provisionDirectUploadViaRest(opts: {
 	platform: App.Platform | undefined;
 	uploadId: string;
 	filename: string;
+	creator?: string;
 }): Promise<StreamDirectUploadResult> {
+	const body: Record<string, unknown> = {
+		maxDurationSeconds: MAX_DURATION_SECONDS,
+		meta: { name: opts.filename, uploadId: opts.uploadId }
+	};
+	if (opts.creator) body.creator = opts.creator;
+
 	const result = await streamApiRequest<{ uploadURL: string; uid: string }>(
 		opts.platform,
 		'/stream/direct_upload',
 		{
 			method: 'POST',
-			body: JSON.stringify({
-				maxDurationSeconds: MAX_DURATION_SECONDS,
-				meta: { name: opts.filename, uploadId: opts.uploadId }
-			})
+			body: JSON.stringify(body)
 		}
 	);
 	if (!result.uploadURL || !result.uid) {
@@ -160,17 +174,21 @@ async function provisionTusUploadViaRest(opts: {
 	platform: App.Platform | undefined;
 	filename: string;
 	sizeBytes: number;
+	creator?: string;
 }): Promise<StreamDirectUploadResult> {
 	const accountId = getAccountId(opts.platform);
 	const token = getApiToken(opts.platform);
+	const headers: Record<string, string> = {
+		Authorization: `Bearer ${token}`,
+		'Tus-Resumable': '1.0.0',
+		'Upload-Length': String(opts.sizeBytes),
+		'Upload-Metadata': buildTusUploadMetadata({ filename: opts.filename })
+	};
+	if (opts.creator) headers['Upload-Creator'] = opts.creator;
+
 	const res = await fetch(`${STREAM_API}/accounts/${accountId}/stream?direct_user=true`, {
 		method: 'POST',
-		headers: {
-			Authorization: `Bearer ${token}`,
-			'Tus-Resumable': '1.0.0',
-			'Upload-Length': String(opts.sizeBytes),
-			'Upload-Metadata': buildTusUploadMetadata({ filename: opts.filename })
-		}
+		headers
 	});
 
 	if (!res.ok) {
@@ -193,6 +211,7 @@ export async function provisionStreamDirectUpload(opts: {
 	uploadId: string;
 	filename: string;
 	sizeBytes: number;
+	creator?: string;
 }): Promise<StreamDirectUploadResult> {
 	if (opts.sizeBytes > STREAM_TUS_THRESHOLD_BYTES) {
 		return provisionTusUploadViaRest(opts);
@@ -206,7 +225,8 @@ export async function provisionStreamDirectUpload(opts: {
 	const stream = getStreamBinding(opts.platform);
 	const direct = await stream.createDirectUpload({
 		maxDurationSeconds: MAX_DURATION_SECONDS,
-		meta: { name: opts.filename, uploadId: opts.uploadId }
+		meta: { name: opts.filename, uploadId: opts.uploadId },
+		...(opts.creator ? { creator: opts.creator } : {})
 	});
 	return {
 		streamUid: direct.id,
