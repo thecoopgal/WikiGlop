@@ -18,6 +18,8 @@
 	<div class="mx-auto max-w-3xl">
 		<header class="mb-6">
 			<p class="text-sm text-base-content/60">
+				<a href="/watch" class="link link-hover">Watch</a>
+				<span class="mx-1">/</span>
 				<a href="/watch/{data.creatorId}" class="link link-hover">{data.creatorName}</a>
 				<span class="mx-1">/</span>
 				{title}

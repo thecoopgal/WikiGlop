@@ -45,6 +45,10 @@ export type WatchVideoRow = {
 	approvedAt: string | null;
 };
 
+export type WatchFeedVideoRow = WatchVideoRow & {
+	creatorId: string;
+};
+
 const UPLOAD_SESSION_COLUMNS = `id, site_id, r2_key, stream_uid, stream_playback_url, filename, content_type, size_bytes, client_key, creator_id, approval_status, approved_at, thumbnail_url, created_at`;
 
 export function newUploadId(): string {
@@ -205,6 +209,35 @@ export async function listApprovedWatchVideos(opts: {
 	return (results ?? [])
 		.map((row) => rowToWatchVideo(row))
 		.filter((v): v is WatchVideoRow => v !== null);
+}
+
+/** All approved videos on the platform watch feed (any creator). */
+export async function listAllApprovedWatchVideos(opts: {
+	platform: App.Platform | undefined;
+	siteId: string;
+	limit?: number;
+}): Promise<WatchFeedVideoRow[]> {
+	const db = getDbBinding(opts.platform);
+	const limit = Math.min(Math.max(opts.limit ?? 100, 1), 200);
+	const { results } = await db
+		.prepare(
+			`SELECT ${UPLOAD_SESSION_COLUMNS}
+       FROM upload_sessions
+       WHERE site_id = ? AND approval_status = 'approved' AND stream_uid IS NOT NULL AND creator_id IS NOT NULL
+       ORDER BY COALESCE(approved_at, created_at) DESC
+       LIMIT ?`
+		)
+		.bind(opts.siteId, limit)
+		.all<UploadSessionRow>();
+
+	return (results ?? [])
+		.map((row) => {
+			const video = rowToWatchVideo(row);
+			const creatorId = row.creator_id?.trim().toLowerCase();
+			if (!video || !creatorId) return null;
+			return { ...video, creatorId };
+		})
+		.filter((v): v is WatchFeedVideoRow => v !== null);
 }
 
 export async function getApprovedWatchVideo(opts: {

@@ -101,3 +101,8 @@ blocks:
       Each member has one vote and the right to participate in governance. Consent defines **how** the membership reaches decisions in ordinary business: by looking for alignment and surfacing real risks, not by requiring everyone to agree for the same reasons.
 
       The membership may adopt different rules for specific decisions (for example, elections or major changes) by consent or as otherwise provided in the bylaws.
+
+  - type: search_cta
+    id: search-consent
+    prompt: Want to know more?
+    query: Consent

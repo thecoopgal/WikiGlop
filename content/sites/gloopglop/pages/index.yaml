@@ -26,9 +26,21 @@ blocks:
       - label: Home
         open_in: same_tab
         href: /
+      - label: Search
+        open_in: same_tab
+        href: /search
       - label: Creators
         open_in: same_tab
         href: /creators
+      - label: Watch
+        open_in: same_tab
+        href: /watch
+      - label: Create
+        open_in: same_tab
+        href: /create
+      - label: Upload
+        open_in: same_tab
+        href: /upload
       - label: ByLaws
         open_in: same_tab
         href: /bylaws
@@ -38,6 +50,3 @@ blocks:
       - label: Consent
         open_in: same_tab
         href: /consent
-      - label: GloopGlop
-        open_in: same_tab
-        href: /search

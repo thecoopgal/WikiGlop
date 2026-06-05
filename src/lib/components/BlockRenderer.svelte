@@ -12,6 +12,7 @@
 	import PeopleBlock from './blocks/PeopleBlock.svelte';
 	import CreatorProfileBlock from './blocks/CreatorProfileBlock.svelte';
 	import QuoteBlock from './blocks/QuoteBlock.svelte';
+	import SearchCtaBlock from './blocks/SearchCtaBlock.svelte';
 	import BlockRenderer from './BlockRenderer.svelte';
 
 let { blocks, block, site }: any = $props();
@@ -112,6 +113,14 @@ let { blocks, block, site }: any = $props();
 		</div>
 	{:else}
 		<QuoteBlock {...(block as any)} />
+	{/if}
+{:else if blockType === 'search_cta'}
+	{#if (block as any)?.id}
+		<div id={(block as any).id}>
+			<SearchCtaBlock {...(block as any)} />
+		</div>
+	{:else}
+		<SearchCtaBlock {...(block as any)} />
 	{/if}
 {:else}
 	{#if block?.id}

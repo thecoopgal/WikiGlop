@@ -1,8 +1,33 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { insertGlopAnswer, isGlopSubmissionSchemaError } from '$lib/server/glop-search';
+import { runGlopSearchQuery } from '$lib/server/glop-search-page';
 
 const GLOOPGLOP_SITE_ID = 'gloopglop';
+
+export const GET: RequestHandler = async ({ url, locals, platform }) => {
+	if (locals.site?.siteId !== GLOOPGLOP_SITE_ID) {
+		throw error(404, 'Not found');
+	}
+
+	const query = (url.searchParams.get('q') ?? '').trim();
+	if (query.length < 2) {
+		throw error(400, 'Query must be at least 2 characters');
+	}
+
+	try {
+		const result = await runGlopSearchQuery({
+			platform,
+			siteId: locals.site.siteId,
+			queryRaw: query,
+			requestUrl: url
+		});
+		return json(result);
+	} catch (e) {
+		console.error('glop-search GET failed:', e);
+		throw error(503, 'Search is temporarily unavailable.');
+	}
+};
 
 export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	if (locals.site?.siteId !== GLOOPGLOP_SITE_ID) {
