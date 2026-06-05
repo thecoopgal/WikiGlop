@@ -12,6 +12,7 @@ page_settings:
   show_header: true
   show_footer: true
   max_width: sm
+  grid_columns: 1
   search_query: What is GloopGlop?
 
 blocks:
@@ -23,28 +24,3 @@ blocks:
     avatar: https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/907061a8-51ae-454c-c739-83935616f900/public
     bio: |
       We are a collective creators who like to create cool tools for other creators.
-    short_links:
-      - label: Home
-        open_in: same_tab
-        href: /
-      - label: Search
-        open_in: same_tab
-        href: /search
-      - label: Creators
-        open_in: same_tab
-        href: /creators
-      - label: Watch
-        open_in: same_tab
-        href: /watch
-      - label: Create
-        open_in: same_tab
-        href: /create
-      - label: ByLaws
-        open_in: same_tab
-        href: /bylaws
-      - label: Seven Principles
-        open_in: same_tab
-        href: /sevenprinciples
-      - label: Consent
-        open_in: same_tab
-        href: /consent

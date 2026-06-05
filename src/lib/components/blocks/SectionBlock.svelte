@@ -1,14 +1,15 @@
 <script lang="ts">
-	import type { PageBlock } from '$lib/server/content';
+	import type { PageBlock, PageSettings } from '$lib/server/content';
 	import BlockRenderer from '../BlockRenderer.svelte';
 
 	type Props = {
 		title?: string;
 		blocks?: PageBlock[];
-	site?: unknown;
+		site?: unknown;
+		pageSettings?: PageSettings;
 	};
 
-let { title, blocks, site } = $props() as Props;
+	let { title, blocks, site, pageSettings }: Props = $props();
 </script>
 
 <section class="my-10">
@@ -18,7 +19,7 @@ let { title, blocks, site } = $props() as Props;
 
 	{#if blocks && blocks.length}
 		<div class="space-y-8">
-			<BlockRenderer blocks={blocks} site={site} />
+			<BlockRenderer blocks={blocks} site={site} {pageSettings} />
 		</div>
 	{:else}
 		<p class="text-sm text-warning">No section blocks.</p>

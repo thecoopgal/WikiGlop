@@ -17,7 +17,39 @@ theme:
   preset: gloopglop
   mode: dark
   overrides:
-    
+
+short_links:
+  - label: Home
+    open_in: same_tab
+    href: /
+
+short_link_groups:
+  - heading: Tools
+    links:
+      - label: Search
+        open_in: same_tab
+        href: /search
+      - label: Watch
+        open_in: same_tab
+        href: /watch
+      - label: Links
+        open_in: same_tab
+        href: /create
+  - heading: About Us
+    links:
+      - label: Creators
+        open_in: same_tab
+        href: /creators
+      - label: ByLaws
+        open_in: same_tab
+        href: /bylaws
+      - label: Seven Principles
+        open_in: same_tab
+        href: /sevenprinciples
+      - label: Consent
+        open_in: same_tab
+        href: /consent
+
 routing:
   default_page: index
 

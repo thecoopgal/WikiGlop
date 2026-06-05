@@ -26,7 +26,7 @@
 	<div class={containerClass(String(maxWidth))}>
 		{#if page.blocks && page.blocks.length}
 			<div class="space-y-10">
-				<BlockRenderer blocks={page.blocks} site={site} />
+				<BlockRenderer blocks={page.blocks} site={site} pageSettings={page.page_settings} />
 			</div>
 		{:else}
 			<p class="text-sm text-warning">No creator blocks found.</p>

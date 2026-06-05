@@ -106,8 +106,16 @@ function walkBlocksForImages(blocks: unknown, base: URL, out: Map<string, string
 			continue;
 		}
 
-		if (type === 'creator_profile' && Array.isArray(b.short_links)) {
-			collectImagesFromLinksItems(b.short_links, base, out);
+		if (type === 'creator_profile') {
+			if (Array.isArray(b.short_links)) {
+				collectImagesFromLinksItems(b.short_links, base, out);
+			}
+			if (Array.isArray(b.short_link_groups)) {
+				for (const group of b.short_link_groups) {
+					if (!isRecord(group) || !Array.isArray(group.links)) continue;
+					collectImagesFromLinksItems(group.links, base, out);
+				}
+			}
 			const avatar = typeof b.avatar === 'string' ? b.avatar.trim() : '';
 			if (avatar.startsWith('http://') || avatar.startsWith('https://')) {
 				const home = new URL('/', base).href;
@@ -138,8 +146,16 @@ function walkBlocks(blocks: unknown, base: URL, pageTitle: string, out: Map<stri
 			continue;
 		}
 
-		if (type === 'creator_profile' && Array.isArray(b.short_links)) {
-			collectFromLinksItems(b.short_links, base, pageTitle, out);
+		if (type === 'creator_profile') {
+			if (Array.isArray(b.short_links)) {
+				collectFromLinksItems(b.short_links, base, pageTitle, out);
+			}
+			if (Array.isArray(b.short_link_groups)) {
+				for (const group of b.short_link_groups) {
+					if (!isRecord(group) || !Array.isArray(group.links)) continue;
+					collectFromLinksItems(group.links, base, pageTitle, out);
+				}
+			}
 			continue;
 		}
 

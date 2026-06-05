@@ -1,11 +1,16 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
-	import { replaceState } from '$app/navigation';
+	import { goto, replaceState } from '$app/navigation';
 	import { page } from '$app/state';
 	import { fetchGlopSearchQuery } from '$lib/glop-search-client';
 	import { glopResultDisplay, groupGlopsByCanonical, topGlopByGloopCount } from '$lib/glop-search-ui';
 	import { getOrCreateBrowserClientId } from '$lib/client/gloop-browser-glop-limit';
 	import { GLOOPGLOP_DEFAULT_LOGO_URL } from '$lib/glop-link-image';
+	import {
+		GLOOPGLOP_SEARCH_PAGE_FOCUS_HREF,
+		gloopglopSearchPageHref
+	} from '$lib/gloopglop-search-nav';
+	import AddGlopForm from '$lib/components/AddGlopForm.svelte';
 	import LoadingGloop from '$lib/components/LoadingGloop.svelte';
 	import IconMagnify from '~icons/mdi/magnify';
 	import type { GlopSearchQueryPayload } from '$lib/server/glop-search-page';
@@ -14,9 +19,10 @@
 		open: boolean;
 		initialQuery?: string;
 		onclose?: () => void;
+		onsuccess?: () => void | Promise<void>;
 	};
 
-	let { open = $bindable(false), initialQuery = '', onclose }: Props = $props();
+	let { open = $bindable(false), initialQuery = '', onclose, onsuccess }: Props = $props();
 
 	const gloopglopLogoUrl = GLOOPGLOP_DEFAULT_LOGO_URL;
 
@@ -83,6 +89,23 @@
 		onclose?.();
 	}
 
+	function goToSearchPage() {
+		urlSynced = false;
+		open = false;
+		onclose?.();
+		if (!browser) return;
+		void goto(GLOOPGLOP_SEARCH_PAGE_FOCUS_HREF);
+	}
+
+	function openFullSearchPage() {
+		const q = (results?.query ?? query).trim();
+		urlSynced = false;
+		open = false;
+		onclose?.();
+		if (!browser) return;
+		void goto(gloopglopSearchPageHref(q));
+	}
+
 	async function runSearch(nextQuery: string) {
 		const q = nextQuery.trim();
 		if (q.length < 2) {
@@ -140,6 +163,7 @@
 		gloopUrl = '';
 		gloopSubmit = 'idle';
 		await runSearch(q);
+		await onsuccess?.();
 	}
 </script>
 
@@ -159,24 +183,41 @@
 		>
 			<div class="border-b border-base-300 px-4 py-4 sm:px-5">
 				<form class="flex items-center gap-2 sm:gap-3" onsubmit={onSearchSubmit}>
-					<span class="shrink-0 rounded-xl ring-1 ring-base-300">
+					<button
+						type="button"
+						class="shrink-0"
+						onclick={goToSearchPage}
+						aria-label="Open GloopGlop search"
+					>
 						<LoadingGloop spinning={loading} size="sm" alt="" />
-					</span>
-					<label class="input input-bordered flex h-12 min-w-0 flex-1 items-center gap-2">
-						<IconMagnify class="h-5 w-5 shrink-0 text-base-content/60" aria-hidden="true" />
-						<span class="sr-only">Search</span>
-						<input
-							bind:this={searchInputEl}
-							type="search"
-							class="min-w-0 grow"
-							bind:value={query}
-							placeholder="What do you want to glop?"
-							autocomplete="off"
-							minlength="2"
-							maxlength="500"
-							disabled={loading}
-						/>
-					</label>
+					</button>
+					{#if results && !loading}
+						<button
+							type="button"
+							class="input input-bordered flex h-12 min-w-0 flex-1 cursor-pointer items-center gap-2 text-left transition-colors hover:border-primary/40 hover:bg-base-200/50"
+							onclick={openFullSearchPage}
+							aria-label="Edit search on full search page"
+						>
+							<IconMagnify class="h-5 w-5 shrink-0 text-base-content/60" aria-hidden="true" />
+							<span class="min-w-0 flex-1 truncate font-medium">{results.query}</span>
+						</button>
+					{:else}
+						<label class="input input-bordered flex h-12 min-w-0 flex-1 items-center gap-2">
+							<IconMagnify class="h-5 w-5 shrink-0 text-base-content/60" aria-hidden="true" />
+							<span class="sr-only">Search</span>
+							<input
+								bind:this={searchInputEl}
+								type="search"
+								class="min-w-0 grow"
+								bind:value={query}
+								placeholder="What do you want to glop?"
+								autocomplete="off"
+								minlength="2"
+								maxlength="500"
+								disabled={loading}
+							/>
+						</label>
+					{/if}
 				</form>
 			</div>
 
@@ -189,11 +230,12 @@
 					<div role="alert" class="alert alert-error text-sm">
 						<span>{errorMessage}</span>
 					</div>
-				{:else if results?.dbUnavailable}
-					<div role="alert" class="alert alert-warning text-sm">
-						<span>Community search is temporarily unavailable.</span>
-					</div>
 				{:else if results}
+					{#if results.dbUnavailable}
+						<div role="alert" class="alert alert-warning mb-4 text-sm">
+							<span>Community search is temporarily unavailable.</span>
+						</div>
+					{/if}
 					{#if topGlop}
 						{@const seo = results.seoByUrl[topGlop.answerUrl]}
 						{@const display = glopResultDisplay(topGlop.answerUrl, seo)}
@@ -204,7 +246,7 @@
 								<img
 									src={gloopglopLogoUrl}
 									alt=""
-									class="h-9 w-9 rounded-lg object-cover ring-1 ring-base-300"
+									class="h-9 w-9 rounded-lg object-cover"
 									width="36"
 									height="36"
 									decoding="async"
@@ -215,12 +257,17 @@
 									{topGlop.gloopCount}
 								</span>
 							</div>
-							<p class="min-w-0 text-sm font-medium leading-snug">
-								{results.query}
+							<button
+								type="button"
+								class="min-w-0 flex-1 rounded-md text-left transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+								onclick={openFullSearchPage}
+								aria-label="Edit search on full search page"
+							>
+								<span class="block text-sm font-medium leading-snug">{results.query}</span>
 								<span class="block text-xs font-normal text-base-content/65">
-									Most glopped answer
+									Most glopped answer · tap to edit search
 								</span>
-							</p>
+							</button>
 						</div>
 
 						<div class="rounded-xl border border-base-300 bg-base-100">
@@ -234,7 +281,7 @@
 									<img
 										src={gloopglopLogoUrl}
 										alt=""
-										class="h-9 w-9 rounded-lg object-cover ring-1 ring-base-300"
+										class="h-9 w-9 rounded-lg object-cover"
 										width="36"
 										height="36"
 										decoding="async"
@@ -262,56 +309,40 @@
 						</div>
 					{:else}
 						<div class="rounded-xl border border-base-300 bg-base-100 px-4 py-6 text-center text-sm text-base-content/75">
-							No gloops yet for “{results.query}”. Add the first link below.
+							No gloops yet for
+							<button
+								type="button"
+								class="font-medium text-primary underline-offset-2 hover:underline"
+								onclick={openFullSearchPage}
+							>
+								“{results.query}”
+							</button>. Add the first link below.
 						</div>
 					{/if}
 
-					<div class="mt-5 space-y-3 rounded-xl border border-dashed border-primary/30 bg-primary/5 px-4 py-4">
-						<p class="text-sm font-medium">Add a glop for this search</p>
-						<label class="form-control w-full">
-							<input
-								type="text"
-								class="input input-bordered w-full input-sm"
-								placeholder="YouTube, TikTok, Instagram, Wikipedia, Reddit, or Facebook link"
-								aria-label="Paste a public link"
-								bind:value={gloopUrl}
-								inputmode="url"
-								autocomplete="off"
-								disabled={gloopSubmit === 'loading'}
-							/>
-						</label>
-						{#if gloopSubmit === 'error' && gloopError}
-							<p class="text-sm text-error">{gloopError}</p>
-						{/if}
-						<button
-							type="button"
-							class="btn btn-primary btn-sm"
-							disabled={gloopSubmit === 'loading' || !gloopUrl.trim()}
-							onclick={submitGloop}
-						>
-							{#if gloopSubmit === 'loading'}
-								<span class="inline-flex items-center gap-2">
-									<LoadingGloop spinning size="sm" />
-									Saving…
-								</span>
-							{:else}
-								Submit glop
-							{/if}
-						</button>
-					</div>
+					<AddGlopForm
+						class="mt-5"
+						bind:gloopUrl
+						submitState={gloopSubmit}
+						errorMessage={gloopError}
+						onsubmit={submitGloop}
+					/>
 				{/if}
 			</div>
 
 			<div class="flex flex-wrap items-center justify-between gap-2 border-t border-base-300 px-4 py-3 sm:px-5">
 				{#if results?.query}
 					<a
-						href="/search?q={encodeURIComponent(results.query)}"
+						href={gloopglopSearchPageHref(results.query)}
 						class="link link-primary text-sm no-underline hover:underline"
 					>
 						Open full search page
 					</a>
 				{:else}
-					<a href="/search" class="link link-primary text-sm no-underline hover:underline">
+					<a
+						href={gloopglopSearchPageHref()}
+						class="link link-primary text-sm no-underline hover:underline"
+					>
 						Open search page
 					</a>
 				{/if}

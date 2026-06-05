@@ -1,18 +1,18 @@
 <script lang="ts">
-	import { invalidateAll } from '$app/navigation';
-	import { navigating } from '$app/state';
 	import { browser } from '$app/environment';
+	import { invalidateAll, replaceState } from '$app/navigation';
+	import { navigating } from '$app/state';
 	import type { PageData } from './$types';
 	import type { GlopAnswerRow } from '$lib/server/glop-search';
-	import {
-		getOrCreateBrowserClientId
-	} from '$lib/client/gloop-browser-glop-limit';
 	import { GLOOPGLOP_DEFAULT_LOGO_URL } from '$lib/glop-link-image';
+	import { GLOOPGLOP_SEARCH_PAGE_FOCUS_HREF } from '$lib/gloopglop-search-nav';
+	import GlopSearchModal from '$lib/components/GlopSearchModal.svelte';
 	import Icons8BoogerAttribution from '$lib/components/Icons8BoogerAttribution.svelte';
 	import LoadingGloop from '$lib/components/LoadingGloop.svelte';
 	import IconMagnify from '~icons/mdi/magnify';
 	import IconChevronDown from '~icons/mdi/chevron-down';
 	import { page } from '$app/state';
+	import { tick } from 'svelte';
 
 	/** Header and all glop result card thumbnails */
 	const gloopglopLogoUrl = GLOOPGLOP_DEFAULT_LOGO_URL;
@@ -31,9 +31,7 @@
 	);
 
 	let gloopModalOpen = $state(false);
-	let gloopUrl = $state('');
-	let gloopSubmit = $state<'idle' | 'loading' | 'success' | 'error'>('idle');
-	let gloopError = $state('');
+	let glopModalQuery = $state('');
 	let searchInputEl = $state<HTMLInputElement | null>(null);
 	/** True while this page’s search is refetching (form submit, client nav to /search, or invalidate after gloop). */
 	let searchResultsLoading = $state(false);
@@ -52,6 +50,18 @@
 			el.select();
 		});
 	}
+
+	$effect(() => {
+		if (!browser || page.url.searchParams.get('focus') !== '1') return;
+		void (async () => {
+			await tick();
+			focusSearchInput();
+			const next = new URL(page.url);
+			next.searchParams.delete('focus');
+			const target = `${next.pathname}${next.search}${next.hash}`;
+			replaceState(target, {});
+		})();
+	});
 
 	type GroupedGlop = { answerUrl: string; gloopCount: number };
 
@@ -165,47 +175,11 @@
 	}
 
 	function openGloopModal() {
-		gloopUrl = '';
-		gloopSubmit = 'idle';
-		gloopError = '';
+		glopModalQuery = data.query;
 		gloopModalOpen = true;
 	}
 
-	function closeGloopModal() {
-		gloopModalOpen = false;
-	}
-
-	async function submitGloop() {
-		if (!data.query.trim()) return;
-		if (!browser) return;
-		gloopSubmit = 'loading';
-		gloopError = '';
-		let clientKey: string;
-		try {
-			clientKey = getOrCreateBrowserClientId();
-		} catch (e) {
-			gloopSubmit = 'error';
-			gloopError = e instanceof Error ? e.message : 'Could not use browser storage.';
-			return;
-		}
-		const res = await fetch('/api/glop-search', {
-			method: 'POST',
-			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({ query: data.query, url: gloopUrl, clientKey })
-		});
-		if (!res.ok) {
-			gloopSubmit = 'error';
-			try {
-				const err = await res.json();
-				const msg = typeof err?.message === 'string' ? err.message : res.statusText;
-				gloopError = msg;
-			} catch {
-				gloopError = res.statusText || 'Something went wrong.';
-			}
-			return;
-		}
-		gloopSubmit = 'success';
-		closeGloopModal();
+	async function onGlopAdded() {
 		searchResultsLoading = true;
 		try {
 			await invalidateAll();
@@ -228,8 +202,8 @@
 		<div class="mx-auto w-full max-w-xl space-y-8">
 			<div class="flex flex-col items-center gap-3 sm:flex-row sm:items-center">
 				<a
-					href="/search"
-					class="shrink-0 rounded-2xl ring-1 ring-base-300 transition-opacity hover:opacity-90"
+					href={GLOOPGLOP_SEARCH_PAGE_FOCUS_HREF}
+					class="shrink-0 transition-opacity hover:opacity-90"
 					aria-label="GloopGlop search"
 				>
 					<LoadingGloop spinning={spinHeaderLogo} size="md" />
@@ -259,7 +233,7 @@
 				</form>
 			</div>
 
-			{#if !data.searched && !data.dbUnavailable}
+			{#if !data.searched}
 				<div class="space-y-6">
 				<section
 					class="card overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-sm"
@@ -384,24 +358,23 @@
 				</div>
 			{/if}
 
-			{#if data.dbUnavailable}
-				<div role="alert" class="alert alert-warning text-sm">
-					<span>
-						{#if isLocalDevHost}
-							Community search needs D1 locally: run <code class="text-xs">npm run db:migrate:local</code>, then
-							<code class="text-xs">npm run cf:dev</code> (plain <code class="text-xs">vite dev</code> has no D1).
-						{:else}
-							Community search could not reach the database. Redeploy with <code class="text-xs">npm run deploy</code>
-							after confirming the Worker has a D1 binding named <code class="text-xs">DB</code> (database
-							<code class="text-xs">gloopglop</code>), then run
-							<code class="text-xs">npm run db:migrate:remote</code>.
-						{/if}
-					</span>
-				</div>
-			{/if}
-
-			{#if data.searched && data.query.length >= 2 && !data.dbUnavailable}
+			{#if data.searched && data.query.length >= 2}
 				<section class="space-y-6" aria-label="Search results">
+					{#if data.dbUnavailable}
+						<div role="alert" class="alert alert-warning text-sm">
+							<span>
+								{#if isLocalDevHost}
+									Community search needs D1 locally: run <code class="text-xs">npm run db:migrate:local</code>, then
+									<code class="text-xs">npm run cf:dev</code> (plain <code class="text-xs">vite dev</code> has no D1).
+								{:else}
+									Community search could not reach the database. Redeploy with <code class="text-xs">npm run deploy</code>
+									after confirming the Worker has a D1 binding named <code class="text-xs">DB</code> (database
+									<code class="text-xs">gloopglop</code>), then run
+									<code class="text-xs">npm run db:migrate:remote</code>.
+								{/if}
+							</span>
+						</div>
+					{/if}
 					{#if groupedGlops.length > 0}
 						<div
 							class="card overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-sm"
@@ -705,62 +678,11 @@
 
 	<Icons8BoogerAttribution />
 
-	{#if gloopModalOpen}
-		<div class="modal modal-open">
-			<div
-				class="modal-box max-w-lg space-y-4"
-				role="dialog"
-				aria-modal="true"
-				aria-labelledby="glop-modal-query"
-			>
-				<div
-					id="glop-modal-query"
-					class="flex items-center gap-2 rounded-lg border border-base-300 bg-base-200 px-3 py-2.5 text-base font-medium leading-snug"
-				>
-					<IconMagnify class="h-5 w-5 shrink-0 text-base-content/60" aria-hidden="true" />
-					<p class="min-w-0 flex-1">{data.query}</p>
-				</div>
-				<label class="form-control w-full">
-					<input
-						type="text"
-						class="input input-bordered w-full"
-						placeholder="YouTube, TikTok, Instagram, Wikipedia, Reddit, or Facebook link"
-						aria-label="Paste a public link"
-						bind:value={gloopUrl}
-						inputmode="url"
-						autocomplete="off"
-						disabled={gloopSubmit === 'loading'}
-					/>
-				</label>
-				{#if gloopSubmit === 'error' && gloopError}
-					<p class="text-sm text-error">{gloopError}</p>
-				{/if}
-				<div class="modal-action mt-2 flex-wrap gap-2">
-					<button type="button" class="btn btn-primary" disabled={gloopSubmit === 'loading'} onclick={submitGloop}>
-						{#if gloopSubmit === 'loading'}
-							<span class="inline-flex items-center gap-2">
-								<LoadingGloop spinning size="sm" />
-								Saving…
-							</span>
-						{:else}
-							Submit
-						{/if}
-					</button>
-					<button
-						type="button"
-						class="btn btn-ghost"
-						disabled={gloopSubmit === 'loading'}
-						onclick={closeGloopModal}
-					>
-						Cancel
-					</button>
-				</div>
-			</div>
-			<div class="modal-backdrop">
-				<button type="button" aria-label="Close" onclick={closeGloopModal}>close</button>
-			</div>
-		</div>
-	{/if}
+	<GlopSearchModal
+		bind:open={gloopModalOpen}
+		initialQuery={glopModalQuery}
+		onsuccess={onGlopAdded}
+	/>
 </div>
 
 <style>

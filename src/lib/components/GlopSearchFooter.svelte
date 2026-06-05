@@ -1,5 +1,7 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
+	import { GLOOPGLOP_SEARCH_PAGE_FOCUS_HREF } from '$lib/gloopglop-search-nav';
 	import GlopSearchModal from '$lib/components/GlopSearchModal.svelte';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
 	import LoadingGloop from '$lib/components/LoadingGloop.svelte';
@@ -32,8 +34,12 @@
 	let activeQuery = $state('');
 
 	function openSearchModal() {
-		activeQuery = displayQuery;
-		modalOpen = true;
+		if (displayQuery) {
+			activeQuery = displayQuery;
+			modalOpen = true;
+			return;
+		}
+		void goto(GLOOPGLOP_SEARCH_PAGE_FOCUS_HREF);
 	}
 
 	function openSettingsModal() {
@@ -44,17 +50,19 @@
 
 <div class={wrapperClass}>
 	<div class="flex items-center gap-2 sm:gap-3">
+		<a
+			href={GLOOPGLOP_SEARCH_PAGE_FOCUS_HREF}
+			class="shrink-0 motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-out motion-safe:hover:scale-110"
+			aria-label="GloopGlop search"
+		>
+			<LoadingGloop spinning={false} size="sm" alt="" />
+		</a>
 		<button
 			type="button"
-			class="group flex min-w-0 flex-1 items-center gap-2 rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-base-200 sm:gap-3"
+			class="group flex min-w-0 flex-1 items-center gap-2 rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-base-200"
 			onclick={openSearchModal}
 			aria-label={barLabel}
 		>
-			<span
-				class="shrink-0 rounded-xl ring-1 ring-base-300 motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-out motion-safe:group-hover:scale-110"
-			>
-				<LoadingGloop spinning={false} size="sm" alt="" />
-			</span>
 			<span
 				class="input input-bordered flex h-12 min-w-0 flex-1 cursor-pointer items-center gap-2 bg-base-100 px-3 shadow-sm transition-colors hover:border-primary/40 hover:bg-base-100"
 			>

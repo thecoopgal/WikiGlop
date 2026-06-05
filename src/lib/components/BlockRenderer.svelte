@@ -15,14 +15,14 @@
 	import SearchCtaBlock from './blocks/SearchCtaBlock.svelte';
 	import BlockRenderer from './BlockRenderer.svelte';
 
-let { blocks, block, site }: any = $props();
+let { blocks, block, site, pageSettings }: any = $props();
 
 	const blockType = $derived((block as any)?.type as string | undefined);
 </script>
 
 {#if blocks}
 	{#each blocks as b, i (b.id ?? `${b.type}-${i}`)}
-		<BlockRenderer block={b} site={site} />
+		<BlockRenderer block={b} site={site} {pageSettings} />
 	{/each}
 {:else if blockType === 'hero'}
 	{#if (block as any)?.id}
@@ -53,10 +53,10 @@ let { blocks, block, site }: any = $props();
 {:else if blockType === 'section'}
 	{#if (block as any)?.id}
 		<div id={(block as any).id}>
-			<SectionBlock {...(block as any)} site={site} />
+			<SectionBlock {...(block as any)} site={site} {pageSettings} />
 		</div>
 	{:else}
-		<SectionBlock {...(block as any)} site={site} />
+		<SectionBlock {...(block as any)} site={site} {pageSettings} />
 	{/if}
 {:else if blockType === 'callout'}
 	{#if (block as any)?.id}
@@ -101,10 +101,10 @@ let { blocks, block, site }: any = $props();
 {:else if blockType === 'creator_profile'}
 	{#if (block as any)?.id}
 		<div id={(block as any).id}>
-			<CreatorProfileBlock {...(block as any)} site={site} />
+			<CreatorProfileBlock {...(block as any)} site={site} {pageSettings} />
 		</div>
 	{:else}
-		<CreatorProfileBlock {...(block as any)} site={site} />
+		<CreatorProfileBlock {...(block as any)} site={site} {pageSettings} />
 	{/if}
 {:else if blockType === 'quote'}
 	{#if (block as any)?.id}

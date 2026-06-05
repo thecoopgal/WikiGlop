@@ -12,6 +12,8 @@ page_settings:
   show_header: true
   show_footer: true
   max_width: sm
+  grid_columns: 1
+  search_query: Who is GloopGlop?
 
 blocks:
   - type: creator_profile
@@ -22,29 +24,9 @@ blocks:
     avatar: https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/907061a8-51ae-454c-c739-83935616f900/public
     bio: |
       We are a collective creators who like to create cool tools for other creators.
-    short_links:
-      - label: Home
-        open_in: same_tab
-        href: /
-      - label: Creators
-        open_in: same_tab
-        href: /creators
-      - label: ByLaws
-        open_in: same_tab
-        href: /bylaws
-      - label: Seven Principles
-        open_in: same_tab
-        href: /sevenprinciples
-      - label: Consent
-        open_in: same_tab
-        href: /consent
-      - label: GloopGlop
-        open_in: same_tab
-        href: /search
 
   - type: links
     id: social-links
-    title: Our Amazing Creators
     style: cards
     items:
       - source: "@thecoopgal"

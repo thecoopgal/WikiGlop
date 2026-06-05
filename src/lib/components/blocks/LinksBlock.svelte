@@ -5,6 +5,9 @@
 		items?: Array<{
 			label?: string;
 			href?: string;
+			tagline?: string;
+			avatar?: string;
+			bio?: string;
 			open_mode?: string;
 			modal?: string;
 			open_in?: 'same_tab' | 'new_tab' | string;
@@ -75,6 +78,14 @@
 		return (item.label && item.label.trim()) || 'Untitled link';
 	}
 
+	function isProfileCard(item: NonNullable<Props['items']>[number]): boolean {
+		return !!(item.avatar?.trim() || item.tagline?.trim() || item.bio?.trim());
+	}
+
+	function profileBio(item: NonNullable<Props['items']>[number]): string {
+		return (item.bio ?? '').replace(/\s+/g, ' ').trim();
+	}
+
 	function shouldOpenSameTab(item: NonNullable<Props['items']>[number]): boolean {
 		if (item.open_mode === 'modal') return true;
 		return (item.open_in ?? '').toLowerCase() === 'same_tab';
@@ -124,6 +135,42 @@
 								<div class="text-sm text-warning">{item.message ?? 'Page not found'}</div>
 							</div>
 						</div>
+					{:else if isProfileCard(item)}
+						<a
+							class="card border border-primary/25 bg-base-100/80 {cardShadow} transition hover:border-primary hover:bg-primary/5"
+							href={item.href}
+							data-open-mode={item.open_mode ?? undefined}
+							data-modal={item.modal ?? undefined}
+							target={linkTarget(item)}
+							rel={linkRel(item)}
+						>
+							<div class="card-body gap-3 p-4">
+								<div class="flex items-start gap-4">
+									{#if item.avatar?.trim()}
+										<img
+											src={item.avatar}
+											alt=""
+											class="h-14 w-14 shrink-0 rounded-full object-cover ring-1 ring-primary/20"
+											loading="lazy"
+											decoding="async"
+											width="56"
+											height="56"
+										/>
+									{/if}
+									<div class="min-w-0 flex-1">
+										<div class="text-base font-semibold leading-tight">{itemLabel(item)}</div>
+										{#if item.tagline?.trim()}
+											<p class="mt-1 text-sm leading-snug opacity-80">{item.tagline}</p>
+										{/if}
+										{#if profileBio(item)}
+											<p class="mt-2 line-clamp-3 text-sm leading-relaxed opacity-70">
+												{profileBio(item)}
+											</p>
+										{/if}
+									</div>
+								</div>
+							</div>
+						</a>
 					{:else}
 						<a
 							class="card bg-base-100 border border-base-300 {cardShadow} transition hover:border-primary"

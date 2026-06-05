@@ -13,6 +13,9 @@ permissions:
   edit_mode: proposal_required
 
 page_settings:
+  document_style: cards
+  grid_columns: 1
+  search_query: What is a worker cooperative?
   table_of_contents: true
   show_last_updated: true
   show_edit_history: true
@@ -26,25 +29,6 @@ blocks:
     avatar: https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/907061a8-51ae-454c-c739-83935616f900/public
     bio: |
       We are a collective creators who like to create cool tools for other creators.
-    short_links:
-      - label: Home
-        open_in: same_tab
-        href: /
-      - label: Creators
-        open_in: same_tab
-        href: /creators
-      - label: ByLaws
-        open_in: same_tab
-        href: /bylaws
-      - label: Seven Principles
-        open_in: same_tab
-        href: /sevenprinciples
-      - label: Consent
-        open_in: same_tab
-        href: /consent
-      - label: GloopGlop
-        open_in: same_tab
-        href: /search
 
   - type: document_header
     id: top

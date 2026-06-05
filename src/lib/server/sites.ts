@@ -13,6 +13,23 @@ export type SiteNavLink = {
 	modal?: string;
 };
 
+/** Default creator_profile short links for all pages on this site. */
+export type SiteShortLink = {
+	label?: string;
+	href: string;
+	icon?: string;
+	seo_image?: string;
+	seo_icon?: string;
+	logo_override?: string;
+	open_in?: string;
+	open_mode?: string;
+};
+
+export type SiteShortLinkGroup = {
+	heading: string;
+	links: SiteShortLink[];
+};
+
 export type SiteNavigation = {
 	header?: SiteNavLink[];
 };
@@ -24,6 +41,8 @@ export type SiteConfig = {
 	kind?: string;
 	theme?: SiteTheme;
 	navigation?: SiteNavigation;
+	short_links?: SiteShortLink[];
+	short_link_groups?: SiteShortLinkGroup[];
 	routing?: {
 		default_page?: string;
 		/** First path segment on gloop.gg / www.gloop.gg (e.g. `taf` → this site). */
@@ -70,6 +89,43 @@ function pickSubdomainCandidate(hostname: string): string | null {
 function safeStringArray(v: unknown): string[] | undefined {
 	if (!Array.isArray(v)) return undefined;
 	const out = v.filter((x) => typeof x === 'string' && x.trim().length > 0).map((x) => x.trim());
+	return out.length ? out : undefined;
+}
+
+function parseSiteShortLinkItem(x: Record<string, unknown>): SiteShortLink | null {
+	if (typeof x.href !== 'string' || !x.href.trim()) return null;
+	return {
+		label: typeof x.label === 'string' ? x.label : undefined,
+		href: String(x.href),
+		icon: typeof x.icon === 'string' ? x.icon : undefined,
+		seo_image: typeof x.seo_image === 'string' ? x.seo_image : undefined,
+		seo_icon: typeof x.seo_icon === 'string' ? x.seo_icon : undefined,
+		logo_override: typeof x.logo_override === 'string' ? x.logo_override : undefined,
+		open_in: typeof x.open_in === 'string' ? x.open_in : undefined,
+		open_mode: typeof x.open_mode === 'string' ? x.open_mode : undefined
+	};
+}
+
+function parseSiteShortLinks(raw: unknown): SiteShortLink[] | undefined {
+	if (!Array.isArray(raw)) return undefined;
+	const out = raw
+		.filter((x): x is Record<string, unknown> => typeof x === 'object' && x !== null)
+		.map((x) => parseSiteShortLinkItem(x))
+		.filter((x): x is SiteShortLink => x !== null);
+	return out.length ? out : undefined;
+}
+
+function parseSiteShortLinkGroups(raw: unknown): SiteShortLinkGroup[] | undefined {
+	if (!Array.isArray(raw)) return undefined;
+	const out: SiteShortLinkGroup[] = [];
+	for (const item of raw) {
+		if (!item || typeof item !== 'object') continue;
+		const obj = item as Record<string, unknown>;
+		const heading = typeof obj.heading === 'string' ? obj.heading.trim() : '';
+		const links = parseSiteShortLinks(obj.links);
+		if (!heading || !links?.length) continue;
+		out.push({ heading, links });
+	}
 	return out.length ? out : undefined;
 }
 
@@ -156,6 +212,8 @@ async function loadSiteConfig(siteId: string): Promise<ResolvedSite | null> {
 			return Object.keys(navigation).length ? navigation : undefined;
 		})(),
 		routing: obj.routing && typeof obj.routing === 'object' ? (obj.routing as any) : undefined,
+		short_links: parseSiteShortLinks(obj.short_links),
+		short_link_groups: parseSiteShortLinkGroups(obj.short_link_groups),
 		permissions:
 			obj.permissions && typeof obj.permissions === 'object'
 				? (obj.permissions as Record<string, unknown>)

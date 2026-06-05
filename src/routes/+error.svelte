@@ -6,6 +6,7 @@
 	import Icons8BoogerAttribution from '$lib/components/Icons8BoogerAttribution.svelte';
 	import LoadingGloop from '$lib/components/LoadingGloop.svelte';
 	import GlopSearchModal from '$lib/components/GlopSearchModal.svelte';
+	import { GLOOPGLOP_SEARCH_PAGE_FOCUS_HREF } from '$lib/gloopglop-search-nav';
 	import { resolveGloopIconUrl, subscribeCustomGloopIcon } from '$lib/client/gloopglop-custom-icon';
 	import { GLOOPGLOP_DEFAULT_LOGO_URL } from '$lib/glop-link-image';
 	import IconMagnify from '~icons/mdi/magnify';
@@ -199,18 +200,20 @@
 			</div>
 		</main>
 
-		<div class="mx-auto w-full max-w-lg px-4 pb-4 text-left">
+		<div class="mx-auto flex w-full max-w-lg items-center gap-2 px-4 pb-4 text-left sm:gap-3">
+			<a
+				href={GLOOPGLOP_SEARCH_PAGE_FOCUS_HREF}
+				class="shrink-0 motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-out motion-safe:hover:scale-110"
+				aria-label="GloopGlop search"
+			>
+				<LoadingGloop spinning={false} size="sm" alt="" />
+			</a>
 			<button
 				type="button"
-				class="group flex w-full items-center gap-2 rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-base-200 sm:gap-3"
+				class="group flex min-w-0 flex-1 items-center rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-base-200"
 				onclick={() => openSearchModal(gloopErrorContent.searchQuery)}
 				aria-label="Search: {gloopErrorContent.searchQuery}"
 			>
-				<span
-					class="shrink-0 rounded-xl ring-1 ring-base-300 motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-out motion-safe:group-hover:scale-110"
-				>
-					<LoadingGloop spinning={false} size="sm" alt="" />
-				</span>
 				<span
 					class="input input-bordered flex h-12 min-w-0 flex-1 cursor-pointer items-center gap-2 bg-base-100 px-3 shadow-sm transition-colors hover:border-primary/40 hover:bg-base-100"
 				>

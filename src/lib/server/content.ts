@@ -11,6 +11,10 @@ export type PageSeo = {
 
 export type PageSettings = {
 	max_width?: string;
+	/** Document layout: `cards` groups sections into stacked cards (800px max). */
+	document_style?: 'default' | 'cards' | string;
+	/** Short-link grid columns on wide screens (1–3). Default: 3. */
+	grid_columns?: 1 | 2 | 3 | number;
 	table_of_contents?: boolean;
 	show_last_updated?: boolean;
 	show_edit_history?: boolean;
@@ -148,6 +152,47 @@ function toNormalizedPath(pathValue: unknown, fileName: string): string {
 		return pathValue.startsWith('/') ? pathValue : `/${pathValue}`;
 	}
 	return toPathFromFileName(fileName);
+}
+
+type CreatorProfileSummary = {
+	name?: string;
+	tagline?: string;
+	avatar?: string;
+	bio?: string;
+};
+
+function loadCreatorProfileSummaryFromSite(siteId: string): CreatorProfileSummary | null {
+	const filePath = `/content/sites/${siteId}/pages/index.yaml`;
+	const raw = PAGE_YAML_FILES[filePath];
+	if (!raw?.trim()) return null;
+
+	let parsed: unknown;
+	try {
+		parsed = parseYaml(raw);
+	} catch {
+		return null;
+	}
+	if (!isRecord(parsed) || !Array.isArray(parsed.blocks)) return null;
+
+	const profileBlock = parsed.blocks.find(
+		(b): b is Record<string, unknown> => isRecord(b) && b.type === 'creator_profile'
+	);
+	if (!profileBlock) return null;
+
+	const name = typeof profileBlock.name === 'string' ? profileBlock.name.trim() : undefined;
+	const tagline = typeof profileBlock.tagline === 'string' ? profileBlock.tagline.trim() : undefined;
+	const avatar = typeof profileBlock.avatar === 'string' ? profileBlock.avatar.trim() : undefined;
+	const bio = typeof profileBlock.bio === 'string' ? profileBlock.bio.trim() : undefined;
+	const seo = isRecord(parsed.seo) ? parsed.seo : null;
+	const seoImage = seo && typeof seo.image === 'string' ? seo.image.trim() : '';
+	const pageTitle = typeof parsed.title === 'string' ? parsed.title.trim() : undefined;
+
+	return {
+		name: name || pageTitle,
+		tagline: tagline || undefined,
+		avatar: avatar || seoImage || undefined,
+		bio: bio || undefined
+	};
 }
 
 function isCreatorLinksShortcut(item: LinkLikeItem): boolean {
@@ -302,6 +347,26 @@ function parsePageYaml(raw: string, filePathForError: string): PageYaml {
 	return page;
 }
 
+function applySiteShortLinksToPage(page: PageYaml, site: ResolvedSite): PageYaml {
+	const siteShortLinks = site.short_links;
+	const siteShortLinkGroups = site.short_link_groups;
+	if ((!siteShortLinks?.length && !siteShortLinkGroups?.length) || !page.blocks?.length) {
+		return page;
+	}
+
+	return {
+		...page,
+		blocks: page.blocks.map((block) => {
+			if (block.type !== 'creator_profile') return block;
+			return {
+				...block,
+				...(siteShortLinks?.length ? { short_links: siteShortLinks } : {}),
+				...(siteShortLinkGroups?.length ? { short_link_groups: siteShortLinkGroups } : {})
+			};
+		})
+	};
+}
+
 export async function loadModalYaml(
 	site: ResolvedSite,
 	modalId: string
@@ -345,7 +410,7 @@ export async function loadPageYaml(
 	if (!raw || !raw.trim()) return null;
 
 	try {
-		return parsePageYaml(raw, filePath);
+		return applySiteShortLinksToPage(parsePageYaml(raw, filePath), site);
 	} catch (e) {
 		// For invalid YAML, fail gracefully per-request; loader can surface a useful error.
 		throw new Error(e instanceof Error ? e.message : `Invalid page YAML in ${filePath}`);
@@ -425,10 +490,17 @@ export async function expandCreatorLinksShortcuts(
 				if (targetSite) {
 					const host = pickHostForRequest(targetSite, requestUrl.hostname.toLowerCase());
 					if (host) {
+						const profile = loadCreatorProfileSummaryFromSite(targetSite.siteId);
 						hasExpansion = true;
 						expandedItems.push({
 							...item,
-							label: typeof item.label === 'string' && item.label.trim() ? item.label : targetSite.name ?? targetSite.id,
+							label:
+								typeof item.label === 'string' && item.label.trim()
+									? item.label
+									: profile?.name ?? targetSite.name ?? targetSite.id,
+							tagline: profile?.tagline,
+							avatar: profile?.avatar,
+							bio: profile?.bio,
 							href: buildAbsoluteUrl(host, requestUrl)
 						});
 						continue;

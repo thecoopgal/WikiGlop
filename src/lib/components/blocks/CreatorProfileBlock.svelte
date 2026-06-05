@@ -27,14 +27,26 @@ import IconMore from '~icons/mdi/dots-horizontal-circle-outline';
 import IconDownload from '~icons/mdi/download';
 import IconBell from '~icons/mdi/bell-outline';
 import IconDownloadMobile from '~icons/mdi/cellphone-arrow-down';
-import {
-	isMobileDevice,
-	isStandaloneDisplayMode,
-	registerForCreatorNotifications
-} from '$lib/push-client';
+	import type { PageSettings } from '$lib/server/content';
+	import {
+		isMobileDevice,
+		isStandaloneDisplayMode,
+		registerForCreatorNotifications
+	} from '$lib/push-client';
 
 	/** Flip to `true` to show the creator notification bell + modal again. */
 	const CREATOR_NOTIFICATIONS_UI_ENABLED = false;
+
+	type ShortLinkItem = {
+		label?: string;
+		href: string;
+		icon?: string;
+		/** Card image URL (preferred over `icon` on GloopGlop theme). */
+		seo_image?: string;
+		seo_icon?: string;
+		logo_override?: string;
+		open_in?: 'same_tab' | 'new_tab' | string;
+	};
 
 	type Props = {
 		name?: string;
@@ -44,15 +56,10 @@ import {
 		tagline?: string;
 		avatar?: string;
 		bio?: string;
-		short_links?: Array<{
-			label?: string;
-			href: string;
-			icon?: string;
-			/** Card image URL (preferred over `icon` on GloopGlop theme). */
-			seo_image?: string;
-			seo_icon?: string;
-			logo_override?: string;
-			open_in?: 'same_tab' | 'new_tab' | string;
+		short_links?: ShortLinkItem[];
+		short_link_groups?: Array<{
+			heading: string;
+			links: ShortLinkItem[];
 		}>;
 		notifications?: {
 			enabled?: boolean;
@@ -77,9 +84,32 @@ import {
 			gloop_gg_short_slug?: string;
 		};
 	};
+		/** Override `page_settings.grid_columns` for this profile block. */
+		grid_columns?: 1 | 2 | 3 | number;
+		pageSettings?: PageSettings;
 	};
 
-let { name, names, name_animation, profile_theme, tagline, avatar, bio, short_links, notifications, site } = $props() as Props;
+	function parseGridColumns(value: unknown): 1 | 2 | 3 {
+		const n = typeof value === 'number' ? value : Number.parseInt(String(value ?? ''), 10);
+		if (n === 1 || n === 2 || n === 3) return n;
+		return 3;
+	}
+
+let {
+	name,
+	names,
+	name_animation,
+	profile_theme,
+	tagline,
+	avatar,
+	bio,
+	short_links,
+	short_link_groups,
+	notifications,
+	site,
+	grid_columns,
+	pageSettings
+} = $props() as Props;
 
 const NAME_ANIMATIONS = ['fade', 'swipe', 'bounce'] as const;
 type NameAnimationMode = (typeof NAME_ANIMATIONS)[number] | 'all';
@@ -130,6 +160,31 @@ const effectiveNameAnimation = $derived.by(() => {
 });
 const isCoopgalCosmicTheme = $derived((profile_theme ?? '').trim().toLowerCase() === 'coopgal_cosmic');
 const isGloopglopTheme = $derived((profile_theme ?? '').trim().toLowerCase() === 'gloopglop');
+const shortLinksGridColumns = $derived(
+	parseGridColumns(grid_columns ?? pageSettings?.grid_columns ?? 3)
+);
+const gloopglopShortLinksContainerClass = $derived.by(() => {
+	const base = 'mt-5 mx-auto w-full flex flex-col gap-2';
+	if (shortLinksGridColumns === 1) return `${base} max-w-md`;
+	if (shortLinksGridColumns === 2) {
+		return `${base} max-w-2xl sm:flex-row sm:flex-wrap sm:justify-center`;
+	}
+	return `${base} max-w-2xl sm:flex-row sm:flex-wrap sm:justify-center lg:max-w-3xl`;
+});
+const gloopglopShortLinkButtonClass = $derived.by(() => {
+	const base =
+		'h-auto min-h-10 w-full min-w-0 flex-[1_1_100%] items-center justify-center gap-2 rounded-xl border-primary/25 bg-base-100/80 px-3 py-2 text-center font-medium normal-case hover:bg-primary/10';
+	if (shortLinksGridColumns === 1) return base;
+	if (shortLinksGridColumns === 2) {
+		return `${base} sm:max-w-[calc(50%-0.25rem)] sm:flex-[0_1_calc(50%-0.25rem)]`;
+	}
+	return `${base} sm:max-w-[calc(50%-0.25rem)] sm:flex-[0_1_calc(50%-0.25rem)] lg:max-w-[calc(33.333%-0.34rem)] lg:flex-[0_1_calc(33.333%-0.34rem)]`;
+});
+const hasShortLinks = $derived(
+	(short_links?.length ?? 0) > 0 || (short_link_groups?.length ?? 0) > 0
+);
+const gloopglopShortLinkGroupHeadingClass =
+	'gloopglop-subheading mb-2 w-full text-center text-xs font-semibold uppercase tracking-wide opacity-80';
 
 let runtimeTheme = $state<EffectiveTheme>('light');
 
@@ -299,8 +354,6 @@ function toggleTopic(topicId: string) {
 
 	const GLOOPGLOP_LINK_LOGO_URL =
 		'https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/907061a8-51ae-454c-c739-83935616f900/public';
-
-	type ShortLinkItem = NonNullable<Props['short_links']>[number];
 
 	function shortLinkImageOverride(link: ShortLinkItem): string | null {
 		for (const key of ['seo_image', 'seo_icon', 'logo_override'] as const) {
@@ -744,47 +797,38 @@ async function promptInstallIfAvailable() {
 						</button>
 					</div>
 				{/if}
-				{#if short_links?.length}
-					<div
-						class={`mt-5 w-full ${
-							isGloopglopTheme
-								? 'mx-auto flex max-w-2xl flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-center lg:max-w-3xl'
-								: 'flex flex-wrap gap-2'
-						}`}
-					>
-						{#each short_links as shortLink, i (`${shortLink.href}-${i}`)}
-							{@const Icon = iconComponent(shortLink.icon)}
-							{@const cardImg = resolveShortLinkCardImage(shortLink)}
-							<a
-								href={shortLink.href}
-								class={`btn btn-sm btn-outline ${
-									isCoopgalCosmicTheme
-										? 'btn-circle border-white/45 bg-white/10 text-white backdrop-blur hover:bg-white/20 hover:border-white/70'
-										: isGloopglopTheme
-											? 'h-auto min-h-10 w-full min-w-0 flex-[1_1_100%] items-center justify-center gap-2 rounded-xl border-primary/25 bg-base-100/80 px-3 py-2 text-center font-medium normal-case hover:bg-primary/10 sm:max-w-[calc(50%-0.25rem)] sm:flex-[0_1_calc(50%-0.25rem)] lg:max-w-[calc(33.333%-0.34rem)] lg:flex-[0_1_calc(33.333%-0.34rem)]'
-											: `btn-circle ${cardShadow}`
-								}`}
-								target={shouldOpenSameTab(shortLink.open_in) ? undefined : '_blank'}
-								rel={shouldOpenSameTab(shortLink.open_in) ? undefined : 'noreferrer'}
-								title={shortLink.label ?? shortLink.icon ?? 'Link'}
-								aria-label={shortLink.label ?? shortLink.icon ?? 'Link'}
+				{#if hasShortLinks}
+					<div class="mt-5 w-full space-y-4">
+						{#if short_links?.length}
+							<div
+								class={isGloopglopTheme
+									? gloopglopShortLinksContainerClass
+									: 'flex w-full flex-wrap gap-2'}
 							>
-								{#if cardImg}
-									<img
-										src={cardImg}
-										alt=""
-										class="h-5 w-5 shrink-0 rounded object-cover"
-										width="20"
-										height="20"
-										decoding="async"
-									/>
-								{:else}
-									<Icon class="h-5 w-5 shrink-0" />
-								{/if}
-								{#if isGloopglopTheme}
-									<span class="truncate text-center text-xs leading-tight">{shortLink.label ?? shortLink.icon ?? 'Link'}</span>
-								{/if}
-							</a>
+								{#each short_links as shortLink, i (`${shortLink.href}-${i}`)}
+									{@render shortLinkAnchor(shortLink)}
+								{/each}
+							</div>
+						{/if}
+						{#each short_link_groups ?? [] as group (group.heading)}
+							<div>
+								<p
+									class={isGloopglopTheme
+										? gloopglopShortLinkGroupHeadingClass
+										: 'mb-2 w-full text-center text-xs font-semibold uppercase tracking-wide text-base-content/60'}
+								>
+									{group.heading}
+								</p>
+								<div
+									class={isGloopglopTheme
+										? gloopglopShortLinksContainerClass
+										: 'flex w-full flex-wrap gap-2'}
+								>
+									{#each group.links as shortLink, i (`${group.heading}-${shortLink.href}-${i}`)}
+										{@render shortLinkAnchor(shortLink)}
+									{/each}
+								</div>
+							</div>
 						{/each}
 					</div>
 				{/if}
@@ -975,6 +1019,43 @@ async function promptInstallIfAvailable() {
 {:else}
 	<p class="text-sm text-warning">Creator profile missing display name.</p>
 {/if}
+
+{#snippet shortLinkAnchor(shortLink: ShortLinkItem)}
+	{@const Icon = iconComponent(shortLink.icon)}
+	{@const cardImg = resolveShortLinkCardImage(shortLink)}
+	<a
+		href={shortLink.href}
+		class={`btn btn-sm btn-outline ${
+			isCoopgalCosmicTheme
+				? 'btn-circle border-white/45 bg-white/10 text-white backdrop-blur hover:bg-white/20 hover:border-white/70'
+				: isGloopglopTheme
+					? gloopglopShortLinkButtonClass
+					: `btn-circle ${cardShadow}`
+		}`}
+		target={shouldOpenSameTab(shortLink.open_in) ? undefined : '_blank'}
+		rel={shouldOpenSameTab(shortLink.open_in) ? undefined : 'noreferrer'}
+		title={shortLink.label ?? shortLink.icon ?? 'Link'}
+		aria-label={shortLink.label ?? shortLink.icon ?? 'Link'}
+	>
+		{#if cardImg}
+			<img
+				src={cardImg}
+				alt=""
+				class="h-5 w-5 shrink-0 rounded object-cover"
+				width="20"
+				height="20"
+				decoding="async"
+			/>
+		{:else}
+			<Icon class="h-5 w-5 shrink-0" />
+		{/if}
+		{#if isGloopglopTheme}
+			<span class="truncate text-center text-xs leading-tight"
+				>{shortLink.label ?? shortLink.icon ?? 'Link'}</span
+			>
+		{/if}
+	</a>
+{/snippet}
 
 <style>
 	.profile-name-heading {
