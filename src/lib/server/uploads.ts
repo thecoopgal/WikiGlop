@@ -1,6 +1,5 @@
 import { getDbBinding } from '$lib/server/platform-env';
 import {
-	getStreamMp4DownloadUrl,
 	normalizeStreamCreator,
 	provisionStreamDirectUpload,
 	waitForStreamReady
@@ -47,19 +46,6 @@ export type WatchVideoRow = {
 };
 
 const UPLOAD_SESSION_COLUMNS = `id, site_id, r2_key, stream_uid, stream_playback_url, filename, content_type, size_bytes, client_key, creator_id, approval_status, approved_at, thumbnail_url, created_at`;
-
-export type UploadDestination = 'youtube';
-
-export type DestinationJobRow = {
-	upload_id: string;
-	destination: UploadDestination;
-	status: 'pending' | 'uploading' | 'complete' | 'error';
-	external_id: string | null;
-	external_url: string | null;
-	error_message: string | null;
-	google_sub: string | null;
-	updated_at: string;
-};
 
 export function newUploadId(): string {
 	const bytes = new Uint8Array(12);
@@ -283,87 +269,13 @@ export async function listPendingUploads(opts: {
 	return results ?? [];
 }
 
-/** ReadableStream of MP4 bytes from Stream (for YouTube publish). */
-export async function getStreamVideoBodyForExport(
-	platform: App.Platform | undefined,
-	session: UploadSessionRow
-): Promise<{ body: ReadableStream; contentType: string; sizeBytes: number }> {
-	if (!session.stream_uid) {
-		throw new Error('Video is not on Stream');
-	}
-	await waitForStreamReady({ platform, streamUid: session.stream_uid });
-	const mp4Url = await getStreamMp4DownloadUrl({ platform, streamUid: session.stream_uid });
-	const res = await fetch(mp4Url);
-	if (!res.ok || !res.body) {
-		throw new Error('Could not download video from Stream for export');
-	}
-	const len = res.headers.get('Content-Length');
-	return {
-		body: res.body,
-		contentType: 'video/mp4',
-		sizeBytes: len ? parseInt(len, 10) : session.size_bytes
-	};
-}
-
-export async function listDestinationJobs(
-	platform: App.Platform | undefined,
-	uploadId: string
-): Promise<DestinationJobRow[]> {
-	const db = getDbBinding(platform);
-	const { results } = await db
-		.prepare(
-			`SELECT upload_id, destination, status, external_id, external_url, error_message, google_sub, updated_at
-       FROM upload_destination_jobs WHERE upload_id = ?`
-		)
-		.bind(uploadId)
-		.all<DestinationJobRow>();
-	return results ?? [];
-}
-
-export async function upsertDestinationJob(opts: {
-	platform: App.Platform | undefined;
-	uploadId: string;
-	destination: UploadDestination;
-	status: DestinationJobRow['status'];
-	externalId?: string | null;
-	externalUrl?: string | null;
-	errorMessage?: string | null;
-	googleSub?: string | null;
-}): Promise<void> {
-	const db = getDbBinding(opts.platform);
-	await db
-		.prepare(
-			`INSERT INTO upload_destination_jobs (upload_id, destination, status, external_id, external_url, error_message, google_sub, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
-       ON CONFLICT(upload_id, destination) DO UPDATE SET
-         status = excluded.status,
-         external_id = excluded.external_id,
-         external_url = excluded.external_url,
-         error_message = excluded.error_message,
-         google_sub = excluded.google_sub,
-         updated_at = datetime('now')`
-		)
-		.bind(
-			opts.uploadId,
-			opts.destination,
-			opts.status,
-			opts.externalId ?? null,
-			opts.externalUrl ?? null,
-			opts.errorMessage ?? null,
-			opts.googleSub ?? null
-		)
-		.run();
-}
-
 export function isUploadSchemaError(e: unknown): boolean {
 	const msg = e instanceof Error ? e.message : String(e);
 	return (
 		msg.includes('no such table: upload_sessions') ||
 		msg.includes('no such column: stream_uid') ||
 		msg.includes('no such column: creator_id') ||
-		msg.includes('no such column: approval_status') ||
-		msg.includes('no such table: google_oauth_accounts') ||
-		msg.includes('no such table: upload_destination_jobs')
+		msg.includes('no such column: approval_status')
 	);
 }
 

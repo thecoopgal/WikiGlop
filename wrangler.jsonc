@@ -33,8 +33,6 @@
 		"RESEND_API_KEY": "",
 		"VAPID_PUBLIC_KEY": "BFxK_qez_beomsxbU92SJ90B2rNtQ7-kdwQuWvrD2_jQgMzNJNl15262JUyoJR-kpFY_ZeRoT7WnOg9xmsSW7hE",
 		"VAPID_SUBJECT": "mailto:notifications@gloop.gg",
-		"GOOGLE_OAUTH_CLIENT_ID": "",
-		"GOOGLE_OAUTH_REDIRECT_URI": "",
 		"CLOUDFLARE_ACCOUNT_ID": ""
 	}
 }

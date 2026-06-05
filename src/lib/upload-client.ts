@@ -17,7 +17,7 @@ export type UploadSessionStart = {
 	tusEndpoint?: string;
 };
 
-export type UploadDestinationId = 'gloopglop' | 'youtube' | 'tiktok';
+export type UploadDestinationId = 'gloopglop' | 'tiktok';
 
 export type UploadDestinationInfo = {
 	id: UploadDestinationId;
@@ -31,23 +31,6 @@ export type UploadDestinationInfo = {
 
 export type UploadStatusResult = {
 	upload: UploadApiResult & { createdAt?: string };
-	destinations: Array<{
-		destination: string;
-		status: string;
-		externalUrl: string | null;
-		errorMessage: string | null;
-	}>;
-	google: {
-		connected: boolean;
-		email: string | null;
-		configured: boolean;
-	};
-};
-
-export type YoutubePublishResult = {
-	ok: true;
-	videoId: string;
-	videoUrl: string;
 };
 
 export type UploadProgressHandler = (percent: number) => void;
@@ -201,28 +184,7 @@ export async function fetchUploadStatus(uploadId: string): Promise<UploadStatusR
 
 export async function fetchUploadDestinations(): Promise<{
 	destinations: UploadDestinationInfo[];
-	google: UploadStatusResult['google'];
 }> {
 	const res = await fetch('/api/upload/destinations');
 	return parseJson(res);
-}
-
-export async function publishUploadToYoutube(opts: {
-	uploadId: string;
-	title?: string;
-	description?: string;
-	privacyStatus?: 'private' | 'unlisted' | 'public';
-}): Promise<YoutubePublishResult> {
-	const res = await fetch('/api/upload/youtube', {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify(opts)
-	});
-	return parseJson<YoutubePublishResult>(res);
-}
-
-/** Start Google SSO for YouTube upload. */
-export function startGoogleUploadAuth(returnTo = '/upload'): void {
-	const params = new URLSearchParams({ returnTo });
-	window.location.href = `/api/auth/google?${params.toString()}`;
 }

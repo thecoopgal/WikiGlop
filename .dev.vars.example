@@ -7,11 +7,3 @@ VAPID_PRIVATE_KEY=
 # Account ID from dashboard; API token needs Stream:Edit
 CLOUDFLARE_ACCOUNT_ID=
 CLOUDFLARE_API_TOKEN=
-
-# Google OAuth (YouTube upload) — https://console.cloud.google.com/apis/credentials
-GOOGLE_OAUTH_CLIENT_ID=
-GOOGLE_OAUTH_CLIENT_SECRET=
-GOOGLE_OAUTH_REDIRECT_URI=http://localhost:8787/api/auth/google/callback
-
-# Signs gg_google_session cookies (min 16 chars)
-UPLOAD_SESSION_SECRET=change-me-local-dev-secret

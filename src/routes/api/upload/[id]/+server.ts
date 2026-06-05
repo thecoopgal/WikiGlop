@@ -1,32 +1,16 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { assertGloopglopUploadSite } from '$lib/server/upload-gate';
-import {
-	getLinkedGoogleAccountForSession,
-	isGoogleOAuthConfigured
-} from '$lib/server/google-oauth';
-import { getUploadSession, isUploadSchemaError, listDestinationJobs } from '$lib/server/uploads';
-import {
-	GOOGLE_SESSION_COOKIE,
-	verifyGoogleSessionCookie
-} from '$lib/server/upload-session-cookie';
+import { getUploadSession, isUploadSchemaError } from '$lib/server/uploads';
 
-export const GET: RequestHandler = async ({ params, locals, platform, cookies }) => {
+export const GET: RequestHandler = async ({ params, locals, platform }) => {
 	assertGloopglopUploadSite(locals.site);
 	const uploadId = params.id?.trim();
 	if (!uploadId) throw error(400, 'Missing upload id');
 
-	const sessionId = await verifyGoogleSessionCookie(
-		platform,
-		cookies.get(GOOGLE_SESSION_COOKIE)
-	);
-	const linked = await getLinkedGoogleAccountForSession({ platform, sessionId });
-
 	try {
 		const session = await getUploadSession(platform, uploadId, 'gloopglop');
 		if (!session) throw error(404, 'Upload not found');
-
-		const jobs = await listDestinationJobs(platform, uploadId);
 
 		return json({
 			upload: {
@@ -37,17 +21,6 @@ export const GET: RequestHandler = async ({ params, locals, platform, cookies })
 				streamUid: session.stream_uid ?? undefined,
 				playbackUrl: session.stream_playback_url,
 				createdAt: session.created_at
-			},
-			destinations: jobs.map((j) => ({
-				destination: j.destination,
-				status: j.status,
-				externalUrl: j.external_url,
-				errorMessage: j.error_message
-			})),
-			google: {
-				connected: !!linked,
-				email: linked?.email ?? null,
-				configured: isGoogleOAuthConfigured(platform)
 			}
 		} satisfies import('$lib/upload-client').UploadStatusResult);
 	} catch (e) {

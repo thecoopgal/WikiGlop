@@ -12,8 +12,6 @@ declare namespace Cloudflare {
 		ASSETS: Fetcher;
 		VAPID_PUBLIC_KEY: "BFxK_qez_beomsxbU92SJ90B2rNtQ7-kdwQuWvrD2_jQgMzNJNl15262JUyoJR-kpFY_ZeRoT7WnOg9xmsSW7hE";
 		VAPID_SUBJECT: "mailto:notifications@gloop.gg";
-		GOOGLE_OAUTH_CLIENT_ID: "";
-		GOOGLE_OAUTH_REDIRECT_URI: "";
 		CLOUDFLARE_ACCOUNT_ID: "";
 		RESEND_API_KEY: string;
 	}
@@ -23,7 +21,7 @@ type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
 declare namespace NodeJS {
-	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "VAPID_PUBLIC_KEY" | "VAPID_SUBJECT" | "GOOGLE_OAUTH_CLIENT_ID" | "GOOGLE_OAUTH_REDIRECT_URI" | "CLOUDFLARE_ACCOUNT_ID" | "RESEND_API_KEY">> {}
+	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "VAPID_PUBLIC_KEY" | "VAPID_SUBJECT" | "CLOUDFLARE_ACCOUNT_ID" | "RESEND_API_KEY">> {}
 }
 
 // Begin runtime types
