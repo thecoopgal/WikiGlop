@@ -2,18 +2,7 @@ import { getRequestEvent } from '$app/server';
 import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { runGlopSearchQuery } from '$lib/server/glop-search-page';
-import {
-	isGlopSearchDbError,
-	listTopGlopedQuestions,
-	type GlopAnswerRow,
-	type GlopQuestionRow,
-	type TopGlopedQuestion
-} from '$lib/server/glop-search';
-import {
-	listUnansweredGlopQuestions,
-	parseUnansweredGlopSort,
-	type UnansweredGlopSort
-} from '$lib/server/glop-search-resolve';
+import { isGlopSearchDbError, type GlopAnswerRow } from '$lib/server/glop-search';
 import type { UrlSeoSnippet } from '$lib/server/url-seo';
 
 const GLOOPGLOP_SITE_ID = 'gloopglop';
@@ -30,28 +19,7 @@ export const load: PageServerLoad = async ({ locals, url, platform: platformProp
 
 	const qRaw = url.searchParams.get('q') ?? '';
 	const query = qRaw.trim();
-	const unansweredSort: UnansweredGlopSort = parseUnansweredGlopSort(
-		url.searchParams.get('unansweredSort')
-	);
 	if (query.length < 2) {
-		let topGlopedQuestions: TopGlopedQuestion[] = [];
-		let unansweredGlopQuestions: GlopQuestionRow[] = [];
-		try {
-			topGlopedQuestions = await listTopGlopedQuestions(platform, locals.site.siteId, 10);
-		} catch (topErr) {
-			console.error('Top gloped questions failed (landing continues):', topErr);
-		}
-		try {
-			unansweredGlopQuestions = await listUnansweredGlopQuestions(
-				platform,
-				locals.site.siteId,
-				url,
-				10,
-				unansweredSort
-			);
-		} catch (unansweredErr) {
-			console.error('Unanswered glop questions failed (landing continues):', unansweredErr);
-		}
 		return {
 			site: locals.site,
 			query,
@@ -60,10 +28,7 @@ export const load: PageServerLoad = async ({ locals, url, platform: platformProp
 			seoByUrl: {} as Record<string, UrlSeoSnippet>,
 			canonicalHrefByAnswerUrl: {} as Record<string, string>,
 			glopCountByAnswerUrl: {} as Record<string, number>,
-			creatorSearchUi: null,
-			topGlopedQuestions,
-			unansweredGlopQuestions,
-			unansweredSort
+			creatorSearchUi: null
 		};
 	}
 
@@ -85,10 +50,7 @@ export const load: PageServerLoad = async ({ locals, url, platform: platformProp
 				seoByUrl: {} as Record<string, UrlSeoSnippet>,
 				canonicalHrefByAnswerUrl: {} as Record<string, string>,
 				glopCountByAnswerUrl: {} as Record<string, number>,
-				creatorSearchUi: null,
-				topGlopedQuestions: [] as TopGlopedQuestion[],
-				unansweredGlopQuestions: [] as GlopQuestionRow[],
-				unansweredSort
+				creatorSearchUi: null
 			};
 		}
 
@@ -100,10 +62,7 @@ export const load: PageServerLoad = async ({ locals, url, platform: platformProp
 			seoByUrl: searchResult.seoByUrl,
 			canonicalHrefByAnswerUrl: searchResult.canonicalHrefByAnswerUrl,
 			glopCountByAnswerUrl: searchResult.glopCountByAnswerUrl,
-			creatorSearchUi: searchResult.creatorSearchUi,
-			topGlopedQuestions: [] as TopGlopedQuestion[],
-			unansweredGlopQuestions: [] as GlopQuestionRow[],
-			unansweredSort
+			creatorSearchUi: searchResult.creatorSearchUi
 		};
 	} catch (e) {
 		console.error('Search load failed:', e);
@@ -117,10 +76,7 @@ export const load: PageServerLoad = async ({ locals, url, platform: platformProp
 				seoByUrl: {} as Record<string, UrlSeoSnippet>,
 				canonicalHrefByAnswerUrl: {} as Record<string, string>,
 				glopCountByAnswerUrl: {} as Record<string, number>,
-				creatorSearchUi: null,
-				topGlopedQuestions: [] as TopGlopedQuestion[],
-				unansweredGlopQuestions: [] as GlopQuestionRow[],
-				unansweredSort
+				creatorSearchUi: null
 			};
 		}
 		throw error(503, 'Search is temporarily unavailable.');

@@ -137,20 +137,6 @@
 		return h === 'localhost' || h === '127.0.0.1' || h.endsWith('.localhost');
 	});
 
-	const unansweredSort = $derived(data.unansweredSort ?? 'recent');
-
-	function unansweredSortHref(sort: 'recent' | 'searches'): string {
-		const u = new URL(page.url);
-		u.searchParams.delete('q');
-		if (sort === 'recent') {
-			u.searchParams.delete('unansweredSort');
-		} else {
-			u.searchParams.set('unansweredSort', sort);
-		}
-		const qs = u.searchParams.toString();
-		return qs ? `${u.pathname}?${qs}` : u.pathname;
-	}
-
 	type GlopSeo = { title?: string | null; description?: string | null };
 
 	function isTikTokUrl(answerUrl: string): boolean {
@@ -232,131 +218,6 @@
 					<button type="submit" class="btn btn-primary shrink-0">Search</button>
 				</form>
 			</div>
-
-			{#if !data.searched}
-				<div class="space-y-6">
-				<section
-					class="card overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-sm"
-					aria-label="Trending Gloops glopped right now"
-				>
-					<div class="border-b border-base-300 px-4 py-3">
-						<h2 class="text-base font-semibold leading-snug">Trending Gloops glopped right now</h2>
-						
-					</div>
-					{#if (data.topGlopedQuestions ?? []).length > 0}
-						<ol class="divide-y divide-base-200">
-							{#each data.topGlopedQuestions ?? [] as item, i (item.query_normalized)}
-								<li>
-									<a
-										href="/search?q={encodeURIComponent(item.query_display)}"
-										class="group flex items-center gap-3 px-4 py-3 no-underline transition-colors hover:bg-base-200/70 focus-visible:bg-base-200/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
-									>
-										<span
-											class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-sm font-bold text-primary"
-											aria-hidden="true"
-										>{i + 1}</span>
-										<span class="min-w-0 flex-1">
-											<span
-												class="line-clamp-2 text-sm font-medium leading-snug text-base-content group-hover:text-primary"
-											>
-												{item.query_display}
-											</span>
-										</span>
-										<span class="flex shrink-0 flex-col items-end gap-0.5 text-xs text-base-content/55">
-											<span title="Times searched">
-												{item.ask_count} search{item.ask_count === 1 ? '' : 'es'}
-											</span>
-											{#if item.glop_count > 0}
-												<span class="font-medium text-primary" title="Links glooped for this question">
-													{item.glop_count} glop{item.glop_count === 1 ? '' : 's'}
-												</span>
-											{/if}
-										</span>
-									</a>
-								</li>
-							{/each}
-						</ol>
-					{:else}
-						<div class="px-4 py-6 text-center text-sm text-base-content/70">
-							<p>No gloops yet. Search for something above to start the list.</p>
-						</div>
-					{/if}
-				</section>
-
-					<section
-						class="card overflow-hidden rounded-2xl border border-warning/40 bg-base-100 shadow-sm"
-						aria-label="Unanswered gloops"
-					>
-						<div class="border-b border-base-300 bg-warning/10 px-4 py-3">
-							<div class="flex flex-wrap items-start justify-between gap-3">
-								<div class="min-w-0">
-									<h2 class="text-base font-semibold leading-snug">Unanswered gloops</h2>
-									<p class="mt-0.5 text-sm text-base-content/65">
-										Gloops people searched with no links yet. Maybe you should be the first to glop it!
-									</p>
-								</div>
-								<div
-									class="join shrink-0"
-									role="group"
-									aria-label="Sort unanswered gloops"
-								>
-									<a
-										href={unansweredSortHref('recent')}
-										class="btn btn-xs join-item no-underline{unansweredSort === 'recent'
-											? ' btn-warning'
-											: ' btn-ghost border border-base-300'}"
-										aria-current={unansweredSort === 'recent' ? 'true' : undefined}
-									>
-										Recent
-									</a>
-									<a
-										href={unansweredSortHref('searches')}
-										class="btn btn-xs join-item no-underline{unansweredSort === 'searches'
-											? ' btn-warning'
-											: ' btn-ghost border border-base-300'}"
-										aria-current={unansweredSort === 'searches' ? 'true' : undefined}
-									>
-										Most searched
-									</a>
-								</div>
-							</div>
-						</div>
-						{#if (data.unansweredGlopQuestions ?? []).length > 0}
-							<ul class="divide-y divide-base-200">
-								{#each data.unansweredGlopQuestions ?? [] as item (item.query_normalized)}
-									<li>
-										<a
-											href="/search?q={encodeURIComponent(item.query_display)}"
-											class="group flex items-center gap-3 px-4 py-3 no-underline transition-colors hover:bg-warning/10 focus-visible:bg-warning/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-warning"
-										>
-											<span
-												class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-warning/20 text-warning"
-												aria-hidden="true"
-											>
-												<IconMagnify class="h-4 w-4" />
-											</span>
-											<span class="min-w-0 flex-1">
-												<span
-													class="line-clamp-2 text-sm font-medium leading-snug text-base-content group-hover:text-primary"
-												>
-													{item.query_display}
-												</span>
-											</span>
-											<span class="shrink-0 text-xs text-base-content/55" title="Times searched">
-												{item.ask_count} search{item.ask_count === 1 ? '' : 'es'}
-											</span>
-										</a>
-									</li>
-								{/each}
-							</ul>
-						{:else}
-							<div class="px-4 py-6 text-center text-sm text-base-content/70">
-								<p>Every gloop has been glopped nice work, community. 🦾</p>
-							</div>
-						{/if}
-					</section>
-				</div>
-			{/if}
 
 			{#if data.searched && data.query.length >= 2}
 				<section class="space-y-6" aria-label="Search results">
@@ -669,7 +530,6 @@
 							<IconMagnify class="h-5 w-5 shrink-0" aria-hidden="true" />
 							<span class="min-w-0 truncate text-left font-medium">{data.query}</span>
 						</button>
-						<p class="mt-3 text-sm opacity-80">add another angle, source, or link to this Gloop</p>
 					</div>
 				</section>
 			{/if}

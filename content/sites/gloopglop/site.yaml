@@ -35,6 +35,9 @@ short_link_groups:
       - label: Links
         open_in: same_tab
         href: /create
+      - label: Data
+        open_in: same_tab
+        href: /data
   - heading: About Us
     links:
       - label: Creators
