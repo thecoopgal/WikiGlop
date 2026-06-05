@@ -1,5 +1,5 @@
 <script lang="ts">
-	import GlopSearchFooter from '$lib/components/GlopSearchFooter.svelte';
+	import GlopSearchBar from '$lib/components/GlopSearchBar.svelte';
 	import Icons8BoogerAttribution from '$lib/components/Icons8BoogerAttribution.svelte';
 
 	let { children } = $props();
@@ -8,7 +8,7 @@
 <div class="gloopglop-data flex min-h-screen flex-col bg-base-200">
 	<div class="flex-1 px-4 py-10">
 		<div class="mx-auto w-full max-w-xl space-y-8">
-			<GlopSearchFooter wrapperClass="mx-auto w-full max-w-lg" />
+			<GlopSearchBar wrapperClass="mx-auto w-full max-w-lg" />
 			{@render children()}
 		</div>
 	</div>

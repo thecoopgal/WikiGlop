@@ -7,8 +7,11 @@
 	import { GLOOPGLOP_DEFAULT_LOGO_URL } from '$lib/glop-link-image';
 	import { GLOOPGLOP_SEARCH_PAGE_FOCUS_HREF } from '$lib/gloopglop-search-nav';
 	import GlopSearchModal from '$lib/components/GlopSearchModal.svelte';
+	import SettingsModal from '$lib/components/SettingsModal.svelte';
 	import Icons8BoogerAttribution from '$lib/components/Icons8BoogerAttribution.svelte';
 	import LoadingGloop from '$lib/components/LoadingGloop.svelte';
+	import { isGloopglopSite } from '$lib/daisy-theme-colors';
+	import IconCog from '~icons/mdi/cog';
 	import IconMagnify from '~icons/mdi/magnify';
 	import IconChevronDown from '~icons/mdi/chevron-down';
 	import { page } from '$app/state';
@@ -32,7 +35,9 @@
 
 	let gloopModalOpen = $state(false);
 	let glopModalQuery = $state('');
+	let settingsOpen = $state(false);
 	let searchInputEl = $state<HTMLInputElement | null>(null);
+	const showSettingsCog = $derived(isGloopglopSite(data.site));
 	/** True while this page’s search is refetching (form submit, client nav to /search, or invalidate after gloop). */
 	let searchResultsLoading = $state(false);
 
@@ -137,6 +142,8 @@
 		return h === 'localhost' || h === '127.0.0.1' || h.endsWith('.localhost');
 	});
 
+	const isSearchLanding = $derived(!data.searched);
+
 	type GlopSeo = { title?: string | null; description?: string | null };
 
 	function isTikTokUrl(answerUrl: string): boolean {
@@ -165,6 +172,10 @@
 		gloopModalOpen = true;
 	}
 
+	function openSettingsModal() {
+		settingsOpen = true;
+	}
+
 	async function onGlopAdded() {
 		searchResultsLoading = true;
 		try {
@@ -184,7 +195,7 @@
 	class="gloopglop-search flex min-h-screen flex-col bg-base-200"
 	style={pageBg ? `background-color: ${pageBg};` : undefined}
 >
-	<main class="flex flex-1 flex-col px-4 pb-16 pt-10">
+	<main class="flex flex-1 flex-col px-4 pb-16 {isSearchLanding ? 'justify-center' : 'pt-10'}">
 		<div class="mx-auto w-full max-w-xl space-y-8">
 			<div class="flex flex-col items-center gap-3 sm:flex-row sm:items-center">
 				<a
@@ -217,6 +228,16 @@
 					</label>
 					<button type="submit" class="btn btn-primary shrink-0">Search</button>
 				</form>
+				{#if showSettingsCog}
+					<button
+						type="button"
+						class="shrink-0 rounded-lg p-1 text-base-content/60 transition-colors hover:text-base-content focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-base-200 motion-safe:transition-transform motion-safe:hover:scale-110"
+						aria-label="Settings"
+						onclick={openSettingsModal}
+					>
+						<IconCog class="h-6 w-6" />
+					</button>
+				{/if}
 			</div>
 
 			{#if data.searched && data.query.length >= 2}
@@ -543,6 +564,10 @@
 		initialQuery={glopModalQuery}
 		onsuccess={onGlopAdded}
 	/>
+
+	{#if settingsOpen}
+		<SettingsModal bind:open={settingsOpen} />
+	{/if}
 </div>
 
 <style>

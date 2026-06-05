@@ -1,9 +1,36 @@
 <script lang="ts">
+	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
+	import {
+		getThemePreference,
+		resolveEffectiveTheme,
+		subscribeThemePreference,
+		type ThemePreference
+	} from '$lib/client/theme-preference';
 	import GlopSearchFooter from '$lib/components/GlopSearchFooter.svelte';
 	import Icons8BoogerAttribution from '$lib/components/Icons8BoogerAttribution.svelte';
 	import SettingsPanel from '$lib/components/SettingsPanel.svelte';
 	import IconCog from '~icons/mdi/cog';
+
+	let themePreference = $state<ThemePreference>('system');
+
+	$effect(() => {
+		if (!browser) return;
+		const refresh = () => {
+			themePreference = getThemePreference();
+		};
+		refresh();
+		return subscribeThemePreference(refresh);
+	});
+
+	const settingsSearchQuery = $derived.by(() => {
+		if (themePreference === 'system') return 'beep boop';
+		if (themePreference === 'dark') return 'Who is batman';
+		if (themePreference === 'light') return 'Why do my eyes hurt';
+		return resolveEffectiveTheme(themePreference) === 'dark'
+			? 'Who is batman'
+			: 'Why do my eyes hurt';
+	});
 
 	function leaveSettings() {
 		void goto('/', { replaceState: true });
@@ -20,6 +47,6 @@
 			<SettingsPanel onDone={leaveSettings} />
 		</div>
 	</main>
-	<GlopSearchFooter showSettings={false} />
+	<GlopSearchFooter showSettings={false} initialQuery={settingsSearchQuery} />
 	<Icons8BoogerAttribution />
 </div>
