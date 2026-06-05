@@ -31,6 +31,23 @@ export function normalizeHexColor(value: string): string | null {
 	return null;
 }
 
+/** WCAG relative luminance; values above ~0.55 read as a light surface. */
+export function hexRelativeLuminance(hex: string): number | null {
+	const rgb = hexToRgb(hex);
+	if (!rgb) return null;
+	const channels = [rgb.r, rgb.g, rgb.b].map((channel) => {
+		const s = channel / 255;
+		return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4;
+	});
+	return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+}
+
+export function isLightHexColor(hex: string, threshold = 0.55): boolean {
+	const luminance = hexRelativeLuminance(hex);
+	if (luminance == null) return true;
+	return luminance > threshold;
+}
+
 export function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
 	const normalized = normalizeHexColor(hex);
 	if (!normalized) return null;

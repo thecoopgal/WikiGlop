@@ -34,7 +34,7 @@ short_link_groups:
         href: /watch
       - label: Links
         open_in: same_tab
-        href: /create
+        href: /links
       - label: Data
         open_in: same_tab
         href: /data

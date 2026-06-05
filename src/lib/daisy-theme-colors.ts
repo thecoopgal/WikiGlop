@@ -15,6 +15,13 @@ export const GLOOPGLOP_BRAND = {
 export type GloopglopCustomColorKey =
 	| 'base-100'
 	| 'base-200'
+	| 'card-border'
+	| 'card-gradient'
+	| 'link-background'
+	| 'link-border'
+	| 'link-text'
+	| 'share-background'
+	| 'share-border'
 	| 'heading'
 	| 'subheading'
 	| 'button-text'
@@ -28,6 +35,13 @@ export const GLOOPGLOP_CUSTOM_COLOR_FIELDS: Array<{
 }> = [
 	{ key: 'base-200', label: 'Page background' },
 	{ key: 'base-100', label: 'Cards' },
+	{ key: 'card-border', label: 'Card border' },
+	{ key: 'card-gradient', label: 'Card gradient' },
+	{ key: 'link-background', label: 'Link background' },
+	{ key: 'link-border', label: 'Link border' },
+	{ key: 'link-text', label: 'Link text' },
+	{ key: 'share-background', label: 'Share profile background' },
+	{ key: 'share-border', label: 'Share profile border' },
 	{ key: 'heading', label: 'Header text' },
 	{ key: 'subheading', label: 'Subheader text' },
 	{ key: 'button-text', label: 'Button text' },
@@ -44,6 +58,20 @@ export function gloopglopColorVarName(key: GloopglopCustomColorKey): string {
 			return '--gloopglop-button-text-color';
 		case 'text-box-text':
 			return '--gloopglop-text-box-text-color';
+		case 'link-background':
+			return '--gloopglop-link-background-color';
+		case 'link-border':
+			return '--gloopglop-link-border-color';
+		case 'link-text':
+			return '--gloopglop-link-text-color';
+		case 'share-background':
+			return '--gloopglop-share-background-color';
+		case 'share-border':
+			return '--gloopglop-share-border-color';
+		case 'card-border':
+			return '--gloopglop-card-border-color';
+		case 'card-gradient':
+			return '--gloopglop-card-gradient-color';
 		default:
 			return `--color-${key}`;
 	}

@@ -58,11 +58,23 @@ function defaultColorFromTheme(
 	if (key === 'heading' || key === 'subheading') {
 		return cssColorToHex(computed.getPropertyValue('--color-base-content'));
 	}
-	if (key === 'button-text') {
-		return GLOOPGLOP_BRAND.buttonText;
-	}
-	if (key === 'text-box-text') {
+	if (key === 'button-text' || key === 'link-text' || key === 'text-box-text') {
 		return cssColorToHex(computed.getPropertyValue('--color-base-content'));
+	}
+	if (key === 'link-background') {
+		return cssColorToHex(computed.getPropertyValue('--color-base-100'));
+	}
+	if (key === 'link-border') {
+		return cssColorToHex(computed.getPropertyValue('--color-primary'));
+	}
+	if (key === 'share-background' || key === 'share-border') {
+		return cssColorToHex(computed.getPropertyValue('--color-primary'));
+	}
+	if (key === 'card-border') {
+		return cssColorToHex(computed.getPropertyValue('--color-primary'));
+	}
+	if (key === 'card-gradient') {
+		return cssColorToHex(computed.getPropertyValue('--color-base-200'));
 	}
 	return cssColorToHex(computed.getPropertyValue(gloopglopColorVarName(key)));
 }
@@ -106,6 +118,9 @@ export function readDaisyThemeDefaults(
 	probe.style.position = 'absolute';
 	probe.style.visibility = 'hidden';
 	probe.style.pointerEvents = 'none';
+	// Daisy dark/light presets default to blue primary; GloopGlop uses brand green.
+	probe.style.setProperty('--color-primary', GLOOPGLOP_BRAND.primary);
+	probe.style.setProperty('--color-primary-content', GLOOPGLOP_BRAND.primaryContent);
 	document.body.appendChild(probe);
 
 	const computed = getComputedStyle(probe);

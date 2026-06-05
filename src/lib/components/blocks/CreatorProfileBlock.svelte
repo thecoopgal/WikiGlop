@@ -173,7 +173,7 @@ const gloopglopShortLinksContainerClass = $derived.by(() => {
 });
 const gloopglopShortLinkButtonClass = $derived.by(() => {
 	const base =
-		'h-auto min-h-10 w-full min-w-0 flex-[1_1_100%] items-center justify-center gap-2 rounded-xl border-primary/25 bg-base-100/80 px-3 py-2 text-center font-medium normal-case hover:bg-primary/10';
+		'gloopglop-link-border h-auto min-h-10 w-full min-w-0 flex-[1_1_100%] items-center justify-center gap-2 rounded-xl bg-base-100/80 px-3 py-2 text-center font-medium normal-case hover:bg-primary/10';
 	if (shortLinksGridColumns === 1) return base;
 	if (shortLinksGridColumns === 2) {
 		return `${base} sm:max-w-[calc(50%-0.25rem)] sm:flex-[0_1_calc(50%-0.25rem)]`;
@@ -685,7 +685,7 @@ async function promptInstallIfAvailable() {
 			isCoopgalCosmicTheme
 				? 'border border-primary/30 bg-gradient-to-br from-[#0f1327] via-[#1e1b4b] to-[#0e2a52] text-white shadow-[0_12px_45px_rgba(37,99,235,0.35)]'
 				: isGloopglopTheme
-					? 'border border-primary/20 bg-gradient-to-b from-base-100 to-base-200'
+					? 'gloopglop-card-gradient gloopglop-card-border border bg-gradient-to-b from-base-100 to-base-200'
 					: `bg-base-100 ${cardShadow}`
 		}`}>
 			{#if isCoopgalCosmicTheme}
@@ -781,7 +781,7 @@ async function promptInstallIfAvailable() {
 					<div class="mt-3 w-full flex justify-center">
 						<button
 							type="button"
-							class="btn btn-sm rounded-full border border-primary/30 bg-primary/10 hover:bg-primary/20"
+							class="gloopglop-share-background gloopglop-share-border btn btn-sm rounded-full border"
 							onclick={() => {
 								showShareModal = true;
 								copyState = 'idle';
@@ -1050,7 +1050,7 @@ async function promptInstallIfAvailable() {
 			<Icon class="h-5 w-5 shrink-0" />
 		{/if}
 		{#if isGloopglopTheme}
-			<span class="truncate text-center text-xs leading-tight"
+			<span class="gloopglop-link-text truncate text-center text-xs leading-tight"
 				>{shortLink.label ?? shortLink.icon ?? 'Link'}</span
 			>
 		{/if}

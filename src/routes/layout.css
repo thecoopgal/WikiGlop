@@ -1,6 +1,11 @@
 @import 'tailwindcss';
 @plugin "daisyui";
 
+/* GloopGlop brand green — Daisy presets default primary to blue. */
+html[data-theme] {
+	--gloopglop-brand-primary: oklch(62% 0.18 155);
+}
+
 html[data-theme] h1,
 html[data-theme] h2,
 html[data-theme] h3 {
@@ -9,6 +14,66 @@ html[data-theme] h3 {
 
 html[data-theme] .gloopglop-subheading {
 	color: var(--gloopglop-subheading-color, var(--color-base-content));
+}
+
+html[data-theme] .gloopglop-button-text {
+	color: var(--gloopglop-button-text-color, var(--color-base-content));
+}
+
+html[data-theme] .gloopglop-link-text {
+	color: var(--gloopglop-link-text-color, inherit);
+}
+
+html[data-theme] .gloopglop-card-gradient {
+	background-image: linear-gradient(
+		to bottom,
+		var(--color-base-100),
+		var(--gloopglop-card-gradient-color, var(--color-base-200))
+	);
+}
+
+html[data-theme] .gloopglop-card-border {
+	border-color: var(
+		--gloopglop-card-border-color,
+		color-mix(in oklab, var(--gloopglop-brand-primary) 20%, transparent)
+	);
+}
+
+html[data-theme] .gloopglop-link-background {
+	background-color: var(
+		--gloopglop-link-background-color,
+		color-mix(in oklab, var(--color-base-100) 80%, transparent)
+	);
+}
+
+html[data-theme] .gloopglop-link-border {
+	border-color: var(
+		--gloopglop-link-border-color,
+		color-mix(in oklab, var(--gloopglop-brand-primary) 25%, transparent)
+	);
+}
+
+html[data-theme] .gloopglop-share-background {
+	background-color: color-mix(
+		in oklab,
+		var(--gloopglop-share-background-color, var(--gloopglop-brand-primary)) 10%,
+		transparent
+	);
+}
+
+html[data-theme] .gloopglop-share-background:hover {
+	background-color: color-mix(
+		in oklab,
+		var(--gloopglop-share-background-color, var(--gloopglop-brand-primary)) 20%,
+		transparent
+	);
+}
+
+html[data-theme] .gloopglop-share-border {
+	border-color: var(
+		--gloopglop-share-border-color,
+		color-mix(in oklab, var(--gloopglop-brand-primary) 30%, transparent)
+	);
 }
 
 html[data-theme] .btn-primary {
@@ -27,6 +92,58 @@ html[data-theme] .btn-ghost:not(.btn-active) {
 }
 
 html[data-theme] .input,
-html[data-theme] textarea {
-	color: var(--gloopglop-text-box-text-color, inherit);
+html[data-theme] textarea,
+html[data-theme] .gloopglop-text-box-text {
+	color: var(--gloopglop-text-box-text-color, var(--color-base-content));
+}
+
+.profile-name-heading {
+	overflow-wrap: anywhere;
+	word-break: break-word;
+}
+
+.links-reorder-edit-mode [role='listitem']:not(.links-reorder-dragging) {
+	animation: links-reorder-shake 0.32s ease-in-out infinite;
+	touch-action: none;
+}
+
+.links-reorder-edit-mode .links-reorder-item-contents :is(input, button, textarea, select, a) {
+	pointer-events: none;
+}
+
+.links-reorder-dragging {
+	animation: none !important;
+	touch-action: none;
+}
+
+@keyframes links-reorder-shake {
+	0%,
+	100% {
+		transform: rotate(-0.65deg);
+	}
+	50% {
+		transform: rotate(0.65deg);
+	}
+}
+
+.profile-name-measure {
+	overflow-wrap: anywhere;
+	word-break: break-word;
+}
+
+.profile-name-anim {
+	will-change: transform, opacity;
+}
+
+.profile-name-anim-fade {
+	animation: profile-name-fade 420ms ease both;
+}
+
+@keyframes profile-name-fade {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
 }
