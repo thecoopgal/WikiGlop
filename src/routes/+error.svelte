@@ -2,16 +2,25 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import type { PageYaml } from '$lib/server/content';
-	import type { ResolvedSite, SiteNavLink } from '$lib/server/sites';
-	import LandingPage from '$lib/components/page-layouts/LandingPage.svelte';
+	import type { ResolvedSite } from '$lib/server/sites';
 	import Icons8BoogerAttribution from '$lib/components/Icons8BoogerAttribution.svelte';
 	import LoadingGloop from '$lib/components/LoadingGloop.svelte';
 	import GlopSearchModal from '$lib/components/GlopSearchModal.svelte';
+	import { resolveGloopIconUrl, subscribeCustomGloopIcon } from '$lib/client/gloopglop-custom-icon';
+	import { GLOOPGLOP_DEFAULT_LOGO_URL } from '$lib/glop-link-image';
 	import IconMagnify from '~icons/mdi/magnify';
 
 	type LayoutData = {
 		site: ResolvedSite | null;
 		notFoundForError: { site: ResolvedSite; page: PageYaml } | null;
+	};
+
+	type GloopErrorContent = {
+		code: string;
+		headline: string;
+		searchQuery: string;
+		showTryAgain: boolean;
+		showWatchMock: boolean;
 	};
 
 	let { data }: { data: LayoutData } = $props();
@@ -28,43 +37,91 @@
 		typeof site?.theme?.overrides?.['base-200'] === 'string' ? site.theme.overrides['base-200'] : undefined
 	);
 
-	const BOOGER_ICON_URL = 'https://img.icons8.com/color/96/booger.png';
 	const BOOGER_SPIN_MS = 2000;
-	const SEARCH_INSTEAD_QUERY = 'what is a 503 error';
 
+	let heroIconUrl = $state(GLOOPGLOP_DEFAULT_LOGO_URL);
 	let boogerExhausted = $state(false);
 	let searchModalOpen = $state(false);
+	let activeSearchQuery = $state('');
+
+	const isWatchPath = $derived(/^\/watch\/?$/.test(page.url.pathname));
+	const watchMockHref = $derived.by(() => {
+		const next = new URL(page.url);
+		next.searchParams.set('mock', '1');
+		return `${next.pathname}${next.search}`;
+	});
+
+	const gloopErrorContent = $derived.by((): GloopErrorContent | null => {
+		if (page.status === 503) {
+			return {
+				code: '503 Error',
+				headline: 'The gloops got glopped too hard',
+				searchQuery: 'what is a 503 error',
+				showTryAgain: true,
+				showWatchMock: isWatchPath
+			};
+		}
+		if (page.status === 404) {
+			return {
+				code: '404 Error',
+				headline: 'This page got lost in the gloop',
+				searchQuery: 'what is a 404 error',
+				showTryAgain: false,
+				showWatchMock: false
+			};
+		}
+		return null;
+	});
 
 	onMount(() => {
-		if (page.status !== 503) return;
+		const stopIconSync = subscribeCustomGloopIcon(() => {
+			heroIconUrl = resolveGloopIconUrl();
+		});
+
+		if (page.status !== 404 && page.status !== 503) {
+			return stopIconSync;
+		}
+
 		const timer = setTimeout(() => {
 			boogerExhausted = true;
 		}, BOOGER_SPIN_MS);
-		return () => clearTimeout(timer);
-	});
 
-	function navLinkAttrs(link: SiteNavLink) {
-		return {
-			'data-open-mode': link.open_mode ?? undefined,
-			'data-modal': link.modal ?? undefined
+		return () => {
+			stopIconSync();
+			clearTimeout(timer);
 		};
-	}
+	});
 
 	function tryAgain() {
 		window.location.reload();
 	}
 
-	function openSearchModal() {
+	function goBack() {
+		if (typeof history !== 'undefined' && history.length > 1) {
+			history.back();
+			return;
+		}
+		window.location.href = '/';
+	}
+
+	function openSearchModal(query: string) {
+		activeSearchQuery = query;
 		searchModalOpen = true;
 	}
 </script>
 
 <svelte:head>
-	{#if page.status === 404 && data.notFoundForError}
-		<title>{data.notFoundForError.page.seo?.title ?? data.notFoundForError.page.title ?? 'Not found'}</title>
-		{#if data.notFoundForError.page.seo?.description}
-			<meta name="description" content={data.notFoundForError.page.seo.description} />
-		{/if}
+	{#if page.status === 404}
+		<title
+			>{data.notFoundForError?.page.seo?.title ??
+				data.notFoundForError?.page.title ??
+				'Page not found · GloopGlop'}</title
+		>
+		<meta
+			name="description"
+			content={data.notFoundForError?.page.seo?.description ??
+				'This page does not exist or has moved.'}
+		/>
 	{:else if page.status === 503}
 		<title>Gloop overload · GloopGlop</title>
 		<meta name="description" content="GloopGlop is temporarily unavailable. The gloops are still glopping." />
@@ -73,39 +130,7 @@
 	{/if}
 </svelte:head>
 
-{#if page.status === 404 && data.notFoundForError}
-	<div
-		class="flex min-h-screen flex-col bg-base-200"
-		data-theme={themeName}
-		style={pageBg ? `background-color: ${pageBg};` : undefined}
-	>
-		{#if data.notFoundForError.page.page_settings?.show_header !== false && data.notFoundForError.site.navigation?.header}
-			<div class="navbar bg-base-100 shadow-sm">
-				<div class="navbar-start">
-					<a class="btn btn-ghost text-xl" href="/"
-						>{data.notFoundForError.site.name ?? data.notFoundForError.site.id}</a
-					>
-				</div>
-				<div class="navbar-center hidden md:flex">
-					<ul class="menu menu-horizontal px-1">
-						{#each data.notFoundForError.site.navigation.header as link}
-							<li>
-								<a href={link.href} {...navLinkAttrs(link)}>{link.label}</a>
-							</li>
-						{/each}
-					</ul>
-				</div>
-				<div class="navbar-end"></div>
-			</div>
-		{/if}
-
-		<main class="flex-1">
-			<LandingPage site={data.notFoundForError.site} page={data.notFoundForError.page} />
-		</main>
-
-		<Icons8BoogerAttribution />
-	</div>
-{:else if page.status === 503}
+{#if gloopErrorContent}
 	<div
 		class="flex min-h-screen flex-col bg-gradient-to-b from-base-200 via-base-200 to-base-300/50"
 		data-theme={themeName}
@@ -119,9 +144,9 @@
 						: 'border-primary/20 border-t-primary motion-safe:animate-spin'}"
 				>
 					<img
-						src={BOOGER_ICON_URL}
+						src={heroIconUrl}
 						alt=""
-						class="h-12 w-12 object-contain transition-all duration-1000 ease-out {boogerExhausted
+						class="h-12 w-12 rounded-xl object-cover transition-all duration-1000 ease-out {boogerExhausted
 							? 'grayscale opacity-45'
 							: ''}"
 						width="48"
@@ -130,19 +155,40 @@
 					/>
 				</div>
 
-				<p class="text-sm font-semibold uppercase tracking-[0.2em] text-primary/80">503 Error</p>
+				<p class="text-sm font-semibold uppercase tracking-[0.2em] text-primary/80">
+					{gloopErrorContent.code}
+				</p>
 				<h1 class="mt-3 text-3xl font-extrabold tracking-tight sm:text-4xl">
-					The gloops got glopped too hard
+					{gloopErrorContent.headline}
 				</h1>
 
 				<div class="mt-8 flex flex-wrap items-center justify-center gap-3">
-					<button
-						type="button"
-						class="btn border-[#5f9626] bg-[#7ac943] text-[#10210a] hover:border-[#4c7a1f] hover:bg-[#6fb93b]"
-						onclick={tryAgain}
-					>
-						Try again
-					</button>
+					{#if gloopErrorContent.showTryAgain}
+						<button
+							type="button"
+							class="btn border-[#5f9626] bg-[#7ac943] text-[#10210a] hover:border-[#4c7a1f] hover:bg-[#6fb93b]"
+							onclick={tryAgain}
+						>
+							Try again
+						</button>
+					{/if}
+					{#if gloopErrorContent.showWatchMock}
+						<a
+							href={watchMockHref}
+							class="btn btn-outline border-primary/30 hover:border-primary hover:bg-primary/10"
+						>
+							View with mock data
+						</a>
+					{/if}
+					{#if page.status === 404}
+						<button
+							type="button"
+							class="btn border-[#5f9626] bg-[#7ac943] text-[#10210a] hover:border-[#4c7a1f] hover:bg-[#6fb93b]"
+							onclick={goBack}
+						>
+							Go back
+						</button>
+					{/if}
 					<a
 						href="/"
 						class="btn btn-outline border-primary/30 hover:border-primary hover:bg-primary/10"
@@ -156,9 +202,9 @@
 		<div class="mx-auto w-full max-w-lg px-4 pb-4 text-left">
 			<button
 				type="button"
-				class="group flex w-full items-center gap-2 sm:gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-base-200 rounded-xl"
-				onclick={openSearchModal}
-				aria-label="Search: {SEARCH_INSTEAD_QUERY}"
+				class="group flex w-full items-center gap-2 rounded-xl text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-base-200 sm:gap-3"
+				onclick={() => openSearchModal(gloopErrorContent.searchQuery)}
+				aria-label="Search: {gloopErrorContent.searchQuery}"
 			>
 				<span
 					class="shrink-0 rounded-xl ring-1 ring-base-300 motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-out motion-safe:group-hover:scale-110"
@@ -170,14 +216,14 @@
 				>
 					<IconMagnify class="h-5 w-5 shrink-0 text-base-content/60" />
 					<span class="min-w-0 flex-1 truncate text-left text-base text-base-content">
-						{SEARCH_INSTEAD_QUERY}<span class="error503-cursor"></span>
+						{gloopErrorContent.searchQuery}<span class="gloop-error-cursor"></span>
 					</span>
 				</span>
 			</button>
 		</div>
 
 		{#if searchModalOpen}
-			<GlopSearchModal bind:open={searchModalOpen} initialQuery={SEARCH_INSTEAD_QUERY} />
+			<GlopSearchModal bind:open={searchModalOpen} initialQuery={activeSearchQuery} />
 		{/if}
 
 		<Icons8BoogerAttribution />
@@ -201,17 +247,17 @@
 {/if}
 
 <style>
-	.error503-cursor {
+	.gloop-error-cursor {
 		display: inline-block;
 		width: 2px;
 		height: 1.05em;
 		margin-left: 1px;
 		vertical-align: text-bottom;
 		background-color: currentColor;
-		animation: error503-cursor-blink 1s step-end infinite;
+		animation: gloop-error-cursor-blink 1s step-end infinite;
 	}
 
-	@keyframes error503-cursor-blink {
+	@keyframes gloop-error-cursor-blink {
 		0%,
 		49% {
 			opacity: 1;

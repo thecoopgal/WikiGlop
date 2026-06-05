@@ -1,4 +1,11 @@
 <script lang="ts">
+	import { browser } from '$app/environment';
+	import {
+		getThemePreference,
+		resolveEffectiveTheme,
+		subscribeThemePreference,
+		type EffectiveTheme
+	} from '$lib/client/theme-preference';
 	import IconInstagram from '~icons/mdi/instagram';
 	import IconLinkedin from '~icons/mdi/linkedin';
 	import IconFacebook from '~icons/mdi/facebook';
@@ -124,6 +131,17 @@ const effectiveNameAnimation = $derived.by(() => {
 const isCoopgalCosmicTheme = $derived((profile_theme ?? '').trim().toLowerCase() === 'coopgal_cosmic');
 const isGloopglopTheme = $derived((profile_theme ?? '').trim().toLowerCase() === 'gloopglop');
 
+let runtimeTheme = $state<EffectiveTheme>('light');
+
+$effect(() => {
+	if (!browser || !isGloopglopTheme) return;
+	const refresh = () => {
+		runtimeTheme = resolveEffectiveTheme(getThemePreference());
+	};
+	refresh();
+	return subscribeThemePreference(refresh);
+});
+
 	const cardShadow = 'shadow-[0px_1px_3px_rgba(0,0,0,0.15)]';
 const GLOOP_SHORT_HOST = 'gloop.gg';
 const SHARE_ICON_LIGHT_URL =
@@ -237,9 +255,14 @@ const shortPathLabel = $derived.by(() => {
 	return `${GLOOP_SHORT_HOST}/${encodeURIComponent(key)}${pagePath}${u.search}`;
 });
 const shareIconUrl = $derived.by(() => {
-	const preset = site?.theme?.preset?.toLowerCase();
-	const mode = site?.theme?.mode?.toLowerCase();
-	const effectiveTheme = preset === 'light' || preset === 'dark' ? preset : mode;
+	let effectiveTheme: string;
+	if (isGloopglopTheme) {
+		effectiveTheme = runtimeTheme;
+	} else {
+		const preset = site?.theme?.preset?.toLowerCase();
+		const mode = site?.theme?.mode?.toLowerCase();
+		effectiveTheme = preset === 'light' || preset === 'dark' ? preset : (mode ?? 'light');
+	}
 	return effectiveTheme === 'dark' ? SHARE_ICON_DARK_URL : SHARE_ICON_LIGHT_URL;
 });
 const qrUrl = $derived(

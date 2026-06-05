@@ -222,7 +222,6 @@
 
 <div
 	class="gloopglop-search flex min-h-screen flex-col bg-base-200"
-	data-theme={themeName}
 	style={pageBg ? `background-color: ${pageBg};` : undefined}
 >
 	<main class="flex flex-1 flex-col px-4 pb-16 pt-10">

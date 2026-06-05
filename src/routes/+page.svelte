@@ -10,7 +10,11 @@
 	import CreatorLinksPage from '$lib/components/page-layouts/CreatorLinksPage.svelte';
 	import { collectFormFieldValues, postFormEmail } from '$lib/form-submit-client';
 	import Icons8BoogerAttribution from '$lib/components/Icons8BoogerAttribution.svelte';
+	import GlopSearchFooter from '$lib/components/GlopSearchFooter.svelte';
 	import MyCreatorNotificationsHub from '$lib/components/MyCreatorNotificationsHub.svelte';
+	import { isGloopglopSite } from '$lib/daisy-theme-colors';
+
+	const GLOOPGLOP_SITE_ID = 'gloopglop';
 
 	let { data } = $props();
 
@@ -34,6 +38,17 @@
 		pageYaml?.layout === 'form' && (pageYaml?.render_mode ?? 'page') === 'modal'
 	);
 	const showHeader = $derived(pageYaml?.page_settings?.show_header !== false);
+	const showGloopSearchFooter = $derived(
+		data.site.id === GLOOPGLOP_SITE_ID &&
+			pageYaml?.page_settings?.show_footer !== false &&
+			!isModalForm
+	);
+	const gloopSearchQuery = $derived(
+		typeof pageYaml?.page_settings?.search_query === 'string'
+			? pageYaml.page_settings.search_query.trim()
+			: ''
+	);
+	const gloopglopPlatform = $derived(isGloopglopSite(data.site));
 	let activeModalId = $state<string | null>(null);
 	const activeModal = $derived(
 		activeModalId && data.hub !== 'creator_notifications' && data.modals
@@ -157,8 +172,8 @@
 {:else}
 <div
 	class="flex min-h-screen flex-col bg-base-200"
-	data-theme={themeName}
-	style={pageBg ? `background-color: ${pageBg};` : undefined}
+	data-theme={gloopglopPlatform ? undefined : themeName}
+	style={!gloopglopPlatform && pageBg ? `background-color: ${pageBg};` : undefined}
 >
 	{#if !isModalForm && showHeader && data.site.navigation?.header}
 		<div class="navbar bg-base-100 shadow-sm">
@@ -193,6 +208,10 @@
 			<LandingPage site={data.site} page={pageYaml as PageYaml} />
 		{/if}
 	</main>
+
+	{#if showGloopSearchFooter}
+		<GlopSearchFooter initialQuery={gloopSearchQuery} />
+	{/if}
 
 	<Icons8BoogerAttribution />
 

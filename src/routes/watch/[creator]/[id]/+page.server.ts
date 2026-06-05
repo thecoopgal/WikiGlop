@@ -6,9 +6,10 @@ import {
 	isUploadSchemaError,
 	normalizeCreatorRouteId
 } from '$lib/server/uploads';
+import { findMockWatchVideo, isWatchMockRequest, mockWatchVideoPageData } from '$lib/server/watch-mock';
 import { resolveSiteById } from '$lib/server/sites';
 
-export const load: PageServerLoad = async ({ params, platform, locals }) => {
+export const load: PageServerLoad = async ({ params, platform, locals, url }) => {
 	assertGloopglopUploadSite(locals.site);
 
 	let creatorId: string;
@@ -20,6 +21,12 @@ export const load: PageServerLoad = async ({ params, platform, locals }) => {
 
 	const uploadId = params.id?.trim();
 	if (!uploadId) throw error(404, 'Video not found');
+
+	const mockVideo = findMockWatchVideo(creatorId, uploadId);
+	if (mockVideo || isWatchMockRequest(url)) {
+		if (!mockVideo) throw error(404, 'Video not found');
+		return mockWatchVideoPageData(mockVideo);
+	}
 
 	try {
 		const video = await getApprovedWatchVideo({

@@ -16,6 +16,7 @@ export type PageSettings = {
 	show_edit_history?: boolean;
 	show_footer?: boolean;
 	show_header?: boolean;
+	search_query?: string;
 	modal_size?: 'sm' | 'md' | 'lg' | 'xl' | string;
 	[key: string]: unknown;
 };

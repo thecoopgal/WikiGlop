@@ -2,10 +2,15 @@ import { error } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { assertGloopglopUploadSite, GLOOPGLOP_SITE_ID } from '$lib/server/upload-gate';
 import { isUploadSchemaError, listAllApprovedWatchVideos } from '$lib/server/uploads';
+import { isWatchMockRequest, mockWatchFeedVideos } from '$lib/server/watch-mock';
 import { resolveSiteById } from '$lib/server/sites';
 
-export const load: PageServerLoad = async ({ platform, locals }) => {
+export const load: PageServerLoad = async ({ platform, locals, url }) => {
 	assertGloopglopUploadSite(locals.site);
+
+	if (isWatchMockRequest(url)) {
+		return { videos: mockWatchFeedVideos(), mock: true as const };
+	}
 
 	try {
 		const rows = await listAllApprovedWatchVideos({

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Icons8BoogerAttribution from '$lib/components/Icons8BoogerAttribution.svelte';
+	import GlopSearchFooter from '$lib/components/GlopSearchFooter.svelte';
 	import StreamVideoPlayer from '$lib/components/StreamVideoPlayer.svelte';
 	import type { PageData } from './$types';
 
@@ -14,8 +14,16 @@
 	<title>{title} · {data.creatorName} · GloopGlop</title>
 </svelte:head>
 
-<main class="min-h-[70vh] px-4 py-10">
-	<div class="mx-auto max-w-3xl">
+<div class="px-4 py-10">
+	<div class="mx-auto w-full max-w-3xl">
+		<GlopSearchFooter wrapperClass="mx-auto mb-8 w-full max-w-lg" />
+
+		{#if data.mock}
+			<div class="alert alert-info mb-6 text-sm">
+				<span>Showing mock data — this page is for design preview only.</span>
+			</div>
+		{/if}
+
 		<header class="mb-6">
 			<p class="text-sm text-base-content/60">
 				<a href="/watch" class="link link-hover">Watch</a>
@@ -27,10 +35,11 @@
 			<h1 class="mt-2 text-2xl font-bold tracking-tight">{title}</h1>
 		</header>
 
-		<StreamVideoPlayer streamUid={data.video.streamUid} {title} />
-
-		<p class="mt-8 text-center text-xs text-base-content/50">
-			<Icons8BoogerAttribution />
-		</p>
+		<StreamVideoPlayer
+			streamUid={data.video.streamUid}
+			{title}
+			mock={data.mock}
+			thumbnailUrl={data.video.thumbnailUrl}
+		/>
 	</div>
-</main>
+</div>

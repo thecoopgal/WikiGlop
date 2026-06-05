@@ -10,6 +10,10 @@
 	import CreatorLinksPage from '$lib/components/page-layouts/CreatorLinksPage.svelte';
 	import { collectFormFieldValues, postFormEmail } from '$lib/form-submit-client';
 	import Icons8BoogerAttribution from '$lib/components/Icons8BoogerAttribution.svelte';
+	import GlopSearchFooter from '$lib/components/GlopSearchFooter.svelte';
+	import { isGloopglopSite } from '$lib/daisy-theme-colors';
+
+	const GLOOPGLOP_SITE_ID = 'gloopglop';
 
 	let { data } = $props();
 
@@ -29,6 +33,17 @@
 
 	const isModalForm = $derived(data.page.layout === 'form' && (data.page.render_mode ?? 'page') === 'modal');
 	const showHeader = $derived(data.page.page_settings?.show_header !== false);
+	const showGloopSearchFooter = $derived(
+		data.site.id === GLOOPGLOP_SITE_ID &&
+			data.page.page_settings?.show_footer !== false &&
+			!isModalForm
+	);
+	const gloopSearchQuery = $derived(
+		typeof data.page.page_settings?.search_query === 'string'
+			? data.page.page_settings.search_query.trim()
+			: ''
+	);
+	const gloopglopPlatform = $derived(isGloopglopSite(data.site));
 	let activeModalId = $state<string | null>(null);
 
 	const activeModal = $derived(
@@ -138,8 +153,8 @@
 
 <div
 	class="flex min-h-screen flex-col bg-base-200"
-	data-theme={themeName}
-	style={pageBg ? `background-color: ${pageBg};` : undefined}
+	data-theme={gloopglopPlatform ? undefined : themeName}
+	style={!gloopglopPlatform && pageBg ? `background-color: ${pageBg};` : undefined}
 >
 	{#if !isModalForm && showHeader && data.site.navigation?.header}
 		<div class="navbar bg-base-100 shadow-sm">
@@ -174,6 +189,10 @@
 			<LandingPage site={data.site} page={data.page} />
 		{/if}
 	</main>
+
+	{#if showGloopSearchFooter}
+		<GlopSearchFooter initialQuery={gloopSearchQuery} />
+	{/if}
 
 	<Icons8BoogerAttribution />
 

@@ -1,2 +1,32 @@
 @import 'tailwindcss';
 @plugin "daisyui";
+
+html[data-theme] h1,
+html[data-theme] h2,
+html[data-theme] h3 {
+	color: var(--gloopglop-heading-color, var(--color-base-content));
+}
+
+html[data-theme] .gloopglop-subheading {
+	color: var(--gloopglop-subheading-color, var(--color-base-content));
+}
+
+html[data-theme] .btn-primary {
+	border-color: #5f9626;
+	background-color: #7ac943;
+	color: var(--gloopglop-button-text-color, #10210a);
+}
+
+html[data-theme] .btn-primary:hover {
+	border-color: #4c7a1f;
+	background-color: #6fb93b;
+}
+
+html[data-theme] .btn-ghost:not(.btn-active) {
+	color: var(--gloopglop-button-text-color, inherit);
+}
+
+html[data-theme] .input,
+html[data-theme] textarea {
+	color: var(--gloopglop-text-box-text-color, inherit);
+}

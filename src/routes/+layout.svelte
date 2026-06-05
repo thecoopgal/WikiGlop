@@ -1,8 +1,9 @@
 <script lang="ts">
 	import './layout.css';
 	import { onMount } from 'svelte';
+	import ThemePreferenceSync from '$lib/components/ThemePreferenceSync.svelte';
 
-	let { children } = $props();
+	let { data, children } = $props();
 
 	onMount(() => {
 		if (!('serviceWorker' in navigator)) return;
@@ -19,4 +20,5 @@
 	/>
 	<link rel="manifest" href="/manifest.webmanifest" />
 </svelte:head>
+<ThemePreferenceSync site={data.site} />
 {@render children()}

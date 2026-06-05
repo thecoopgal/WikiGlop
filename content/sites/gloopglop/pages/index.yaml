@@ -12,6 +12,7 @@ page_settings:
   show_header: true
   show_footer: true
   max_width: sm
+  search_query: What is GloopGlop?
 
 blocks:
   - type: creator_profile
@@ -38,9 +39,6 @@ blocks:
       - label: Create
         open_in: same_tab
         href: /create
-      - label: Upload
-        open_in: same_tab
-        href: /upload
       - label: ByLaws
         open_in: same_tab
         href: /bylaws

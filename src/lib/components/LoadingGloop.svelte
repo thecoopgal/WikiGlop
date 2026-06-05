@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { GLOOPGLOP_DEFAULT_LOGO_URL } from '$lib/glop-link-image';
+	import { resolveGloopIconUrl, subscribeCustomGloopIcon } from '$lib/client/gloopglop-custom-icon';
 
 	type Size = 'sm' | 'md' | 'lg';
 
@@ -22,10 +23,15 @@
 	};
 
 	const pixel = $derived(size === 'lg' ? 80 : size === 'md' ? 48 : 32);
+	let iconUrl = $state(GLOOPGLOP_DEFAULT_LOGO_URL);
+
+	$effect(() => subscribeCustomGloopIcon(() => {
+		iconUrl = resolveGloopIconUrl();
+	}));
 </script>
 
 <img
-	src={GLOOPGLOP_DEFAULT_LOGO_URL}
+	src={iconUrl}
 	{alt}
 	width={pixel}
 	height={pixel}
