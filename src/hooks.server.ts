@@ -30,7 +30,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 				return Response.redirect(`${platformOrigin}/${event.url.search}`, 301);
 			}
 
-			const creatorSite = await resolveSiteForGloopGgPath(segments[0]);
+			const creatorSite = await resolveSiteForGloopGgPath(segments[0], event.platform);
 			if (creatorSite) {
 				const origin = canonicalOriginForSite(creatorSite, event.url);
 				if (origin) {
@@ -46,7 +46,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 			const destination = `${platformOrigin}${pathname}${event.url.search}`;
 			return Response.redirect(destination, 301);
 		} else {
-			site = await resolveSiteByHostname(hostname);
+			site = await resolveSiteByHostname(hostname, event.platform);
 		}
 
 		const isNodeDev =

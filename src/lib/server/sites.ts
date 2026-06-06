@@ -53,6 +53,11 @@ export type SiteConfig = {
 
 export type ResolvedSite = SiteConfig & {
 	siteId: string; // directory name under /content/sites
+	/** Approved links submission when the site is not in content/sites. */
+	linksSubmission?: {
+		id: string;
+		payload: import('$lib/links-submission-payload').LinksPageSubmissionPayload;
+	};
 };
 
 type CachedSites = {
@@ -129,7 +134,7 @@ function parseSiteShortLinkGroups(raw: unknown): SiteShortLinkGroup[] | undefine
 	return out.length ? out : undefined;
 }
 
-function normalizeTheme(themeRaw: unknown): SiteTheme | undefined {
+export function normalizeTheme(themeRaw: unknown): SiteTheme | undefined {
 	if (!themeRaw || typeof themeRaw !== 'object') return undefined;
 	const theme = themeRaw as SiteTheme;
 	const preset = typeof theme.preset === 'string' ? theme.preset.trim().toLowerCase() : '';
@@ -249,23 +254,32 @@ export async function getAllSites(): Promise<ResolvedSite[]> {
 	return sites;
 }
 
-export async function resolveSiteById(siteId: string): Promise<ResolvedSite | null> {
+export async function resolveSiteById(
+	siteId: string,
+	platform?: App.Platform
+): Promise<ResolvedSite | null> {
 	const key = normalizeHostname(siteId);
 	if (!key) return null;
 	const sites = await getAllSites();
-	return (
+	const staticSite =
 		sites.find(
 			(s) => normalizeHostname(s.siteId) === key || normalizeHostname(s.id) === key
-		) ?? null
-	);
+		) ?? null;
+	if (staticSite) return staticSite;
+
+	const { resolveApprovedLinksSubmissionSite } = await import('$lib/server/links-submission-sites');
+	return resolveApprovedLinksSubmissionSite(platform, key);
 }
 
 /** Resolves `gloop.gg/{firstSegment}/...` to a site by id or by `routing.gloop_gg_short_slug`. */
-export async function resolveSiteForGloopGgPath(firstSegment: string): Promise<ResolvedSite | null> {
+export async function resolveSiteForGloopGgPath(
+	firstSegment: string,
+	platform?: App.Platform
+): Promise<ResolvedSite | null> {
 	const key = normalizeHostname(firstSegment);
 	if (!key) return null;
 
-	const byId = await resolveSiteById(key);
+	const byId = await resolveSiteById(key, platform);
 	if (byId) return byId;
 
 	const sites = await getAllSites();
@@ -279,7 +293,10 @@ export async function resolveSiteForGloopGgPath(firstSegment: string): Promise<R
 	return null;
 }
 
-export async function resolveSiteByHostname(hostname: string): Promise<ResolvedSite | null> {
+export async function resolveSiteByHostname(
+	hostname: string,
+	platform?: App.Platform
+): Promise<ResolvedSite | null> {
 	const hostnameNormalized = normalizeHostname(hostname);
 	const sites = await getAllSites();
 	const candidate = pickSubdomainCandidate(hostnameNormalized);
@@ -311,6 +328,12 @@ export async function resolveSiteByHostname(hostname: string): Promise<ResolvedS
 				return site;
 			}
 		}
+
+		const { resolveApprovedLinksSubmissionSite } = await import(
+			'$lib/server/links-submission-sites'
+		);
+		const dynamicSite = await resolveApprovedLinksSubmissionSite(platform, candidate);
+		if (dynamicSite) return dynamicSite;
 	}
 
 	return null;

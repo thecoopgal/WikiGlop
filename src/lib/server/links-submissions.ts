@@ -1,19 +1,9 @@
 import { getDbBinding } from '$lib/server/platform-env';
+import type { LinksPageSubmissionPayload } from '$lib/links-submission-payload';
+
+export type { LinksPageSubmissionPayload } from '$lib/links-submission-payload';
 
 export type LinksSubmissionApprovalStatus = 'pending' | 'approved' | 'rejected';
-
-export type LinksPageSubmissionPayload = {
-	theme: string | null;
-	names: string[];
-	tagline: string;
-	description: string;
-	links: Array<{ label: string; href: string; iconMode?: string }>;
-	hasProfilePicture: boolean;
-	profilePictureUrl?: string | null;
-	pageColors: Record<string, string>;
-	shareIconVariant?: 'light' | 'dark';
-	siteThemeMode?: 'light' | 'dark';
-};
 
 export type LinksPageSubmissionRow = {
 	id: string;
@@ -38,6 +28,10 @@ export type LinksPageSubmissionSummary = {
 	approvedAt: string | null;
 	primaryName: string;
 	linkCount: number;
+};
+
+export type LinksPageSubmissionClientSummary = LinksPageSubmissionSummary & {
+	payload: LinksPageSubmissionPayload | null;
 };
 
 const SUBMISSION_COLUMNS = `id, site_id, client_key, creator_id, display_name, approval_status, payload_json, approved_at, created_at, updated_at`;
@@ -65,13 +59,45 @@ export function creatorIdFromPrimaryName(name: string): string | null {
 	return slug.slice(0, 120);
 }
 
-function parsePayload(row: LinksPageSubmissionRow): LinksPageSubmissionPayload | null {
+export function parseLinksSubmissionPayload(
+	row: Pick<LinksPageSubmissionRow, 'payload_json'>
+): LinksPageSubmissionPayload | null {
 	try {
 		const parsed = JSON.parse(row.payload_json) as LinksPageSubmissionPayload;
 		if (!parsed || typeof parsed !== 'object') return null;
 		return parsed;
 	} catch {
 		return null;
+	}
+}
+
+function parsePayload(row: LinksPageSubmissionRow): LinksPageSubmissionPayload | null {
+	return parseLinksSubmissionPayload(row);
+}
+
+export async function getApprovedLinksSubmissionByCreatorId(
+	platform: App.Platform | undefined,
+	siteId: string,
+	creatorId: string
+): Promise<LinksPageSubmissionRow | null> {
+	const key = creatorId.trim().toLowerCase();
+	if (key.length < 2) return null;
+
+	const db = getDbBinding(platform);
+	try {
+		return await db
+			.prepare(
+				`SELECT ${SUBMISSION_COLUMNS}
+         FROM links_page_submissions
+         WHERE site_id = ? AND creator_id = ? AND approval_status = 'approved'
+         ORDER BY approved_at DESC, created_at DESC
+         LIMIT 1`
+			)
+			.bind(siteId, key)
+			.first<LinksPageSubmissionRow>();
+	} catch (e) {
+		if (isLinksSubmissionSchemaError(e)) return null;
+		throw e;
 	}
 }
 
@@ -88,6 +114,11 @@ function rowToSummary(row: LinksPageSubmissionRow): LinksPageSubmissionSummary {
 		primaryName: payload?.names?.[0]?.trim() ?? row.display_name,
 		linkCount: payload?.links?.length ?? 0
 	};
+}
+
+function rowToClientSummary(row: LinksPageSubmissionRow): LinksPageSubmissionClientSummary {
+	const payload = parsePayload(row);
+	return { ...rowToSummary(row), payload };
 }
 
 export async function createLinksPageSubmission(opts: {
@@ -126,7 +157,7 @@ export async function listLinksSubmissionsForClient(opts: {
 	siteId: string;
 	clientKey: string;
 	limit?: number;
-}): Promise<LinksPageSubmissionSummary[]> {
+}): Promise<LinksPageSubmissionClientSummary[]> {
 	const db = getDbBinding(opts.platform);
 	const limit = Math.min(Math.max(opts.limit ?? 50, 1), 100);
 	const { results } = await db
@@ -140,7 +171,7 @@ export async function listLinksSubmissionsForClient(opts: {
 		.bind(opts.siteId, opts.clientKey, limit)
 		.all<LinksPageSubmissionRow>();
 
-	return (results ?? []).map(rowToSummary);
+	return (results ?? []).map(rowToClientSummary);
 }
 
 export async function listPendingLinksSubmissions(opts: {

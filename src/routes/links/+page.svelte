@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import Icons8BoogerAttribution from '$lib/components/Icons8BoogerAttribution.svelte';
+	import { downloadSubmissionSiteYaml } from '$lib/client/links-create-site-yaml';
 	import {
 		fetchMyLinksSubmissions,
 		type LinksPageSubmissionSummary
@@ -9,6 +10,8 @@
 	let loading = $state(true);
 	let loadError = $state('');
 	let submissions = $state<LinksPageSubmissionSummary[]>([]);
+	let downloadingId = $state<string | null>(null);
+	let downloadError = $state('');
 
 	onMount(async () => {
 		const result = await fetchMyLinksSubmissions();
@@ -43,6 +46,20 @@
 		if (status === 'rejected') return 'Not approved';
 		return 'Pending review';
 	}
+
+	async function downloadSubmission(submission: LinksPageSubmissionSummary) {
+		if (downloadingId || !submission.payload) return;
+		downloadingId = submission.id;
+		downloadError = '';
+		try {
+			await downloadSubmissionSiteYaml(submission.payload, submission.creatorId);
+		} catch (error) {
+			downloadError =
+				error instanceof Error ? error.message : 'Could not prepare the site YAML download.';
+		} finally {
+			downloadingId = null;
+		}
+	}
 </script>
 
 <svelte:head>
@@ -52,17 +69,49 @@
 
 <div class="flex min-h-screen flex-col">
 	<div class="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 py-10">
-		<header class="mb-8 text-center">
+		<header class="mb-6 text-center">
 			<h1 class="text-2xl font-semibold tracking-tight">Your Links pages</h1>
 			<p class="mt-2 text-sm opacity-70">
 				Pages you submitted from this browser. We review each one before it goes live.
 			</p>
 		</header>
 
+		<div
+			class="alert alert-warning mb-6 rounded-2xl border border-warning/30 bg-warning/10 text-left text-sm shadow-sm"
+			role="status"
+		>
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				class="h-6 w-6 shrink-0 stroke-current"
+				fill="none"
+				viewBox="0 0 24 24"
+				aria-hidden="true"
+			>
+				<path
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					stroke-width="2"
+					d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4.5c-.77-1.333-2.694-1.333-3.464 0L3.34 16.5c-.77 1.333.192 3 1.732 3z"
+				/>
+			</svg>
+			<div>
+				<p class="font-medium">This list is tied to this browser only.</p>
+				<p class="mt-1 opacity-90">
+					We use a small id saved in your browser to show your submissions. Clearing site data,
+					cookies, or cache, using private browsing, or switching devices can hide submissions
+					here — download a copy of your page YAML to keep your own backup.
+				</p>
+			</div>
+		</div>
+
 		<div class="mb-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
 			<a href="/links/start" class="btn btn-primary rounded-2xl">Gloop my Glop</a>
 			<a href="/links/start" class="btn btn-outline rounded-2xl">Edit existing page</a>
 		</div>
+
+		{#if downloadError}
+			<p class="mb-4 text-center text-sm text-error">{downloadError}</p>
+		{/if}
 
 		{#if loading}
 			<div class="flex flex-1 items-center justify-center py-16">
@@ -119,6 +168,16 @@
 								</div>
 							{/if}
 						</dl>
+						<div class="mt-4">
+							<button
+								type="button"
+								class="btn btn-outline btn-sm rounded-xl"
+								disabled={!submission.payload || downloadingId === submission.id}
+								onclick={() => downloadSubmission(submission)}
+							>
+								{downloadingId === submission.id ? 'Preparing…' : 'Download site YAML'}
+							</button>
+						</div>
 					</li>
 				{/each}
 			</ul>

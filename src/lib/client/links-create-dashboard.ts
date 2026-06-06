@@ -1,4 +1,5 @@
 import { getOrCreateBrowserClientId } from '$lib/client/gloop-browser-glop-limit';
+import type { LinksPageSubmissionPayload } from '$lib/links-submission-payload';
 
 export type LinksSubmissionApprovalStatus = 'pending' | 'approved' | 'rejected';
 
@@ -12,6 +13,7 @@ export type LinksPageSubmissionSummary = {
 	approvedAt: string | null;
 	primaryName: string;
 	linkCount: number;
+	payload: LinksPageSubmissionPayload | null;
 };
 
 export type LinksDashboardLoadResult =

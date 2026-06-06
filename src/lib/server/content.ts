@@ -403,6 +403,15 @@ export async function loadPageYaml(
 	site: ResolvedSite,
 	slugParts: string[]
 ): Promise<PageYaml | null> {
+	if (site.linksSubmission) {
+		const pageSlug = slugParts.length === 0 ? 'index' : slugParts[0];
+		if (pageSlug !== 'index') return null;
+
+		const { buildLinksSubmissionPageYaml } = await import('$lib/server/links-submission-sites');
+		const page = buildLinksSubmissionPageYaml(site.linksSubmission.payload, site.siteId);
+		return applySiteShortLinksToPage(page, site);
+	}
+
 	const filePath = getPageYamlPath(site.siteId, slugParts);
 	if (!filePath) return null;
 
