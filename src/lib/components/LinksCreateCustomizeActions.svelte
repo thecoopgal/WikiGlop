@@ -50,9 +50,10 @@
 
 <div class="relative mx-auto mt-4 flex w-full max-w-md flex-col items-center">
 	{#if submitSuccess}
-		<p class="text-sm opacity-80" in:fade={linksFade}>
-			Thanks — your page was submitted. We will review it soon.
-		</p>
+		<div class="flex flex-col items-center gap-3" in:fade={linksFade}>
+			<p class="text-sm opacity-80">Thanks — your page was submitted. We will review it soon.</p>
+			<a href="/links" class="btn btn-outline btn-sm">View your submissions</a>
+		</div>
 	{:else}
 		<div
 			class="flex w-full flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-center"
