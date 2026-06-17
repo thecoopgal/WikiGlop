@@ -111,9 +111,31 @@ html[data-theme] .gloopglop-text-box-text {
 	pointer-events: none;
 }
 
+.links-reorder-active {
+	user-select: none;
+}
+
+.links-reorder-active .links-reorder-item-contents :is(input, button, textarea, select, a) {
+	pointer-events: none;
+}
+
 .links-reorder-dragging {
 	animation: none !important;
 	touch-action: none;
+}
+
+.links-reorder-dragging .links-reorder-item-contents > * {
+	transform: scale(1.015);
+	box-shadow:
+		0 14px 30px color-mix(in oklab, var(--color-base-content) 16%, transparent),
+		0 0 0 2px color-mix(in oklab, var(--color-primary) 35%, transparent);
+	transition:
+		transform 120ms ease,
+		box-shadow 120ms ease;
+}
+
+.links-reorder-edit-mode .links-reorder-dragging .links-reorder-item-contents > * {
+	opacity: 0.92;
 }
 
 @keyframes links-reorder-shake {

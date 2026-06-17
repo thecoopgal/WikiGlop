@@ -7,33 +7,32 @@
 		enabled = true,
 		itemLabel,
 		dragging = false,
-		onDragStart,
-		onDragEnd
+		onPointerDragStart
 	}: {
 		index: number;
 		total: number;
 		enabled?: boolean;
 		itemLabel: string;
 		dragging?: boolean;
-		onDragStart: (event: DragEvent) => void;
-		onDragEnd: () => void;
+		onPointerDragStart: (event: PointerEvent) => void;
 	} = $props();
 
-	const showReorder = $derived(total > 1);
+	const canDrag = $derived(enabled && total > 1);
 </script>
 
-{#if showReorder}
-	<button
-		type="button"
-		class="btn btn-ghost btn-sm shrink-0 cursor-grab self-center px-2 active:cursor-grabbing {dragging
-			? 'opacity-50'
-			: ''}"
-		aria-label="Drag to reorder {itemLabel}"
-		draggable={enabled}
-		tabindex={enabled ? undefined : -1}
-		ondragstart={onDragStart}
-		ondragend={onDragEnd}
-	>
-		<IconDragVertical class="h-5 w-5 text-base-content/50" aria-hidden="true" />
-	</button>
-{/if}
+<button
+	type="button"
+	class="btn btn-ghost btn-sm shrink-0 touch-none self-center px-2 select-none {canDrag
+		? 'cursor-grab active:cursor-grabbing'
+		: 'cursor-default opacity-60'} {dragging ? 'cursor-grabbing' : ''}"
+	aria-label="Drag to reorder {itemLabel}"
+	aria-disabled={!canDrag}
+	tabindex={canDrag ? undefined : -1}
+	onpointerdown={(event) => {
+		if (!canDrag) return;
+		event.preventDefault();
+		onPointerDragStart(event);
+	}}
+>
+	<IconDragVertical class="h-5 w-5 text-base-content/50" aria-hidden="true" />
+</button>
