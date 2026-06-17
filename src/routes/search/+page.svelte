@@ -7,6 +7,7 @@
 	import { GLOOPGLOP_DEFAULT_LOGO_URL } from '$lib/glop-link-image';
 	import { GLOOPGLOP_SEARCH_PAGE_FOCUS_HREF } from '$lib/gloopglop-search-nav';
 	import GlopSearchModal from '$lib/components/GlopSearchModal.svelte';
+	import GlopSearchResultItem from '$lib/components/GlopSearchResultItem.svelte';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
 	import Icons8BoogerAttribution from '$lib/components/Icons8BoogerAttribution.svelte';
 	import LoadingGloop from '$lib/components/LoadingGloop.svelte';
@@ -310,50 +311,17 @@
 												{#if profileGlopGroup}
 													{@const seo = data.seoByUrl[profileGlopGroup.answerUrl]}
 													{@const display = glopResultDisplay(profileGlopGroup.answerUrl, seo)}
-													<a
-														href={profileGlopGroup.answerUrl}
-														target="_blank"
-														rel="noopener noreferrer"
-														title={profileGlopGroup.answerUrl}
-														class="group flex cursor-pointer flex-row items-start gap-4 rounded-lg no-underline outline-none transition-colors hover:bg-primary/15 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-base-100"
-													>
-														<div class="relative shrink-0 self-start">
-															<img
-																src={gloopglopLogoUrl}
-																alt=""
-																class="h-11 w-11 rounded-xl object-cover ring-1 ring-primary/40"
-																width="44"
-																height="44"
-																decoding="async"
-															/>
-															<span
-																class="badge badge-sm absolute -bottom-1 -right-1 min-w-[1.25rem] justify-center border-0 bg-primary px-1.5 text-primary-content"
-																title="Gloops for this question and link"
-															>
-																{profileGlopGroup.gloopCount}
-															</span>
-														</div>
-														<div class="flex min-w-0 flex-1 flex-col gap-1">
-															<p class="text-xs font-medium text-base-content/70">
-																{creatorUi?.displayName ?? 'Creator'}
-															</p>
-															{#if display.title}
-																<p class="line-clamp-2 text-base leading-snug opacity-90">
-																	{display.title}
-																</p>
-															{/if}
-															{#if display.description}
-																<p class="line-clamp-3 text-sm leading-relaxed opacity-75">
-																	{display.description}
-																</p>
-															{/if}
-															<p
-																class="mt-auto block break-words pt-1 text-sm font-semibold text-primary group-hover:underline"
-															>
-																{display.linkLabel}
-															</p>
-														</div>
-													</a>
+													<GlopSearchResultItem
+														answerUrl={profileGlopGroup.answerUrl}
+														gloopCount={profileGlopGroup.gloopCount}
+														{seo}
+														logoUrl={gloopglopLogoUrl}
+														variant="profile"
+														creatorLabel={creatorUi?.displayName ?? 'Creator'}
+														displayTitle={display.title}
+														displayDescription={display.description}
+														linkLabel={display.linkLabel}
+													/>
 												{/if}
 
 												{#if nestedCreatorGlopGroups.length > 0}
@@ -377,47 +345,16 @@
 																{@const nSeo = data.seoByUrl[group.answerUrl]}
 																{@const display = glopResultDisplay(group.answerUrl, nSeo)}
 																<li class="p-0">
-																	<a
-																		href={group.answerUrl}
-																		target="_blank"
-																		rel="noopener noreferrer"
-																		title={group.answerUrl}
-																		class="group flex cursor-pointer flex-row items-start gap-3 px-3 py-3 no-underline outline-none transition-colors hover:bg-base-200/70 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
-																	>
-																		<div class="relative shrink-0 self-start">
-																			<img
-																				src={gloopglopLogoUrl}
-																				alt=""
-																				class="h-9 w-9 rounded-lg object-cover ring-1 ring-base-300"
-																				width="36"
-																				height="36"
-																				decoding="async"
-																			/>
-																			<span
-																				class="badge badge-sm absolute -bottom-0.5 -right-0.5 min-w-[1.1rem] scale-90 justify-center border-0 bg-primary px-1 text-[10px] text-primary-content"
-																				title="Gloops for this question and link"
-																			>
-																				{group.gloopCount}
-																			</span>
-																		</div>
-																		<div class="flex min-w-0 flex-1 flex-col gap-0.5">
-																			{#if display.title}
-																				<p class="line-clamp-2 text-sm leading-snug opacity-85">
-																					{display.title}
-																				</p>
-																			{/if}
-																			{#if display.description}
-																				<p class="line-clamp-2 text-xs leading-relaxed opacity-70">
-																					{display.description}
-																				</p>
-																			{/if}
-																			<p
-																				class="mt-auto block break-words pt-1 text-xs font-semibold text-primary group-hover:underline"
-																			>
-																				{display.linkLabel}
-																			</p>
-																		</div>
-																	</a>
+																	<GlopSearchResultItem
+																		answerUrl={group.answerUrl}
+																		gloopCount={group.gloopCount}
+																		seo={nSeo}
+																		logoUrl={gloopglopLogoUrl}
+																		variant="nested"
+																		displayTitle={display.title}
+																		displayDescription={display.description}
+																		linkLabel={display.linkLabel}
+																	/>
 																</li>
 															{/each}
 														</ul>
@@ -434,47 +371,15 @@
 											{@const seo = data.seoByUrl[group.answerUrl]}
 											{@const display = glopResultDisplay(group.answerUrl, seo)}
 											<li class="p-0">
-												<a
-													href={group.answerUrl}
-													target="_blank"
-													rel="noopener noreferrer"
-													title={group.answerUrl}
-													class="group flex cursor-pointer flex-row items-start gap-4 px-4 py-4 no-underline outline-none transition-colors hover:bg-base-200/60 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
-												>
-													<div class="relative shrink-0 self-start">
-														<img
-															src={gloopglopLogoUrl}
-															alt=""
-															class="h-11 w-11 rounded-xl object-cover ring-1 ring-base-300"
-															width="44"
-															height="44"
-															decoding="async"
-														/>
-														<span
-															class="badge badge-sm absolute -bottom-1 -right-1 min-w-[1.25rem] justify-center border-0 bg-primary px-1.5 text-primary-content"
-															title="Gloops for this question and link"
-														>
-															{group.gloopCount}
-														</span>
-													</div>
-													<div class="flex min-w-0 flex-1 flex-col gap-1">
-														{#if display.title}
-															<p class="line-clamp-2 text-base leading-snug opacity-90">
-																{display.title}
-															</p>
-														{/if}
-														{#if display.description}
-															<p class="line-clamp-3 text-sm leading-relaxed opacity-75">
-																{display.description}
-															</p>
-														{/if}
-														<p
-															class="mt-auto block break-words pt-1 text-sm font-semibold text-primary group-hover:underline"
-														>
-															{display.linkLabel}
-														</p>
-													</div>
-												</a>
+												<GlopSearchResultItem
+													answerUrl={group.answerUrl}
+													gloopCount={group.gloopCount}
+													{seo}
+													logoUrl={gloopglopLogoUrl}
+													displayTitle={display.title}
+													displayDescription={display.description}
+													linkLabel={display.linkLabel}
+												/>
 											</li>
 										{/each}
 									{:else}
@@ -482,47 +387,15 @@
 											{@const seo = data.seoByUrl[group.answerUrl]}
 											{@const display = glopResultDisplay(group.answerUrl, seo)}
 											<li class="p-0">
-												<a
-													href={group.answerUrl}
-													target="_blank"
-													rel="noopener noreferrer"
-													title={group.answerUrl}
-													class="group flex cursor-pointer flex-row items-start gap-4 px-4 py-4 no-underline outline-none transition-colors hover:bg-base-200/60 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary"
-												>
-													<div class="relative shrink-0 self-start">
-														<img
-															src={gloopglopLogoUrl}
-															alt=""
-															class="h-11 w-11 rounded-xl object-cover ring-1 ring-base-300"
-															width="44"
-															height="44"
-															decoding="async"
-														/>
-														<span
-															class="badge badge-sm absolute -bottom-1 -right-1 min-w-[1.25rem] justify-center border-0 bg-primary px-1.5 text-primary-content"
-															title="Gloops for this question and link"
-														>
-															{group.gloopCount}
-														</span>
-													</div>
-													<div class="flex min-w-0 flex-1 flex-col gap-1">
-														{#if display.title}
-															<p class="line-clamp-2 text-base leading-snug opacity-90">
-																{display.title}
-															</p>
-														{/if}
-														{#if display.description}
-															<p class="line-clamp-3 text-sm leading-relaxed opacity-75">
-																{display.description}
-															</p>
-														{/if}
-														<p
-															class="mt-auto block break-words pt-1 text-sm font-semibold text-primary group-hover:underline"
-														>
-															{display.linkLabel}
-														</p>
-													</div>
-												</a>
+												<GlopSearchResultItem
+													answerUrl={group.answerUrl}
+													gloopCount={group.gloopCount}
+													{seo}
+													logoUrl={gloopglopLogoUrl}
+													displayTitle={display.title}
+													displayDescription={display.description}
+													linkLabel={display.linkLabel}
+												/>
 											</li>
 										{/each}
 									{/if}
