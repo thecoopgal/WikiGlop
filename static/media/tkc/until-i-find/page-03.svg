@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1200" viewBox="0 0 800 1200">
+  <rect width="800" height="1200" fill="#fff7ed"/>
+  <circle cx="400" cy="520" r="180" fill="#fdba74" opacity="0.35"/>
+  <circle cx="520" cy="420" r="120" fill="#f97316" opacity="0.35"/>
+  <circle cx="300" cy="430" r="100" fill="#ea580c" opacity="0.35"/>
+  <text x="400" y="540" fill="#9a3412" font-family="Georgia, serif" font-size="42" text-anchor="middle">Still searching.</text>
+  <text x="400" y="1120" fill="#c2410c" font-family="Arial, sans-serif" font-size="24" text-anchor="middle">Page 3</text>
+</svg>

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1200" viewBox="0 0 800 1200">
+  <rect width="800" height="1200" fill="#faf5ff"/>
+  <rect x="60" y="80" width="680" height="420" rx="24" fill="#ede9fe" stroke="#7c3aed" stroke-width="4"/>
+  <text x="400" y="320" fill="#4c1d95" font-family="Arial, sans-serif" font-size="34" text-anchor="middle">Something shifts</text>
+  <text x="400" y="380" fill="#6d28d9" font-family="Arial, sans-serif" font-size="22" text-anchor="middle">in the kaleidoscope.</text>
+  <text x="400" y="1120" fill="#7c3aed" font-family="Arial, sans-serif" font-size="24" text-anchor="middle">Page 2</text>
+</svg>

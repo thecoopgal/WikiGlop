@@ -1,0 +1,55 @@
+id: until-i-find
+title: Until I Find
+path: /Until-I-Find
+layout: document
+
+seo:
+  title: Until I Find — Tuscaloosa Kaleidoscope Collective
+  description: A webcomic from the Tuscaloosa Kaleidoscope Collective.
+  image: https://imagedelivery.net/zdMtZgMUbYs7-R4-dRSl-Q/d1e965ad-d6c8-43c0-dfd5-0e28f0c2c300/public
+
+permissions:
+  view: public
+  propose: members
+  edit_mode: proposal_required
+
+page_settings:
+  show_header: true
+  show_footer: true
+  table_of_contents: false
+  show_last_updated: false
+  show_edit_history: false
+  max_width: md
+
+blocks:
+  - type: slideshow
+    id: comic
+    title: Until I Find
+    show_counter: true
+    fit: contain
+    items:
+      - image: /media/tkc/until-i-find/page-01.svg
+        alt: Until I Find — page 1, title splash
+      - image: /media/tkc/until-i-find/page-02.svg
+        alt: Until I Find — page 2
+      - image: /media/tkc/until-i-find/page-03.svg
+        alt: Until I Find — page 3
+
+  - type: markdown
+    id: about
+    content: |
+      *Until I Find* — a webcomic from the Tuscaloosa Kaleidoscope Collective. Swipe or use the arrows to turn the page.
+
+  - type: links
+    id: related
+    title: More from TKC
+    style: inline
+    items:
+      - label: Home
+        href: /
+      - label: Creators
+        href: /creators
+      - label: Join
+        href: "#"
+        open_mode: modal
+        modal: join

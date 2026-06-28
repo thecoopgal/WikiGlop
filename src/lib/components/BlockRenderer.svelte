@@ -9,6 +9,7 @@
 	import DocumentHeaderBlock from './blocks/DocumentHeaderBlock.svelte';
 	import PublicationHeaderBlock from './blocks/PublicationHeaderBlock.svelte';
 	import GalleryBlock from './blocks/GalleryBlock.svelte';
+	import SlideshowBlock from './blocks/SlideshowBlock.svelte';
 	import PeopleBlock from './blocks/PeopleBlock.svelte';
 	import CreatorProfileBlock from './blocks/CreatorProfileBlock.svelte';
 	import QuoteBlock from './blocks/QuoteBlock.svelte';
@@ -89,6 +90,14 @@ let { blocks, block, site, pageSettings }: any = $props();
 		</div>
 	{:else}
 		<GalleryBlock {...(block as any)} />
+	{/if}
+{:else if blockType === 'slideshow'}
+	{#if (block as any)?.id}
+		<div id={(block as any).id}>
+			<SlideshowBlock {...(block as any)} />
+		</div>
+	{:else}
+		<SlideshowBlock {...(block as any)} />
 	{/if}
 {:else if blockType === 'people'}
 	{#if (block as any)?.id}

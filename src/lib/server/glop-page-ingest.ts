@@ -127,7 +127,32 @@ function walkBlocksForImages(blocks: unknown, base: URL, out: Map<string, string
 		if (type === 'hero' && Array.isArray(b.cta)) {
 			collectImagesFromLinksItems(b.cta, base, out);
 		}
+
+		if (type === 'slideshow' || type === 'gallery') {
+			const first = firstHttpImageFromSlideshowOrGallery(b);
+			if (first) {
+				const home = new URL('/', base).href;
+				if (!isOmittedFromGloopglopSearch(home) && !out.has(home)) out.set(home, first);
+			}
+		}
 	}
+}
+
+function firstHttpImageFromSlideshowOrGallery(block: Record<string, unknown>): string | null {
+	if (Array.isArray(block.items)) {
+		for (const raw of block.items) {
+			if (!isRecord(raw)) continue;
+			const img = typeof raw.image === 'string' ? raw.image.trim() : '';
+			if (img.startsWith('http://') || img.startsWith('https://')) return img;
+		}
+	}
+	if (Array.isArray(block.images)) {
+		for (const raw of block.images) {
+			const img = typeof raw === 'string' ? raw.trim() : '';
+			if (img.startsWith('http://') || img.startsWith('https://')) return img;
+		}
+	}
+	return null;
 }
 
 function walkBlocks(blocks: unknown, base: URL, pageTitle: string, out: Map<string, string>): void {
