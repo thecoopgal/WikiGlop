@@ -1,3 +1,4 @@
+import { resolveUserFromSessionCookie } from '$lib/server/auth-session';
 import { canonicalOriginForSite } from '$lib/server/content';
 import { isMeNotificationsHost } from '$lib/server/me-host';
 import { getAllSites, resolveSiteByHostname, resolveSiteForGloopGgPath } from '$lib/server/sites';
@@ -60,6 +61,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 		}
 		event.locals.site = site;
 	}
+
+	event.locals.user = await resolveUserFromSessionCookie(event.platform, event.cookies);
 
 	return resolve(event);
 };

@@ -2,7 +2,6 @@ id: alabamaresistersmontgomery
 name: Alabama Resisters (Montgomery)
 hosts:
   - alabamaresistersmontgomery.localhost
-  - 127.0.0.1
   - alabamaresistersmontgomery.gloopglop.com
   - www.alabamaresistersmontgomery.gloopglop.com
   - alabamaresistersmontgomery.gloop.gg

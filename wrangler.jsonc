@@ -28,11 +28,23 @@
 			"bucket_name": "gloopglop-uploads"
 		}
 	],
+	"send_email": [
+		{
+			"name": "EMAIL",
+			"remote": true
+		}
+	],
+	"images": {
+		"binding": "IMAGES"
+	},
 	// Empty default for local / typegen; use `wrangler secret put RESEND_API_KEY` in production (overrides var).
 	"vars": {
 		"RESEND_API_KEY": "",
 		"VAPID_PUBLIC_KEY": "BFxK_qez_beomsxbU92SJ90B2rNtQ7-kdwQuWvrD2_jQgMzNJNl15262JUyoJR-kpFY_ZeRoT7WnOg9xmsSW7hE",
 		"VAPID_SUBJECT": "mailto:notifications@gloop.gg",
-		"CLOUDFLARE_ACCOUNT_ID": ""
+		"CLOUDFLARE_ACCOUNT_ID": "",
+		"AUTH_FROM_EMAIL": "login@gloop.gg",
+		"AUTH_FROM_NAME": "GloopGlop",
+		"CLOUDFLARE_IMAGES_ACCOUNT_HASH": "zdMtZgMUbYs7-R4-dRSl-Q"
 	}
 }

@@ -2,7 +2,6 @@ id: indivisibletag
 name: Indivisible TAG (Tennessee, Alabama and Georgia)
 hosts:
   - indivisibletag.localhost
-  - 127.0.0.1
   - indivisibletag.gloopglop.com
   - www.indivisibletag.gloopglop.com
   - indivisibletag.gloop.gg

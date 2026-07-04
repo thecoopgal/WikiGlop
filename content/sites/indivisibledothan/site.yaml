@@ -2,7 +2,6 @@ id: indivisibledothan
 name: Indivisible Dothan
 hosts:
   - indivisibledothan.localhost
-  - 127.0.0.1
   - indivisibledothan.gloopglop.com
   - www.indivisibledothan.gloopglop.com
   - indivisibledothan.gloop.gg

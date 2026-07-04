@@ -2,7 +2,7 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { importLinksCreatePageFromUrl } from '$lib/server/links-create-import';
 
-export const POST: RequestHandler = async ({ request, locals }) => {
+export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	if (!locals.site) throw error(404, 'Site not found');
 
 	let body: unknown;
@@ -19,7 +19,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		return json({ ok: false, error: 'Enter the link to your existing page.' }, { status: 400 });
 	}
 
-	const result = await importLinksCreatePageFromUrl(url);
+	const result = await importLinksCreatePageFromUrl(url, platform);
 	if (!result.ok) {
 		return json({ ok: false, error: result.error }, { status: 404 });
 	}

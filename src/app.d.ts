@@ -7,6 +7,8 @@ declare global {
 		// interface Error {}
 		interface Locals {
 			site?: import('$lib/server/sites').ResolvedSite | null;
+			/** Signed-in user from `gg_session` cookie (platform auth). */
+			user?: import('$lib/server/auth-users').AuthUser | null;
 			/** When set, path-style URLs on gloop.gg use these slug parts (first path segment is the site id). */
 			gloopGgPageSlugParts?: string[];
 		}

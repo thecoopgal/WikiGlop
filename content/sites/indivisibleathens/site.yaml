@@ -2,7 +2,6 @@ id: indivisibleathens
 name: Indivisible Athens Alabama
 hosts:
   - indivisibleathens.localhost
-  - 127.0.0.1
   - indivisibleathens.gloopglop.com
   - www.indivisibleathens.gloopglop.com
   - indivisibleathens.gloop.gg

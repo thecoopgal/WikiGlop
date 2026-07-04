@@ -2,7 +2,6 @@ id: indivisiblelakemartindadeville
 name: Indivisible Lake Martin Dadeville and Surrounding Area
 hosts:
   - indivisiblelakemartindadeville.localhost
-  - 127.0.0.1
   - indivisiblelakemartindadeville.gloopglop.com
   - www.indivisiblelakemartindadeville.gloopglop.com
   - indivisiblelakemartindadeville.gloop.gg

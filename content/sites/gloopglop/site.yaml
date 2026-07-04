@@ -35,6 +35,9 @@ short_link_groups:
       - label: Links
         open_in: same_tab
         href: /links
+      - label: My pages
+        open_in: same_tab
+        href: /pages
       - label: Data
         open_in: same_tab
         href: /data

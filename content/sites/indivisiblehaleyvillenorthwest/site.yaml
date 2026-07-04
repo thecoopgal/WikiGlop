@@ -2,7 +2,6 @@ id: indivisiblehaleyvillenorthwest
 name: Northwest Alabama Indivisible (Haleyville)
 hosts:
   - indivisiblehaleyvillenorthwest.localhost
-  - 127.0.0.1
   - indivisiblehaleyvillenorthwest.gloopglop.com
   - www.indivisiblehaleyvillenorthwest.gloopglop.com
   - indivisiblehaleyvillenorthwest.gloop.gg

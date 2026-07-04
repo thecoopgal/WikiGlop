@@ -2,7 +2,6 @@ id: indivisiblephenixcity
 name: Phenix City Indivisible
 hosts:
   - indivisiblephenixcity.localhost
-  - 127.0.0.1
   - indivisiblephenixcity.gloopglop.com
   - www.indivisiblephenixcity.gloopglop.com
   - indivisiblephenixcity.gloop.gg

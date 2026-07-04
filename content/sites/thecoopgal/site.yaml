@@ -2,7 +2,6 @@ id: thecoopgal
 name: The Coop Gal
 hosts:
   - thecoopgal.localhost
-  - 127.0.0.1
   - thecoopgal.gloopglop.com
   - www.thecoopgal.gloopglop.com
   - thecoopgal.gloop.gg

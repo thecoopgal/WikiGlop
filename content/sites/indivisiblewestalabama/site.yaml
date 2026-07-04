@@ -2,7 +2,6 @@ id: indivisiblewestalabama
 name: Indivisible West Alabama
 hosts:
   - indivisiblewestalabama.localhost
-  - 127.0.0.1
   - indivisiblewestalabama.gloopglop.com
   - www.indivisiblewestalabama.gloopglop.com
   - indivisiblewestalabama.gloop.gg

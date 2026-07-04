@@ -2,7 +2,6 @@ id: alabamafella
 name: Alabamafella
 hosts:
   - alabamafella.localhost
-  - 127.0.0.1
   - alabamafella.gloopglop.com
   - www.alabamafella.gloopglop.com
   - alabamafella.gloop.gg

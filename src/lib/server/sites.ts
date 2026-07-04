@@ -53,7 +53,12 @@ export type SiteConfig = {
 
 export type ResolvedSite = SiteConfig & {
 	siteId: string; // directory name under /content/sites
-	/** Approved links submission when the site is not in content/sites. */
+	/** Published row in D1 `content_sites` (self-serve). Members live in `content_site_members`. */
+	contentStore?: {
+		source: string | null;
+		sourceRef: string | null;
+	};
+	/** Approved links submission when the site is not in content/sites or D1. */
 	linksSubmission?: {
 		id: string;
 		payload: import('$lib/links-submission-payload').LinksPageSubmissionPayload;
@@ -260,6 +265,12 @@ export async function resolveSiteById(
 ): Promise<ResolvedSite | null> {
 	const key = normalizeHostname(siteId);
 	if (!key) return null;
+
+	// D1 published sites win over YAML for the same id (self-serve edits).
+	const { getContentSiteById } = await import('$lib/server/content-store');
+	const fromDb = await getContentSiteById(platform, key);
+	if (fromDb) return fromDb;
+
 	const sites = await getAllSites();
 	const staticSite =
 		sites.find(
@@ -301,7 +312,19 @@ export async function resolveSiteByHostname(
 	const sites = await getAllSites();
 	const candidate = pickSubdomainCandidate(hostnameNormalized);
 
-	// 1) Exact host allow-list match from site.yaml (highest priority).
+	const isLoopback =
+		hostnameNormalized === 'localhost' ||
+		hostnameNormalized === '127.0.0.1' ||
+		hostnameNormalized === '::1';
+
+	// 1) D1 published sites by host (self-serve). Skip bare loopback — platform YAML owns that.
+	if (!isLoopback) {
+		const { getContentSiteByHostname } = await import('$lib/server/content-store');
+		const fromDbHost = await getContentSiteByHostname(platform, hostnameNormalized);
+		if (fromDbHost) return fromDbHost;
+	}
+
+	// 2) Exact host allow-list match from site.yaml.
 	const exactMatches = sites.filter(
 		(site) => site.hosts && site.hosts.some((h) => normalizeHostname(h) === hostnameNormalized)
 	);
@@ -316,13 +339,24 @@ export async function resolveSiteByHostname(
 			);
 			if (byCandidate) return byCandidate;
 		}
+		// Bare loopback — prefer the platform site so /login and tools resolve correctly.
+		if (isLoopback) {
+			const platformSite = exactMatches.find(
+				(site) =>
+					normalizeHostname(site.siteId) === 'gloopglop' || normalizeHostname(site.id) === 'gloopglop'
+			);
+			if (platformSite) return platformSite;
+		}
 		// Fall back to the first deterministic match.
 		return exactMatches[0];
 	}
 
-	// 2) Fallback: map subdomain -> site folder/id (useful for *.localhost in dev and
-	// multi-tenant subdomains behind Cloudflare Workers).
+	// 3) Fallback: map subdomain -> D1 site id, then YAML folder/id, then legacy links submission.
 	if (candidate) {
+		const { getContentSiteById } = await import('$lib/server/content-store');
+		const fromDbId = await getContentSiteById(platform, candidate);
+		if (fromDbId) return fromDbId;
+
 		for (const site of sites) {
 			if (normalizeHostname(site.siteId) === candidate || normalizeHostname(site.id) === candidate) {
 				return site;

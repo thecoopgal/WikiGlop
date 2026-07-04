@@ -401,8 +401,21 @@ export async function loadAllModals(site: ResolvedSite): Promise<Record<string, 
 
 export async function loadPageYaml(
 	site: ResolvedSite,
-	slugParts: string[]
+	slugParts: string[],
+	platform?: App.Platform
 ): Promise<PageYaml | null> {
+	// 1) D1 published pages (self-serve). Wins over YAML for the same site id.
+	if (platform) {
+		try {
+			const { loadContentPage } = await import('$lib/server/content-store');
+			const fromDb = await loadContentPage(platform, site.siteId, slugParts);
+			if (fromDb) return applySiteShortLinksToPage(fromDb, site);
+		} catch {
+			// Fall through to YAML / legacy submission.
+		}
+	}
+
+	// 2) Legacy approved links submission (not yet published to content_sites).
 	if (site.linksSubmission) {
 		const pageSlug = slugParts.length === 0 ? 'index' : slugParts[0];
 		if (pageSlug !== 'index') return null;
@@ -412,6 +425,7 @@ export async function loadPageYaml(
 		return applySiteShortLinksToPage(page, site);
 	}
 
+	// 3) Static YAML under content/sites.
 	const filePath = getPageYamlPath(site.siteId, slugParts);
 	if (!filePath) return null;
 
@@ -596,26 +610,27 @@ export async function listCreatorPagesAcrossSites(): Promise<GlobalCreatorPageSu
 /** `pages/not-found.yaml` — prefers the active site, then platform `gloopglop`. */
 export async function loadNotFoundPageForError(
 	site: ResolvedSite | null | undefined,
-	url: URL
+	url: URL,
+	platformEnv?: App.Platform
 ): Promise<{ site: ResolvedSite; page: PageYaml } | null> {
-	const platform = await resolveSiteById('gloopglop');
+	const platformSite = await resolveSiteById('gloopglop', platformEnv);
 
 	if (!site) {
-		if (!platform) return null;
-		const page = await loadPageYaml(platform, ['not-found']);
+		if (!platformSite) return null;
+		const page = await loadPageYaml(platformSite, ['not-found'], platformEnv);
 		if (!page) return null;
-		return { site: platform, page: await expandCreatorLinksShortcuts(platform, page, url) };
+		return { site: platformSite, page: await expandCreatorLinksShortcuts(platformSite, page, url) };
 	}
 
-	const own = await loadPageYaml(site, ['not-found']);
+	const own = await loadPageYaml(site, ['not-found'], platformEnv);
 	if (own) {
 		return { site, page: await expandCreatorLinksShortcuts(site, own, url) };
 	}
 
-	if (platform && platform.siteId !== site.siteId) {
-		const page = await loadPageYaml(platform, ['not-found']);
+	if (platformSite && platformSite.siteId !== site.siteId) {
+		const page = await loadPageYaml(platformSite, ['not-found'], platformEnv);
 		if (page) {
-			return { site: platform, page: await expandCreatorLinksShortcuts(platform, page, url) };
+			return { site: platformSite, page: await expandCreatorLinksShortcuts(platformSite, page, url) };
 		}
 	}
 

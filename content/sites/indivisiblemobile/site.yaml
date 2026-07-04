@@ -2,7 +2,6 @@ id: indivisiblemobile
 name: Indivisible Mobile
 hosts:
   - indivisiblemobile.localhost
-  - 127.0.0.1
   - indivisiblemobile.gloopglop.com
   - www.indivisiblemobile.gloopglop.com
   - indivisiblemobile.gloop.gg

@@ -32,23 +32,26 @@ function parsePageUrl(input: string): URL | null {
 	}
 }
 
-async function resolveSiteFromUrl(url: URL): Promise<ResolvedSite | null> {
+async function resolveSiteFromUrl(
+	url: URL,
+	platform?: App.Platform
+): Promise<ResolvedSite | null> {
 	const host = url.hostname.toLowerCase();
 
 	if (host === 'gloop.gg' || host === 'www.gloop.gg') {
 		const siteKey = url.pathname.split('/').filter(Boolean)[0];
 		if (!siteKey) return null;
-		return resolveSiteForGloopGgPath(siteKey);
+		return resolveSiteForGloopGgPath(siteKey, platform);
 	}
 
 	if (host.endsWith('.gloop.gg') && host !== 'gloop.gg' && host !== 'www.gloop.gg') {
 		let label = host.slice(0, -'.gloop.gg'.length);
 		if (label.startsWith('www.')) label = label.slice(4);
 		if (!label) return null;
-		return resolveSiteForGloopGgPath(label);
+		return resolveSiteForGloopGgPath(label, platform);
 	}
 
-	return resolveSiteByHostname(host);
+	return resolveSiteByHostname(host, platform);
 }
 
 function slugPartsFromUrl(url: URL): string[] {
@@ -141,20 +144,21 @@ function importedShareIconVariant(
 }
 
 export async function importLinksCreatePageFromUrl(
-	inputUrl: string
+	inputUrl: string,
+	platform?: App.Platform
 ): Promise<{ ok: true; page: LinksCreateImportedPage } | { ok: false; error: string }> {
 	const url = parsePageUrl(inputUrl);
 	if (!url) {
 		return { ok: false, error: 'Enter a valid page link (for example thecoopgal.gloopglop.com).' };
 	}
 
-	const site = await resolveSiteFromUrl(url);
+	const site = await resolveSiteFromUrl(url, platform);
 	if (!site) {
 		return { ok: false, error: 'No GloopGlop creator site found for that link.' };
 	}
 
 	const slugParts = slugPartsFromUrl(url);
-	const page = await loadPageYaml(site, slugParts);
+	const page = await loadPageYaml(site, slugParts, platform);
 	if (!page) {
 		return { ok: false, error: 'No page found at that link.' };
 	}

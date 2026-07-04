@@ -2,7 +2,7 @@
 	import { getContext } from 'svelte';
 	import {
 		LINKS_CREATOR_PROFILE_PICTURE_ACCEPT,
-		prepareProfilePictureDataUrl
+		uploadProfilePicture
 	} from '$lib/client/links-create-profile-picture';
 	import { setLinksCreateCreatorProfilePicture } from '$lib/client/links-create-state';
 	import { GLOOPGLOP_DEFAULT_LOGO_URL } from '$lib/glop-link-image';
@@ -10,7 +10,6 @@
 		LINKS_CREATE_CONTEXT_KEY,
 		type LinksCreateContextState
 	} from '$lib/links-create-context';
-	import IconAccountCircle from '~icons/mdi/account-circle-outline';
 	import IconCameraPlus from '~icons/mdi/camera-plus-outline';
 
 	let { open = $bindable(false) }: { open: boolean } = $props();
@@ -43,10 +42,11 @@
 		uploading = true;
 		errorMessage = '';
 		try {
-			linksCreateState.creatorProfilePicture = await prepareProfilePictureDataUrl(file);
-			setLinksCreateCreatorProfilePicture(linksCreateState.creatorProfilePicture);
+			const url = await uploadProfilePicture(file);
+			linksCreateState.creatorProfilePicture = url;
+			setLinksCreateCreatorProfilePicture(url);
 		} catch (error) {
-			errorMessage = error instanceof Error ? error.message : 'Could not use that image.';
+			errorMessage = error instanceof Error ? error.message : 'Could not upload that image.';
 		} finally {
 			uploading = false;
 		}
@@ -70,13 +70,13 @@
 					accept={LINKS_CREATOR_PROFILE_PICTURE_ACCEPT}
 					class="sr-only"
 					tabindex={-1}
-					onchange={onFileSelected}
+					onchange={(event) => void onFileSelected(event)}
 				/>
 
 				<button
 					type="button"
 					class="group relative flex h-36 w-36 items-center justify-center overflow-hidden rounded-full border-2 border-dashed border-base-content/20 bg-base-100 shadow-sm transition hover:border-primary/40 hover:bg-base-100/90"
-					aria-label="Choose profile picture"
+					aria-label="Upload profile picture"
 					disabled={uploading}
 					onclick={openFilePicker}
 				>
@@ -93,28 +93,32 @@
 					</span>
 				</button>
 
+				<button
+					type="button"
+					class="btn btn-primary btn-sm mt-4"
+					disabled={uploading}
+					onclick={openFilePicker}
+				>
+					{uploading ? 'Uploading…' : 'Upload photo'}
+				</button>
+
 				{#if uploading}
-					<p class="mt-4 text-sm opacity-70">Processing image…</p>
+					<p class="mt-4 text-sm opacity-70">Uploading to Cloudflare Images…</p>
 				{:else if errorMessage}
 					<p class="mt-4 text-sm text-error">{errorMessage}</p>
-				{/if}
-
-				{#if !linksCreateState.creatorProfilePicture.trim()}
-					<div class="mt-2 flex items-center gap-1 text-xs text-base-content/55">
-						<IconAccountCircle class="h-4 w-4 shrink-0" aria-hidden="true" />
-						<span>Using the default GloopGlop logo until you upload one.</span>
-					</div>
+				{:else}
+					<p class="mt-3 text-center text-xs opacity-60">
+						JPEG, PNG, WebP, or GIF. Hosted on Cloudflare Images.
+					</p>
 				{/if}
 			</div>
 
 			<div class="modal-action">
-				<button type="button" class="btn" onclick={close}>Cancel</button>
-				<button type="button" class="btn btn-primary" disabled={uploading} onclick={done}>
-					Done
-				</button>
+				<button type="button" class="btn" disabled={uploading} onclick={close}>Cancel</button>
+				<button type="button" class="btn btn-primary" disabled={uploading} onclick={done}>Done</button>
 			</div>
 		</div>
-		<button type="button" class="modal-backdrop z-[200]" aria-label="Close" onclick={close}
+		<button type="button" class="modal-backdrop bg-black/40" aria-label="Close" onclick={close}
 		></button>
 	</div>
 {/if}

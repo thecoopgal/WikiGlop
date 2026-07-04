@@ -75,7 +75,7 @@ export async function mergeGlopSearchAnswersForQuery(params: {
 				const hrefLabels = new Map<string, string>();
 
 				for (const slugParts of pageSlugLists) {
-					const page = await loadPageYaml(matchedSite, slugParts);
+					const page = await loadPageYaml(matchedSite, slugParts, platform);
 					if (!page) continue;
 					const hydrated = await expandCreatorLinksShortcuts(matchedSite, page, requestUrl);
 					const fromPage = collectHttpHrefLabelsFromPage(hydrated, siteBase, displayName);

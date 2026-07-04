@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { browser } from '$app/environment';
 	import { getContext } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { downloadCreatorSiteYaml } from '$lib/client/links-create-site-yaml';
@@ -15,12 +16,14 @@
 	let downloading = $state(false);
 	let submitError = $state('');
 	let submitSuccess = $state(false);
+	let submitMessage = $state('Your page is live.');
+	let publishedSiteId = $state<string | null>(null);
 	let downloadError = $state('');
 
 	const primaryBtnClass =
 		'btn min-w-[10rem] border-[#5f9626] bg-[#7ac943] text-[#10210a] hover:border-[#4c7a1f] hover:bg-[#6fb93b] disabled:cursor-not-allowed disabled:opacity-50';
 
-	async function submitForReview() {
+	async function publishPage() {
 		if (submitting || submitSuccess || downloading) return;
 		submitting = true;
 		submitError = '';
@@ -30,8 +33,21 @@
 			submitError = result.error;
 			return;
 		}
+		submitMessage = result.message?.trim() || 'Your page is live.';
+		publishedSiteId = result.siteId?.trim() || null;
 		submitSuccess = true;
 	}
+
+	const publishedHref = $derived.by(() => {
+		if (!publishedSiteId) return null;
+		if (!browser) return `https://${publishedSiteId}.gloopglop.com/`;
+		const host = window.location.hostname;
+		if (host === 'localhost' || host === '127.0.0.1' || host.endsWith('.localhost')) {
+			const port = window.location.port || '8787';
+			return `http://${publishedSiteId}.localhost:${port}/`;
+		}
+		return `https://${publishedSiteId}.gloopglop.com/`;
+	});
 
 	async function downloadSiteYaml() {
 		if (downloading || submitting) return;
@@ -51,8 +67,18 @@
 <div class="relative mx-auto mt-4 flex w-full max-w-md flex-col items-center">
 	{#if submitSuccess}
 		<div class="flex flex-col items-center gap-3" in:fade={linksFade}>
-			<p class="text-sm opacity-80">Thanks — your page was submitted. We will review it soon.</p>
-			<a href="/links" class="btn btn-outline btn-sm">View your submissions</a>
+			<p class="text-sm opacity-80">{submitMessage}</p>
+			{#if publishedHref && publishedSiteId}
+				<a
+					class="btn btn-outline btn-sm"
+					href={publishedHref}
+					target="_blank"
+					rel="noopener noreferrer"
+				>
+					Open page
+				</a>
+			{/if}
+			<a href="/links" class="btn btn-ghost btn-sm">Back to Links</a>
 		</div>
 	{:else}
 		<div
@@ -70,9 +96,9 @@
 				type="button"
 				class={primaryBtnClass}
 				disabled={submitting || downloading}
-				onclick={submitForReview}
+				onclick={publishPage}
 			>
-				{submitting ? 'Submitting…' : 'Submit page for review'}
+				{submitting ? 'Publishing…' : 'Publish page'}
 			</button>
 		</div>
 		{#if submitError}

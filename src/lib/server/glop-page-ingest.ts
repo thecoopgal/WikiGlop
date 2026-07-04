@@ -252,7 +252,10 @@ export function collectHttpHrefImagesFromPage(page: PageYaml, baseUrl: URL): Map
 }
 
 /** All gloopglop creator sites: href → YAML image for search result thumbnails. */
-export async function buildGloopglopYamlImageByUrl(requestUrl: URL): Promise<Map<string, string>> {
+export async function buildGloopglopYamlImageByUrl(
+	requestUrl: URL,
+	platform?: App.Platform
+): Promise<Map<string, string>> {
 	const out = new Map<string, string>();
 	const sites = await getAllSites();
 	for (const site of sites) {
@@ -260,7 +263,7 @@ export async function buildGloopglopYamlImageByUrl(requestUrl: URL): Promise<Map
 		const origin = publicGloopglopCreatorOriginForSearch(site);
 		if (!origin) continue;
 		const base = new URL(origin);
-		const indexPage = await loadPageYaml(site, []);
+		const indexPage = await loadPageYaml(site, [], platform);
 		if (!indexPage) continue;
 		const hydrated = await expandCreatorLinksShortcuts(site, indexPage, requestUrl);
 		const imgs = collectHttpHrefImagesFromPage(hydrated, base);

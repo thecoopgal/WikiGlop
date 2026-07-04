@@ -26,8 +26,35 @@ export type WorkerBindings = {
 	};
 	UPLOADS?: R2BucketBinding;
 	STREAM?: unknown;
+	EMAIL?: {
+		send(message: {
+			to: string | string[];
+			from: { email: string; name?: string } | string;
+			subject: string;
+			html: string;
+			text: string;
+		}): Promise<{ messageId?: string }>;
+	};
+	IMAGES?: {
+		hosted: {
+			upload(
+				image: ReadableStream<Uint8Array> | ArrayBuffer,
+				options?: {
+					id?: string;
+					filename?: string;
+					requireSignedURLs?: boolean;
+					metadata?: Record<string, unknown>;
+					creator?: string;
+					encoding?: 'base64';
+				}
+			): Promise<{ id: string; variants: string[] }>;
+		};
+	};
 	CLOUDFLARE_ACCOUNT_ID?: string;
 	CLOUDFLARE_API_TOKEN?: string;
+	CLOUDFLARE_IMAGES_ACCOUNT_HASH?: string;
+	AUTH_FROM_EMAIL?: string;
+	AUTH_FROM_NAME?: string;
 	[key: string]: unknown;
 };
 

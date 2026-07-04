@@ -2,7 +2,6 @@ id: alabamaprogress
 name: Alabama Progress
 hosts:
   - alabamaprogress.localhost
-  - 127.0.0.1
   - alabamaprogress.gloopglop.com
   - www.alabamaprogress.gloopglop.com
   - alabamaprogress.gloop.gg

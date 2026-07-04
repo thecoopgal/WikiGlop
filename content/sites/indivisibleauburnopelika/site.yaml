@@ -2,7 +2,6 @@ id: indivisibleauburnopelika
 name: Indivisible Auburn/Opelika
 hosts:
   - indivisibleauburnopelika.localhost
-  - 127.0.0.1
   - indivisibleauburnopelika.gloopglop.com
   - www.indivisibleauburnopelika.gloopglop.com
   - indivisibleauburnopelika.gloop.gg

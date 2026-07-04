@@ -8,7 +8,7 @@ import {
 } from '$lib/client/links-create-state';
 
 export type LinksCreateSubmitResult =
-	| { ok: true; message?: string; submissionId?: string }
+	| { ok: true; message?: string; submissionId?: string; siteId?: string }
 	| { ok: false; error: string };
 
 export async function submitLinksCreateForm(
@@ -38,7 +38,7 @@ export async function submitLinksCreateForm(
 		})
 	});
 
-	let data: { error?: string; message?: string; submissionId?: string } = {};
+	let data: { error?: string; message?: string; submissionId?: string; siteId?: string } = {};
 	try {
 		data = (await res.json()) as typeof data;
 	} catch {
@@ -55,6 +55,7 @@ export async function submitLinksCreateForm(
 	return {
 		ok: true,
 		message: typeof data.message === 'string' ? data.message : undefined,
-		submissionId: typeof data.submissionId === 'string' ? data.submissionId : undefined
+		submissionId: typeof data.submissionId === 'string' ? data.submissionId : undefined,
+		siteId: typeof data.siteId === 'string' ? data.siteId : undefined
 	};
 }

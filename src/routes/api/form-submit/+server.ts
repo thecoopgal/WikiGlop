@@ -61,7 +61,7 @@ function buildEmailBody(siteName: string, pageYaml: PageYaml, values: Record<str
 	return lines.join('\n');
 }
 
-export const POST: RequestHandler = async ({ request, locals }) => {
+export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	const site = locals.site;
 	if (!site) throw error(404, 'Site not found');
 
@@ -91,7 +91,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	} else if (Array.isArray(slugPartsRaw)) {
 		const slugParts = slugPartsRaw.filter((x): x is string => typeof x === 'string').map((s) => s.trim());
 		if (slugParts.some((s) => !isSafeSlugPart(s))) throw error(400, 'Invalid slugParts');
-		pageYaml = await loadPageYaml(site, slugParts);
+		pageYaml = await loadPageYaml(site, slugParts, platform);
 	} else {
 		throw error(400, 'Provide modalId or slugParts');
 	}

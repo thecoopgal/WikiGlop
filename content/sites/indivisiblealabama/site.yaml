@@ -2,7 +2,6 @@ id: indivisiblealabama
 name: Indivisible Alabama
 hosts:
   - indivisiblealabama.localhost
-  - 127.0.0.1
   - indivisiblealabama.gloopglop.com
   - www.indivisiblealabama.gloopglop.com
   - indivisiblealabama.gloop.gg

@@ -38,7 +38,7 @@ export const load: PageServerLoad = async ({ params, locals, url, platform }) =>
 	}
 
 	const modals = await loadAllModals(site);
-	const page = await loadPageYaml(site, slugParts);
+	const page = await loadPageYaml(site, slugParts, platform);
 	if (page) {
 		const hydratedPage = await expandCreatorLinksShortcuts(site, page, url);
 		scheduleGloopglopPageGlopIngest({ platform, requestUrl: url, site, page: hydratedPage });
@@ -49,7 +49,7 @@ export const load: PageServerLoad = async ({ params, locals, url, platform }) =>
 	if (slugParts.length === 1) {
 		const modalId = slugParts[0];
 		if (modals[modalId]) {
-			const basePage = await loadPageYaml(site, []);
+			const basePage = await loadPageYaml(site, [], platform);
 			if (!basePage) throw error(404, 'Base page not found.');
 			const hydratedBasePage = await expandCreatorLinksShortcuts(site, basePage, url);
 			scheduleGloopglopPageGlopIngest({ platform, requestUrl: url, site, page: hydratedBasePage });

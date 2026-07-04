@@ -9,11 +9,16 @@ declare namespace Cloudflare {
 		UPLOADS: R2Bucket;
 		DB: D1Database;
 		STREAM: StreamBinding;
+		EMAIL: SendEmail;
+		IMAGES: ImagesBinding;
 		ASSETS: Fetcher;
 		VAPID_PUBLIC_KEY: "BFxK_qez_beomsxbU92SJ90B2rNtQ7-kdwQuWvrD2_jQgMzNJNl15262JUyoJR-kpFY_ZeRoT7WnOg9xmsSW7hE";
 		VAPID_SUBJECT: "mailto:notifications@gloop.gg";
 		CLOUDFLARE_ACCOUNT_ID: "";
 		RESEND_API_KEY: string;
+		AUTH_FROM_EMAIL: "login@gloop.gg";
+		AUTH_FROM_NAME: "GloopGlop";
+		CLOUDFLARE_IMAGES_ACCOUNT_HASH: "zdMtZgMUbYs7-R4-dRSl-Q";
 	}
 }
 interface Env extends Cloudflare.Env {}
@@ -21,7 +26,7 @@ type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
 declare namespace NodeJS {
-	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "VAPID_PUBLIC_KEY" | "VAPID_SUBJECT" | "CLOUDFLARE_ACCOUNT_ID" | "RESEND_API_KEY">> {}
+	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "VAPID_PUBLIC_KEY" | "VAPID_SUBJECT" | "CLOUDFLARE_ACCOUNT_ID" | "RESEND_API_KEY" | "AUTH_FROM_EMAIL" | "AUTH_FROM_NAME">> {}
 }
 
 // Begin runtime types

@@ -7,5 +7,5 @@ export const load: PageServerLoad = async ({ locals }) => {
 	if (locals.site?.siteId !== GLOOPGLOP_SITE_ID) {
 		throw error(404, 'Not found');
 	}
-	return { site: locals.site };
+	return { site: locals.site, user: locals.user ?? null };
 };

@@ -2,7 +2,6 @@ id: indivisibleweststclairmoody
 name: Indivisible West St. Clair County (Moody)
 hosts:
   - indivisibleweststclairmoody.localhost
-  - 127.0.0.1
   - indivisibleweststclairmoody.gloopglop.com
   - www.indivisibleweststclairmoody.gloopglop.com
   - indivisibleweststclairmoody.gloop.gg

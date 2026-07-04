@@ -18,7 +18,7 @@ export const load: PageServerLoad = async ({ locals, url, platform }) => {
 		};
 	}
 
-	const page = await loadPageYaml(site, []);
+	const page = await loadPageYaml(site, [], platform);
 	if (!page) {
 		throw error(404, 'Page not found.');
 	}

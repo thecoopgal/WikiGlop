@@ -212,6 +212,8 @@ export async function setLinksSubmissionApproval(opts: {
 	submissionId: string;
 	siteId: string;
 	status: Extract<LinksSubmissionApprovalStatus, 'approved' | 'rejected'>;
+	/** Optional user added as a site member when publishing (owner if first). */
+	memberUserId?: string | null;
 }): Promise<LinksPageSubmissionRow | null> {
 	const existing = await getLinksPageSubmission(opts.platform, opts.submissionId, opts.siteId);
 	if (!existing) return null;
@@ -226,6 +228,23 @@ export async function setLinksSubmissionApproval(opts: {
 			)
 			.bind(opts.submissionId)
 			.run();
+
+		const approved = await getLinksPageSubmission(opts.platform, opts.submissionId, opts.siteId);
+		if (approved) {
+			const { publishLinksSubmissionToContentStore, isContentStoreSchemaError } = await import(
+				'$lib/server/content-store'
+			);
+			try {
+				await publishLinksSubmissionToContentStore({
+					platform: opts.platform,
+					row: approved,
+					memberUserId: opts.memberUserId ?? null
+				});
+			} catch (e) {
+				if (!isContentStoreSchemaError(e)) throw e;
+				console.warn('[content-store] publish skipped (migration 0016/0017 not applied)');
+			}
+		}
 	} else {
 		await db
 			.prepare(

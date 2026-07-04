@@ -2,7 +2,6 @@ id: tkc
 name: Tuscaloosa Kaleidoscope Collective
 hosts:
   - tkc.localhost
-  - 127.0.0.1
   - tkc.gloopglop.com
   - www.tkc.gloopglop.com
   - tkc.gloop.gg

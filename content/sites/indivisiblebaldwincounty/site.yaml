@@ -2,7 +2,6 @@ id: indivisiblebaldwincounty
 name: Indivisible Baldwin County
 hosts:
   - indivisiblebaldwincounty.localhost
-  - 127.0.0.1
   - indivisiblebaldwincounty.gloopglop.com
   - www.indivisiblebaldwincounty.gloopglop.com
   - indivisiblebaldwincounty.gloop.gg

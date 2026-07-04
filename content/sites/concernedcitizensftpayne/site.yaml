@@ -2,7 +2,6 @@ id: concernedcitizensftpayne
 name: Concerned Citizens for Change (Ft. Payne)
 hosts:
   - concernedcitizensftpayne.localhost
-  - 127.0.0.1
   - concernedcitizensftpayne.gloopglop.com
   - www.concernedcitizensftpayne.gloopglop.com
   - concernedcitizensftpayne.gloop.gg

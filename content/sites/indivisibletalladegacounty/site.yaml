@@ -2,7 +2,6 @@ id: indivisibletalladegacounty
 name: Talladega County Indivisible
 hosts:
   - indivisibletalladegacounty.localhost
-  - 127.0.0.1
   - indivisibletalladegacounty.gloopglop.com
   - www.indivisibletalladegacounty.gloopglop.com
   - indivisibletalladegacounty.gloop.gg

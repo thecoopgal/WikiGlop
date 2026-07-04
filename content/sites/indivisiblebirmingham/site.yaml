@@ -2,7 +2,6 @@ id: indivisiblebirmingham
 name: Birmingham Indivisible
 hosts:
   - indivisiblebirmingham.localhost
-  - 127.0.0.1
   - indivisiblebirmingham.gloopglop.com
   - www.indivisiblebirmingham.gloopglop.com
   - indivisiblebirmingham.gloop.gg

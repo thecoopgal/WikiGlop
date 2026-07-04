@@ -10,6 +10,7 @@ import {
 	creatorIdFromPrimaryName,
 	isLinksSubmissionSchemaError,
 	normalizeLinksClientKey,
+	setLinksSubmissionApproval,
 	type LinksPageSubmissionPayload
 } from '$lib/server/links-submissions';
 import { env } from '$env/dynamic/private';
@@ -103,6 +104,7 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	const creatorId = creatorIdFromPrimaryName(primaryName);
 
 	let submissionId: string;
+	let publishedSiteId: string | null = creatorId;
 	try {
 		const created = await createLinksPageSubmission({
 			platform,
@@ -113,6 +115,16 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 			payload: submissionPayload
 		});
 		submissionId = created.id;
+
+		// Approval pipeline kept; auto-approve for now so pages go live in D1 immediately.
+		const approved = await setLinksSubmissionApproval({
+			platform,
+			submissionId,
+			siteId: GLOOPGLOP_SITE_ID,
+			status: 'approved',
+			memberUserId: locals.user?.id ?? null
+		});
+		if (approved?.creator_id) publishedSiteId = approved.creator_id;
 	} catch (e) {
 		if (isLinksSubmissionSchemaError(e)) {
 			return json(
@@ -130,8 +142,9 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 	if (sendTo) {
 		const lines: string[] = [
 			`Site: ${site.name ?? site.siteId}`,
-			'New GloopGlop Links page submission',
+			'New GloopGlop Links page (auto-approved)',
 			`Submission id: ${submissionId}`,
+			`Live site id: ${publishedSiteId ?? '(unknown)'}`,
 			'',
 			`Theme: ${submissionPayload.theme || '(none)'}`,
 			`Names: ${submissionPayload.names.join(', ')}`,
@@ -157,13 +170,15 @@ export const POST: RequestHandler = async ({ request, locals, platform }) => {
 			}
 		}
 
-		const subject = `[${site.name ?? site.siteId}] New Links page: ${primaryName}`;
+		const subject = `[${site.name ?? site.siteId}] Links page live: ${primaryName}`;
 		await sendFormNotificationEmail({ to: sendTo, subject, text: lines.join('\n') });
 	}
 
 	return json({
 		ok: true,
 		submissionId,
-		message: 'Thanks — your page was submitted. We will review it soon.'
+		siteId: publishedSiteId,
+		approvalStatus: 'approved' as const,
+		message: 'Your page is live.'
 	});
 };
